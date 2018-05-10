@@ -13,6 +13,8 @@
 #include <cmath>
 #include <QMessageBox>
 #include "calibrator.h"
+#include "focus_finder.h"
+#include <conio.h>
 #ifdef VANCOUVER
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
@@ -200,6 +202,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->captureButton,   SIGNAL(clicked(bool)), this, SLOT(captureButtonClicked()));
     connect(ui->Calib_button,    SIGNAL(clicked(bool)), this, SLOT(Calibration_ButtonClicked()));
     connect(ui->Calib_button_2,  SIGNAL(clicked(bool)), this, SLOT(Calibration_2_ButtonClicked()));
+    connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
+    connect(ui->focus_test      ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -281,7 +285,21 @@ void Magrathea::enableCameraBoxClicked(bool clicked)
 //focus
 void Magrathea::focusButtonClicked()
 {
-    qInfo("camera focus");
+    qInfo(" > camera focus ... ");
+    Focus_finder * FocusFinder = new Focus_finder(this);
+    mCamera->stop(); //closing QCamera
+
+    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return;}
+
+    FocusFinder->Set_camera(cap);
+    double focus_position = -1.;
+    FocusFinder->find_focus(focus_position);
+    qInfo(" > camera focus : %5.7f",focus_position);
+    delete FocusFinder;
+    cap.release();         //Going back to QCameraa
+    mCamera->start();
     return;
 }
 
@@ -306,6 +324,77 @@ void Magrathea::captureButtonClicked()
     return;
 }
 //------------------------------------------
+//------------------------------------------
+
+void Magrathea::Camera_test(){
+    CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
+
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+
+    if (!cap.isOpened())  // if not success, exit program
+    {
+        qInfo("Cannot open the video cam");
+        _getch();
+        return;
+    }
+
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+
+//        cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+//        cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 20.0);
+
+    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    //    std::cout << "Frame size : " << dWidth << " x " << dHeight << std::endl;
+
+    cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
+    bool bEnd = false;
+    int img = 1000;
+    while (!bEnd && img > 0)
+    {
+        cv::Mat frame;
+
+        bool bSuccess = cap.read(frame); // read a new frame from video
+
+        if (!bSuccess) //if not success, break loop
+        {
+            qInfo("Cannot read a frame from video stream");
+            break;
+        }
+
+        cv::imshow("MyVideo", frame); //show the frame in "MyVideo" window
+
+        if (cv::waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
+        {
+            qInfo("esc key is pressed by user");
+            bEnd = true;
+        }
+        img--;
+        qInfo("Image : %i",img);
+        //std::cout << img << std::endl;
+    }
+    cap.release();
+    qInfo("end");
+    _getch();
+    return;
+}
+
+//------------------------------------------
+//------------------------------------------
+
+//------------------------------------------
 //calibrate
 
 void Magrathea::Calibration_ButtonClicked()
@@ -316,28 +405,36 @@ void Magrathea::Calibration_2_ButtonClicked()
 
 void Magrathea::calibrationCaller(int input){
 
+    bool from_file = true;
     Calibrator * calibrator = new Calibrator(this);
     //Eventually add conmmand to move the gantry to the place where the
     // calibration area is.
     mCamera->stop(); //closing QCamera
-    if(!cap.open(0))     //Opening opencv-camera, needed for easier image manipulation
+
+    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-    std::string Images[12] = {"C:/Users/Silicio/WORK/Full_Size/Mini/0018.bmp",//0
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/image_000_600_60_15.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/image_000_600_60_15_rotated_5_degrees.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/image_000_600_60_15_rotated_30_degrees.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/image_000_600_60_15_rotated_45_degrees.png",//4
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/image_000_600_60_15_rotated_stereo.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/perfect_strips_0_degrees.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/perfect_strips_1.49_degrees.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/perfect_strips_5_degrees.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/BNL_images/perfect_strips_45_degrees.png",//9
-                              "C:/Users/Silicio/WORK/Temporary_files/image_007_600_60_15_dan.png",
-                              "C:/Users/Silicio/WORK/Temporary_files/image_007_600_60_15_dan_rot_min20.png"
+        return;}
+
+    std::string Images[12] = {"C:/Temporary_files/BNL_images/image_000_600_60_15.png",
+                              "C:/Temporary_files/BNL_images/image_000_600_60_15_rotated_5_degrees.png",
+                              "C:/Temporary_files/BNL_images/image_000_600_60_15_rotated_30_degrees.png",
+                              "C:/Temporary_files/BNL_images/image_000_600_60_15_rotated_45_degrees.png",//4
+                              "C:/Temporary_files/BNL_images/image_000_600_60_15_rotated_stereo.png",
+                              "C:/Temporary_files/BNL_images/perfect_strips_0_degrees.png",
+                              "C:/Temporary_files/BNL_images/perfect_strips_1.49_degrees.png",
+                              "C:/Temporary_files/BNL_images/perfect_strips_5_degrees.png",
+                              "C:/Temporary_files/BNL_images/perfect_strips_45_degrees.png",//9
+                              "C:/Temporary_files/image_007_600_60_15_dan.png",
+                              "C:/Temporary_files/image_007_600_60_15_dan_rot_min20.png"
                              };
-    calibrator->SetImage(Images[3]
+    cv::Mat mat_from_camera;
+    if(from_file){
+        calibrator->SetImage(Images[2]
                 ,CV_LOAD_IMAGE_COLOR);
-    calibrator->Set_camera(cap);
+    }else{
+        cap >> mat_from_camera;
+        calibrator->SetImage(mat_from_camera);
+    }
     calibrator->Set_log(outputLogTextEdit);
     double calibration_value     = -100;
     double calibration_value_err = -10;
@@ -351,8 +448,6 @@ void Magrathea::calibrationCaller(int input){
     mCamera->start();
     return;
 }
-
-
 
 
 //******************************************

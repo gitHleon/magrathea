@@ -27,16 +27,46 @@ SOURCES += \
         main.cpp \
         magrathea.cpp \
         calibrator.cpp \
+        focus_finder.cpp \
+alglib-3.12.0\cpp\src\alglibinternal.cpp \
+alglib-3.12.0\cpp\src\ap.cpp \
+alglib-3.12.0\cpp\src\alglibmisc.cpp \
+alglib-3.12.0\cpp\src\dataanalysis.cpp \
+alglib-3.12.0\cpp\src\diffequations.cpp \
+alglib-3.12.0\cpp\src\fasttransforms.cpp \
+alglib-3.12.0\cpp\src\integration.cpp \
+alglib-3.12.0\cpp\src\interpolation.cpp \
+alglib-3.12.0\cpp\src\linalg.cpp \
+alglib-3.12.0\cpp\src\optimization.cpp \
+alglib-3.12.0\cpp\src\solvers.cpp \
+alglib-3.12.0\cpp\src\specialfunctions.cpp \
+alglib-3.12.0\cpp\src\statistics.cpp \
         MotionHandler.cpp
 
 HEADERS += \
         magrathea.h \
         calibrator.h \
+        focus_finder.h \
+alglib-3.12.0\cpp\src\alglibmisc.h \
+alglib-3.12.0\cpp\src\alglibinternal.h \
+alglib-3.12.0\cpp\src\ap.h \
+alglib-3.12.0\cpp\src\dataanalysis.h \
+alglib-3.12.0\cpp\src\diffequations.h \
+alglib-3.12.0\cpp\src\fasttransforms.h \
+alglib-3.12.0\cpp\src\integration.h \
+alglib-3.12.0\cpp\src\interpolation.h \
+alglib-3.12.0\cpp\src\linalg.h \
+alglib-3.12.0\cpp\src\optimization.h \
+alglib-3.12.0\cpp\src\solvers.h \
+alglib-3.12.0\cpp\src\specialfunctions.h \
+alglib-3.12.0\cpp\src\statistics.h \
+alglib-3.12.0\cpp\src\stdafx.h \
         MotionHandler.h
 
 FORMS += \
         magrathea.ui
 
+INCLUDEPATH += alglib-3.12.0\cpp\src
 INCLUDEPATH += C:\opencv\build\include
 LIBS += C:\opencv-build\bin\libopencv_flann331.dll
 LIBS += C:\opencv-build\bin\libopencv_core331.dll

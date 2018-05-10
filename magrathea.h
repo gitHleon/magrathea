@@ -44,6 +44,7 @@ private slots:
     void calibrationCaller(int input);
     void Calibration_ButtonClicked();
     void Calibration_2_ButtonClicked();
+    void Camera_test();
 
     //gantry
     void connectGantryBoxClicked(bool checked);
