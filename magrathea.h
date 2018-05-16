@@ -61,7 +61,7 @@ private slots:
 private:
     Ui::Magrathea *ui;
 
-    cv::VideoCapture cap;
+    //cv::VideoCapture cap;
     cv::Mat sub_frame;
 
     QCamera *mCamera;

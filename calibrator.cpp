@@ -350,8 +350,9 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     cv::Scalar Stddv;
     cv::meanStdDev(pitch,Mean,Stddv);
 
-    double Object_size     = 74.5; //Strip pitch
-    double Object_size_err = 0.0;  //Strip pitch
+    double Object_size     = 80.0; //Strip pitch [um]- SCT sensor
+    //double Object_size     = 74.5; //Strip pitch [um]- mini sensor
+    double Object_size_err = 0.0;
     std::cout<<"Output Distance: "<<Mean.val[0]<<" ; std dev: "<<Stddv.val[0]<<" ; pitch.size() : "<<pitch.size()<<std::endl;
     double Mean_pitch     = Mean.val[0];
     double Err_mean_pitch = Stddv.val[0];

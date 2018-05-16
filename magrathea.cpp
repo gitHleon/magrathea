@@ -289,7 +289,9 @@ void Magrathea::focusButtonClicked()
     Focus_finder * FocusFinder = new Focus_finder(this);
     mCamera->stop(); //closing QCamera
 
-    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
 
@@ -325,11 +327,11 @@ void Magrathea::captureButtonClicked()
 }
 //------------------------------------------
 //------------------------------------------
-
+//https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-open
 void Magrathea::Camera_test(){
-    CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
+    //CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
 
-    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    cv::VideoCapture cap(0); // open the video camera no. 0
 
     if (!cap.isOpened())  // if not success, exit program
     {
@@ -347,8 +349,8 @@ void Magrathea::Camera_test(){
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
 
-//        cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
-//        cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+    //cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+    //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 20.0);
@@ -357,11 +359,31 @@ void Magrathea::Camera_test(){
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    //    std::cout << "Frame size : " << dWidth << " x " << dHeight << std::endl;
+
+    qInfo("cap.get(CV_CAP_PROP_POS_MSEC);      : %5.5f",cap.get(CV_CAP_PROP_POS_MSEC));
+    qInfo("cap.get(CV_CAP_PROP_POS_FRAMES );   : %5.5f",cap.get(CV_CAP_PROP_POS_FRAMES ));
+    qInfo("cap.get(CV_CAP_PROP_POS_AVI_RATIO); : %5.5f",cap.get(CV_CAP_PROP_POS_AVI_RATIO));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_WIDTH );  : %5.5f",cap.get(CV_CAP_PROP_FRAME_WIDTH ));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_HEIGHT);  : %5.5f",cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+    qInfo("cap.get(CV_CAP_PROP_FPS );          : %5.5f",cap.get(CV_CAP_PROP_FPS ));
+    qInfo("cap.get(CV_CAP_PROP_FOURCC);        : %5.5f",cap.get(CV_CAP_PROP_FOURCC));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_COUNT );  : %5.5f",cap.get(CV_CAP_PROP_FRAME_COUNT ));
+    qInfo("cap.get(CV_CAP_PROP_FORMAT );       : %5.5f",cap.get(CV_CAP_PROP_FORMAT ));
+    qInfo("cap.get(CV_CAP_PROP_MODE );         : %5.5f",cap.get(CV_CAP_PROP_MODE ));
+    qInfo("cap.get(CV_CAP_PROP_BRIGHTNESS);    : %5.5f",cap.get(CV_CAP_PROP_BRIGHTNESS));
+    qInfo("cap.get(CV_CAP_PROP_CONTRAST);      : %5.5f",cap.get(CV_CAP_PROP_CONTRAST));
+    qInfo("cap.get(CV_CAP_PROP_SATURATION);    : %5.5f",cap.get(CV_CAP_PROP_SATURATION));
+    qInfo("cap.get(CV_CAP_PROP_HUE);           : %5.5f",cap.get(CV_CAP_PROP_HUE));
+    qInfo("cap.get(CV_CAP_PROP_GAIN);          : %5.5f",cap.get(CV_CAP_PROP_GAIN));
+    qInfo("cap.get(CV_CAP_PROP_EXPOSURE);      : %5.5f",cap.get(CV_CAP_PROP_EXPOSURE));
+    qInfo("cap.get(CV_CAP_PROP_CONVERT_RGB);   : %5.5f",cap.get(CV_CAP_PROP_CONVERT_RGB));
+    qInfo("cap.get(CV_CAP_PROP_RECTIFICATION); : %5.5f",cap.get(CV_CAP_PROP_RECTIFICATION));
+    qInfo("cap.get(CV_CAP_PROP_ISO_SPEED );    : %5.5f",cap.get(CV_CAP_PROP_ISO_SPEED ));
+    qInfo("cap.get(CV_CAP_PROP_BUFFERSIZE );   : %5.5f",cap.get(CV_CAP_PROP_BUFFERSIZE ));
 
     cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
     bool bEnd = false;
-    int img = 1000;
+    int img = 100;
     while (!bEnd && img > 0)
     {
         cv::Mat frame;
@@ -375,10 +397,6 @@ void Magrathea::Camera_test(){
         }
 
         cv::imshow("MyVideo", frame); //show the frame in "MyVideo" window
-        cv::Scalar Mean_I;
-        cv::Scalar Stddv_I;
-        cv::meanStdDev(frame,Mean_I,Stddv_I);
-        qInfo("Mean %5.5f ;std dev %5.5f",Mean_I.val[0],Stddv_I.val[0]);
 
         if (cv::waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
         {
@@ -387,7 +405,6 @@ void Magrathea::Camera_test(){
         }
         img--;
         qInfo("Image : %i",img);
-        //std::cout << img << std::endl;
     }
     cap.release();
     qInfo("end");
@@ -414,7 +431,7 @@ void Magrathea::calibrationCaller(int input){
     Calibrator * calibrator = new Calibrator(this);
 
     bool from_file = ui->calib_from_file_Box->isChecked();
-    CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
+    //CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
 
     if (!cap.isOpened()){
@@ -460,14 +477,13 @@ void Magrathea::calibrationCaller(int input){
             qInfo("Cannot read a frame from video stream");
             return;
         }
-        cv::imshow("MyVideo",mat_from_camera); //show the frame in "MyVideo" window
         calibrator->SetImage(mat_from_camera);
     }
     calibrator->Set_log(outputLogTextEdit);
     double calibration_value     = -100;
     double calibration_value_err = -10;
     bool is_px_over_micron = (input == 0);
-    //calibrator->Calibration_strips(calibration_value,calibration_value_err, is_px_over_micron);
+    calibrator->Calibration_strips(calibration_value,calibration_value_err, is_px_over_micron);
     QString unit = (is_px_over_micron ? " px/um" : " um/px");
     QString output = "C: "+QString::number(calibration_value)+ " +- "+QString::number(calibration_value_err)+ unit;
     ui->Calib_value_lineEdit->setText(output);
