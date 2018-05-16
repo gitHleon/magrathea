@@ -74,9 +74,28 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
   //process_strips.py
   //process_ROI
 
+    if(image.empty()){
+        log->append("Error!! Image is empty!!");
+        return;
+    }
+
+    log->append("ok 1");
     const bool debug = false;
     int center_rows = image.rows/2.0; //Defining the center of the image
     int center_cols = image.cols/2.0;
+    std::string ty =  type2str( image.type() );
+    auto && oss = std::ostringstream();
+
+    oss
+       << "Matrix: " << ty << " "
+       << std::fixed << std::setprecision(1)
+       << image.cols << " x "<< image.rows
+       << std::endl;
+
+    auto && buf = oss.str();
+    log->append(buf.c_str());
+    //log->append(form("Matrix: %s %dx%d \n", ty.c_str(), image.cols, image.rows ));
+
     if(debug)
         std::cout<<" center_rows "<<center_rows <<" center_cols "<<center_cols <<std::endl;
     cv::Point2i Center_point = {center_cols,center_rows};
@@ -86,20 +105,13 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     //cv::Rect regione_interessante(center_cols-(256,center_rows-256,512,512); //Rectangle that will be the RegionOfInterest (ROI)
     cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
 
-    if(image.empty()){
-        log->append("Error!! Image is empty!!");
-        return;
-    }
+    cv::imshow("0. image original",image);
     cv::Mat RoiImage = image(regione_interessante);
+    cv::imshow("0.1 image ROI",RoiImage);
     cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
     cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
 
-    //cv::imshow("0. dot",image);
-
     cv::imshow("1. gray",image_gray);
-
-    //
-
     //Performing fourier analysis for rotation detection and compensation
     //https://docs.opencv.org/2.4/doc/tutorials/core/discrete_fourier_transform/discrete_fourier_transform.html#discretfouriertransform
 
@@ -156,8 +168,19 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
 
     float Max = 1;
     float Min = 0;
-    magI.convertTo(magI,CV_8U,255.0/(Max-Min),-255.0*Min/(Max-Min)); //Conversion to CV_8U needed for following steps
 
+    ty =  type2str( magI.type() );
+
+    oss
+       << "> Matrix: " << ty << " "
+       << std::fixed << std::setprecision(1)
+       << image.cols << " x "<< image.rows
+       << std::endl;
+
+    buf = oss.str();
+    log->append(buf.c_str());
+
+    magI.convertTo(magI,CV_8U,255.0/(Max-Min),-255.0*Min/(Max-Min)); //Conversion to CV_8U needed for following steps
     cv::imshow("5. scale", magI);
 
     //using opencv to perform a linear fit to find the inclination of the strips

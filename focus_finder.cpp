@@ -166,7 +166,7 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
     num = 4*a*c - b*b;
     double den =0.;
     den = 4*a;
-    return num/den;;
+    return num/den;
 }
 
 void Focus_finder::Eval_syst_scan(){
