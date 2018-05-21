@@ -54,10 +54,6 @@ bool Calibrator::IsImageEmpty(){
     return image.empty();
 }
 
-void Calibrator::Set_camera(const cv::VideoCapture &m_cap){
-    cap = m_cap;
-}
-
 void Calibrator::Set_lines(int m_lines, int m_threshold, int m_length){
     Line_index      = m_lines;
     Line_threshold  = m_threshold;
@@ -74,9 +70,28 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
   //process_strips.py
   //process_ROI
 
+    if(image.empty()){
+        log->append("Error!! Image is empty!!");
+        return;
+    }
+
+    log->append("ok 1");
     const bool debug = false;
     int center_rows = image.rows/2.0; //Defining the center of the image
     int center_cols = image.cols/2.0;
+    std::string ty =  type2str( image.type() );
+    auto && oss = std::ostringstream();
+
+    oss
+       << "Matrix: " << ty << " "
+       << std::fixed << std::setprecision(1)
+       << image.cols << " x "<< image.rows
+       << std::endl;
+
+    auto && buf = oss.str();
+    log->append(buf.c_str());
+    //log->append(form("Matrix: %s %dx%d \n", ty.c_str(), image.cols, image.rows ));
+
     if(debug)
         std::cout<<" center_rows "<<center_rows <<" center_cols "<<center_cols <<std::endl;
     cv::Point2i Center_point = {center_cols,center_rows};
@@ -86,20 +101,15 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     //cv::Rect regione_interessante(center_cols-(256,center_rows-256,512,512); //Rectangle that will be the RegionOfInterest (ROI)
     cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
 
-    if(image.empty()){
-        log->append("Error!! Image is empty!!");
-        return;
-    }
+    if(debug)
+        cv::imshow("0. image original",image);
     cv::Mat RoiImage = image(regione_interessante);
+    cv::imshow("0.1 image ROI",RoiImage);
     cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
     cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
 
-    //cv::imshow("0. dot",image);
-
-    cv::imshow("1. gray",image_gray);
-
-    //
-
+    if(debug)
+        cv::imshow("1. gray",image_gray);
     //Performing fourier analysis for rotation detection and compensation
     //https://docs.opencv.org/2.4/doc/tutorials/core/discrete_fourier_transform/discrete_fourier_transform.html#discretfouriertransform
 
@@ -144,21 +154,37 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     cv::normalize(magI, magI, 0, 1, CV_MINMAX); // Transform the matrix with float values into a
                                                 // viewable image form (float between values 0 and 1).
 
-    cv::imshow("3. spectrum magnitude", magI);
+    if(debug)
+        cv::imshow("3. spectrum magnitude", magI);
 
+    //thresholding the image to have only the relevant points and the rest zeros
     cv::meanStdDev(magI,Mean_I,Stddv_I);
     cv::threshold(magI,magI,Mean_I.val[0] + 20*Stddv_I.val[0],1,CV_THRESH_BINARY);
 
-    std::cout<<" mean "<<Mean_I.val[0] <<" ; std dev "<<Stddv_I.val[0]<<std::endl;
+    if(debug)
+        std::cout<<" mean "<<Mean_I.val[0] <<" ; std dev "<<Stddv_I.val[0]<<std::endl;
 
-    //cv::threshold(magI,magI,0.25,1,CV_THRESH_BINARY); //thresholding the image to have only the relevant points and the rest zeros
-    cv::imshow("4. spectrum magnitude threshold", magI);
+    //cv::threshold(magI,magI,0.25,1,CV_THRESH_BINARY);
+    if(debug)
+        cv::imshow("4. spectrum magnitude threshold", magI);
 
     float Max = 1;
     float Min = 0;
-    magI.convertTo(magI,CV_8U,255.0/(Max-Min),-255.0*Min/(Max-Min)); //Conversion to CV_8U needed for following steps
 
-    cv::imshow("5. scale", magI);
+    ty =  type2str( magI.type() );
+
+    oss
+       << "> Matrix: " << ty << " "
+       << std::fixed << std::setprecision(1)
+       << image.cols << " x "<< image.rows
+       << std::endl;
+
+    buf = oss.str();
+    log->append(buf.c_str());
+
+    magI.convertTo(magI,CV_8U,255.0/(Max-Min),-255.0*Min/(Max-Min)); //Conversion to CV_8U needed for following steps
+    if(debug)
+        cv::imshow("5. scale", magI);
 
     //using opencv to perform a linear fit to find the inclination of the strips
     std::vector<cv::Point2i> nonZeroCoordinates;
@@ -172,23 +198,27 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     cv::Vec4f out_line;
     cv::fitLine(nonZeroCoordinates,out_line,CV_DIST_L2,0,0.01,0.01);
 
-    std::cout<<"out_line [0]  "<<out_line.val[0] <<" [1] "<<out_line.val[1] <<
-               " [2] "<<out_line.val[2] <<" [3] "<<out_line.val[3] <<std::endl;
+    if(debug)
+        std::cout<<"out_line [0]  "<<out_line.val[0] <<" [1] "<<out_line.val[1] <<
+                   " [2] "<<out_line.val[2] <<" [3] "<<out_line.val[3] <<std::endl;
 
     double param = out_line.val[1] / out_line.val[0]; //tg = sin / cos = y / x
     double Angle = atan (param) * 180 / 3.14159265;
     Angle = Angle - 90;
-    std::cout<< " angle "<<Angle<<std::endl;
+    if(debug)
+        std::cout<< " angle "<<Angle<<std::endl;
 
     cv::Mat rot_mat_1 = cv::getRotationMatrix2D(Center_point, Angle, 1.0);
     cv::warpAffine(image, image, rot_mat_1, image.size(),CV_INTER_LINEAR,CV_HAL_BORDER_CONSTANT,cv::Scalar(0));
-    cv::imshow("6. rotaed",image);
+    if(debug)
+        cv::imshow("6. rotaed",image);
     //use rotated image to find the calibration
 
     RoiImage = image(regione_interessante);
     image_gray   = RoiImage.clone();
     cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
-    cv::imshow("7. gray-rotated",image_gray);
+    if(debug)
+        cv::imshow("7. gray-rotated",image_gray);
     cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
     cv::imshow("8. threshold",image_gray);
 
@@ -327,8 +357,9 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     cv::Scalar Stddv;
     cv::meanStdDev(pitch,Mean,Stddv);
 
-    double Object_size     = 74.5; //Strip pitch
-    double Object_size_err = 0.0;  //Strip pitch
+    double Object_size     = 80.0; //Strip pitch [um]- SCT sensor, W21
+    //double Object_size     = 74.5; //Strip pitch [um]- mini sensor
+    double Object_size_err = 0.0;
     std::cout<<"Output Distance: "<<Mean.val[0]<<" ; std dev: "<<Stddv.val[0]<<" ; pitch.size() : "<<pitch.size()<<std::endl;
     double Mean_pitch     = Mean.val[0];
     double Err_mean_pitch = Stddv.val[0];

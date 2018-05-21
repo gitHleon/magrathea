@@ -23,7 +23,6 @@ class Calibrator : public QWidget
 public:
     explicit Calibrator(QWidget *parent = nullptr);
     ~Calibrator();
-    void Set_camera(const cv::VideoCapture &m_cap);
     void Set_log(QTextEdit *m_log);
 
 signals:
@@ -43,7 +42,6 @@ public slots:
     //void Find_probabilistic_lines();
 
 private:
-    cv::VideoCapture cap;
     QTextEdit *log;
     cv::Mat image;
     cv::Mat detected_image;
