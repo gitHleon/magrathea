@@ -14,6 +14,7 @@
 #include <QMessageBox>
 #include "calibrator.h"
 #include "focus_finder.h"
+#include "Fiducial_finder.h"
 #include <conio.h>
 #ifdef VANCOUVER
 #include <AerotechMotionhandler.h>
@@ -415,6 +416,50 @@ void Magrathea::Camera_test(){
 //------------------------------------------
 //------------------------------------------
 
+
+void Magrathea::Fiducial_finder_button_1_Clicked()
+{    FiducialFinderCaller(0); }
+
+
+
+void Magrathea::FiducialFinderCaller(int input){
+    mCamera->stop(); //closing QCamera
+
+    //opening camera with opencv
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return;}
+
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 5.0);
+
+    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+
+    FiducialFinder * Ffinder = new FiducialFinder(this);
+
+    //adding: find square - find 5 dot fid - find F from francesco
+    //then implement a mix of F from francesco and squre and 5 dot fid
+
+
+
+
+    delete Ffinder;
+    mCamera->start();
+    return;
+}
+
+
 //------------------------------------------
 //calibrate
 
@@ -445,16 +490,15 @@ void Magrathea::calibrationCaller(int input){
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 20.0);
+    cap.set(CV_CAP_PROP_FPS, 5.0);
 
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
+    //cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
     cv::Mat mat_from_camera;
     if(from_file){
         std::string Images[12] = {"C:/Temporary_files/BNL_images/image_000_600_60_15.png",

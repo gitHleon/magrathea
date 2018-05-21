@@ -41,7 +41,8 @@ alglib-3.12.0\cpp\src\optimization.cpp \
 alglib-3.12.0\cpp\src\solvers.cpp \
 alglib-3.12.0\cpp\src\specialfunctions.cpp \
 alglib-3.12.0\cpp\src\statistics.cpp \
-        MotionHandler.cpp
+        MotionHandler.cpp \
+Fiducial_finder.cpp
 
 HEADERS += \
         magrathea.h \
@@ -61,7 +62,8 @@ alglib-3.12.0\cpp\src\solvers.h \
 alglib-3.12.0\cpp\src\specialfunctions.h \
 alglib-3.12.0\cpp\src\statistics.h \
 alglib-3.12.0\cpp\src\stdafx.h \
-        MotionHandler.h
+        MotionHandler.h \
+Fiducial_finder.h
 
 FORMS += \
         magrathea.ui
