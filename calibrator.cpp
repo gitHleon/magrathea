@@ -54,10 +54,6 @@ bool Calibrator::IsImageEmpty(){
     return image.empty();
 }
 
-void Calibrator::Set_camera(const cv::VideoCapture &m_cap){
-    cap = m_cap;
-}
-
 void Calibrator::Set_lines(int m_lines, int m_threshold, int m_length){
     Line_index      = m_lines;
     Line_threshold  = m_threshold;
