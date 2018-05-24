@@ -205,6 +205,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Calib_button_2,  SIGNAL(clicked(bool)), this, SLOT(Calibration_2_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
     connect(ui->focus_test      ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
+    connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -418,20 +420,22 @@ void Magrathea::Camera_test(){
 
 
 void Magrathea::Fiducial_finder_button_1_Clicked()
-{    FiducialFinderCaller(0); }
+{    FiducialFinderCaller(1); }
+
+void Magrathea::Fiducial_finder_button_2_Clicked()
+{    FiducialFinderCaller(2); }
 
 
-
-void Magrathea::FiducialFinderCaller(int input){
+void Magrathea::FiducialFinderCaller(const int &input){
     mCamera->stop(); //closing QCamera
 
     //opening camera with opencv
+    cv::Mat mat_from_camera;
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
     if (!cap.isOpened()){
         //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
-
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
@@ -439,21 +443,51 @@ void Magrathea::FiducialFinderCaller(int input){
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 5.0);
-
+    cap.set(CV_CAP_PROP_FPS, 4.0);
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     FiducialFinder * Ffinder = new FiducialFinder(this);
 
     //adding: find square - find 5 dot fid - find F from francesco
     //then implement a mix of F from francesco and squre and 5 dot fid
+    bool from_file = ui->calib_from_file_Box->isChecked();
 
+    if(from_file){
+        std::string Images[6] = {"C:/Users/Silicio/WORK/Full_Size/W080/0007.bmp",//failing
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0014.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0025.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp"
+                                 };
+        Ffinder->SetImage(Images[ui->spinBox_input->value()]
+                ,CV_LOAD_IMAGE_COLOR);
+        std::cout<<"ok "<<std::endl;
+    }else{
+        bool bSuccess = cap.read(mat_from_camera);
+        if (!bSuccess){ //if not success
+            qInfo("Cannot read a frame from video stream");
+            return;
+        }
+        Ffinder->SetImage(mat_from_camera);
+    }
+    Ffinder->Set_calibration(1.6);
+    Ffinder->Set_log(outputLogTextEdit);
 
-
-
+    if(input == 1){
+        Ffinder->Find_circles();
+        std::cout<<"1. "<<std::endl;
+    } else if (input == 2){
+        std::string Images[3] = {"C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0024_4dot_2.bmp"
+                                 };
+        Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
+                ,CV_LOAD_IMAGE_COLOR);
+        Ffinder->Find_F(ui->algorithm_box->value());
+    }
     delete Ffinder;
     mCamera->start();
     return;
