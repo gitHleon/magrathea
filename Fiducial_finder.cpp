@@ -183,7 +183,7 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
     return Out;
 }
 
-void FiducialFinder::Find_circles(){
+void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
 //to find the 4 dot fiducial
 
     if(image.empty()){
@@ -194,11 +194,12 @@ void FiducialFinder::Find_circles(){
     const bool debug = false;
     int center_rows = image.rows/2.0; //Defining the center of the image
     int center_cols = image.cols/2.0;
-    cv::imshow("0 image",image);
     //cv::Point2i Center_point = {center_cols,center_rows};
     const int window_size = 420; //1000
     cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
     cv::Mat RoiImage = image(regione_interessante);
+    //cv::circle(image, cv::Point(center_cols,center_rows), 3, cv::Scalar(206,78,137), -1, 8, 0 );
+    cv::imshow("0 image",image);
     cv::imshow("0.1 image ROI",RoiImage);
     cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
     cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
@@ -247,6 +248,11 @@ void FiducialFinder::Find_circles(){
                                                 Centers.at(Squares.at(i).at(2)),Centers.at(Squares.at(i).at(3)));
         cv::circle(RoiImage, square_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
         cv::circle(RoiImage, square_center, 40*Calibration, cv::Scalar(255,0,0), 3, 8, 0 );
+        if(Squares.size() == 1){
+            X_distance = (center_cols - square_center.x)*Calibration;
+            Y_distance = (center_rows - square_center.y)*Calibration;
+            cv::circle(RoiImage, cv::Point(RoiImage.cols/2.0,RoiImage.rows/2.0), 3, cv::Scalar(206,78,137), -1, 8, 0 );
+        }
     }
 
     cv::imshow("3 Results",RoiImage);
@@ -254,7 +260,7 @@ void FiducialFinder::Find_circles(){
     //add return of the fid center
 }
 
-void FiducialFinder::Find_F(const int &DescriptorAlgorithm){
+void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance){
 
     //to find the 4 dot fiducial
 

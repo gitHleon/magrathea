@@ -473,11 +473,23 @@ void Magrathea::FiducialFinderCaller(const int &input){
         }
         Ffinder->SetImage(mat_from_camera);
     }
-    Ffinder->Set_calibration(1.6);
+    if(mCalibration < 0.){
+        qInfo("Calibration not set!! value is : %5.3f",mCalibration);
+        return;
+    } else{
+        qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
+    }
+
+    Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
+    //Ffinder->Set_calibration(1.6); //get calibration from a private variable
     Ffinder->Set_log(outputLogTextEdit);
 
+    double distance_x = 888888888.8;
+    double distance_y = 888888888.8;
+    qInfo("Displacement from expected position is: %5.3f in X, %5.3f in Y",distance_x,distance_y);
+
     if(input == 1){
-        Ffinder->Find_circles();
+        Ffinder->Find_circles(distance_x,distance_y);
         std::cout<<"1. "<<std::endl;
     } else if (input == 2){
         std::string Images[3] = {"C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
@@ -486,8 +498,9 @@ void Magrathea::FiducialFinderCaller(const int &input){
                                  };
         Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Find_F(ui->algorithm_box->value());
+        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y);
     }
+    qInfo("Displacement from expected position is: %5.3f in X, %5.3f in Y",distance_x,distance_y);
     delete Ffinder;
     mCamera->start();
     return;
@@ -562,9 +575,11 @@ void Magrathea::calibrationCaller(int input){
     double calibration_value_err = -10;
     bool is_px_over_micron = (input == 0);
     calibrator->Calibration_strips(calibration_value,calibration_value_err, is_px_over_micron);
-    QString unit = (is_px_over_micron ? " px/um" : " um/px");
+    QString unit = (is_px_over_micron ? " px/um : Value set!" : " um/px : Value NOT set");
     QString output = "C: "+QString::number(calibration_value)+ " +- "+QString::number(calibration_value_err)+ unit;
     ui->Calib_value_lineEdit->setText(output);
+    if(is_px_over_micron)
+        mCalibration = calibration_value;
     delete calibrator;
     cap.release();         //Going back to QCameraa
     mCamera->start();

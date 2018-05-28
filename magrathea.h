@@ -67,6 +67,7 @@ private:
     //cv::VideoCapture cap;
     cv::Mat sub_frame;
 
+    double mCalibration = -100000.1;
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;
