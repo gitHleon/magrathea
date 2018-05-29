@@ -271,7 +271,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         log->append("Error!! Fiducial is empty!!");
         return;}
 
-        const bool debug = false;
+        //const bool debug = false;
         int center_rows = image.rows/2.0; //Defining the center of the image
         int center_cols = image.cols/2.0;
 
@@ -307,67 +307,82 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 
         cv::Ptr <cv::Feature2D> detector;
         //const int DescriptorAlgorithm = ui->algorithm_box->value();//set as input to the function
-
+        std::string algo_name = "none";
         if(DescriptorAlgorithm == 0){
-            //detector = cv::Feature2D::SURF::create();
-            log->append("Surf..");
+            detector = cv::xfeatures2d ::SURF::create();
+            algo_name = "SURF";
         }else if (DescriptorAlgorithm == 1){
-            log->append("Sift..");
+            detector = cv::xfeatures2d ::SIFT::create();
+            algo_name = "SIFT";
         }else if (DescriptorAlgorithm == 2){
             //https://docs.opencv.org/2.4/modules/features2d/doc/feature_detection_and_description.html
             detector = cv::ORB::create();//(500, 1.2, 8,0,2,cv::ORB::HARRIS_SCORE,31);
-            std::cout<<" ok 2"<<std::endl;
+            algo_name = "ORB";
         }else if (DescriptorAlgorithm == 3){
             detector = cv::AKAZE::create();
+            algo_name = "AKAZE";
         }else if (DescriptorAlgorithm == 4){
-            log->append("Star..");
+            detector = cv::xfeatures2d ::StarDetector::create();
+            algo_name = "STAR";
         }else{
             log->append("Error!! DescriptorAlgorithm not set properly!!");
             return;}
         std::vector<cv::KeyPoint> keypoints_F(0);
         std::vector<cv::KeyPoint> keypoints_image(0);
         std::vector<cv::DMatch> matches;
+        cv::Ptr<cv::DescriptorExtractor> descriptor_extractor;
         std::vector<std::vector< cv::DMatch> > matches_2;
         cv::Mat descriptorImage;
         cv::Mat descriptorFiducial;
         if(detector->empty())
-            std::cout<<" empty - a"<<std::endl;
+            std::cout<<"Detector is empty"<<std::endl;
 
-        //return;
         if(DescriptorAlgorithm != 4){
             detector->detectAndCompute(image_gray,cv::Mat(),keypoints_image,descriptorImage,false);
-            std::cout<<" ok 3"<<std::endl;
             detector->detectAndCompute(image_F_gray,cv::Mat(),keypoints_F,descriptorFiducial,false);
-            std::cout<<" ok 3.1"<<std::endl;
         }else{
             log->append("Star feature detection");
+            detector->detect(image_gray,keypoints_image);
+            detector->detect(image_F_gray,keypoints_F);
+            descriptor_extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
+            descriptor_extractor->compute(image_gray,keypoints_image,descriptorImage);
+            descriptor_extractor->compute(image_F_gray,keypoints_F,descriptorFiducial);
         }
         qInfo("Fiducial keypoints %i",keypoints_F.size());
         qInfo("Image    keypoints %i",keypoints_image.size());
 
         //https://docs.opencv.org/2.4/modules/features2d/doc/common_interfaces_of_descriptor_matchers.html
         cv::Ptr<cv::BFMatcher> matcher;// = cv::BFMatcher::create(cv::NORM_HAMMING,true);
+        bool flann_true = false;
         if(DescriptorAlgorithm == 2){//ORB
             matcher = cv::BFMatcher::create(cv::NORM_HAMMING,true);
-            std::cout<<" ok 4.1"<<std::endl;
             matcher->match(descriptorFiducial,descriptorImage,matches,cv::Mat());
-            std::cout<<" ok 4.2"<<std::endl;
         }else if (DescriptorAlgorithm == 3){//AKAZE
             matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
-            std::cout<<" ok 4.1"<<std::endl;
             matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
-            std::cout<<" ok 4.2"<<std::endl;
-        }else
+        }else{
             log->append("Star, Surf, Sift matching");
-
+            if(flann_true){
+                int FLANN_INDEX_KDTREE = 0;
+                cv::Ptr<cv::flann::IndexParams> index_params;
+                index_params->setAlgorithm(FLANN_INDEX_KDTREE);
+                index_params->setInt("tree",5);
+                cv::Ptr<cv::flann::SearchParams> search_params = new cv::flann::SearchParams(50,0,true);
+                cv::Ptr<cv::FlannBasedMatcher> matcher_flann = new cv::FlannBasedMatcher(index_params,search_params);
+                matcher_flann->knnMatch(descriptorFiducial,descriptorImage,matches_2,2);
+            }else{
+                matcher = cv::BFMatcher::create();
+                matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
+            }
+        }
         std::vector<cv::DMatch> SortedMatches;
-        const double Lowe_ratio = 0.7; //loose: 0.9, tight: 0.7
+        const double Lowe_ratio = 0.9; //loose: 0.9, tight: 0.7
         if(DescriptorAlgorithm == 2){//ORB
             SortedMatches = matches;
             sort(SortedMatches.begin(),SortedMatches.end(),Distance_sorter);
             std::cout<<" ok 5"<<std::endl;
             //http://www.cplusplus.com/reference/algorithm/sort/
-        } else if (DescriptorAlgorithm == 3){//AKAZE
+        } else {
             //https://docs.opencv.org/3.0-beta/doc/tutorials/features2d/akaze_tracking/akaze_tracking.html
             for(unsigned int j=0; j< matches_2.size(); j++){
                 if(matches_2[j][0].distance < matches_2[j][1].distance*Lowe_ratio)
@@ -450,8 +465,8 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::line(RoiImage, scene_corners[2], scene_corners[3], cv::Scalar(0, 255, 0), 4);
         cv::line(RoiImage, scene_corners[3], scene_corners[0], cv::Scalar(0, 255, 0), 4);
 
-        cv::namedWindow("ORB Match", CV_WINDOW_KEEPRATIO);
-        cv::imshow("ORB Match", result);
+        cv::namedWindow(algo_name +" Match", CV_WINDOW_KEEPRATIO);
+        cv::imshow(algo_name +" Match", result);
 
         return;
 }

@@ -455,33 +455,39 @@ void Magrathea::FiducialFinderCaller(const int &input){
     bool from_file = ui->calib_from_file_Box->isChecked();
 
     if(from_file){
-        std::string Images[6] = {"C:/Users/Silicio/WORK/Full_Size/W080/0007.bmp",//failing
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0014.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0025.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp"
+        std::string Images[12] = {"C:/Users/Silicio/WORK/Full_Size/W080/0007.bmp",//failing
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0025.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp"
                                  };
         Ffinder->SetImage(Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
         std::cout<<"ok "<<std::endl;
+        Ffinder->Set_calibration(1.6); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
             qInfo("Cannot read a frame from video stream");
             return;
         }
+        Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
         Ffinder->SetImage(mat_from_camera);
     }
-    if(mCalibration < 0.){
+    if(!from_file && mCalibration < 0.){
         qInfo("Calibration not set!! value is : %5.3f",mCalibration);
         return;
     } else{
         qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
     }
 
-    Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
-    //Ffinder->Set_calibration(1.6); //get calibration from a private variable
     Ffinder->Set_log(outputLogTextEdit);
 
     double distance_x = 888888888.8;

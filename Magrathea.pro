@@ -69,7 +69,7 @@ FORMS += \
         magrathea.ui
 
 INCLUDEPATH += alglib-3.12.0\cpp\src
-INCLUDEPATH += C:\opencv\build\include
+INCLUDEPATH += C:\opencv-build\install\include
 LIBS += C:\opencv-build\bin\libopencv_flann341.dll
 LIBS += C:\opencv-build\bin\libopencv_core341.dll
 LIBS += C:\opencv-build\bin\libopencv_highgui341.dll
@@ -77,6 +77,7 @@ LIBS += C:\opencv-build\bin\libopencv_videoio341.dll
 LIBS += C:\opencv-build\bin\libopencv_imgcodecs341.dll
 LIBS += C:\opencv-build\bin\libopencv_imgproc341.dll
 LIBS += C:\opencv-build\bin\libopencv_features2d341.dll
+LIBS += C:\opencv-build\bin\libopencv_xfeatures2d341.dll
 LIBS += C:\opencv-build\bin\libopencv_calib3d341.dll
 
 #Vancouver
