@@ -249,8 +249,8 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
         cv::circle(RoiImage, square_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
         cv::circle(RoiImage, square_center, 40*Calibration, cv::Scalar(255,0,0), 3, 8, 0 );
         if(Squares.size() == 1){
-            X_distance = (center_cols - square_center.x)*Calibration;
-            Y_distance = (center_rows - square_center.y)*Calibration;
+            X_distance = (center_cols - square_center.x)*(1./Calibration); //[um]
+            Y_distance = (center_rows - square_center.y)*(1./Calibration); //[um]
             cv::circle(RoiImage, cv::Point(RoiImage.cols/2.0,RoiImage.rows/2.0), 3, cv::Scalar(206,78,137), -1, 8, 0 );
         }
     }
@@ -262,7 +262,7 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
 
 void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance){
 
-    //to find the 4 dot fiducial
+    //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
@@ -271,12 +271,10 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         log->append("Error!! Fiducial is empty!!");
         return;}
 
-        //const bool debug = false;
         int center_rows = image.rows/2.0; //Defining the center of the image
         int center_cols = image.cols/2.0;
 
         cv::imshow("f. 0 image",image);
-        //cv::Point2i Center_point = {center_cols,center_rows};
         const int window_size = 420; //1000
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
@@ -303,10 +301,15 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 
         cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
         cv::threshold(image_F_gray,image_F_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+        cv::imshow("f. 1.1 blur+thr",image_gray);
+        cv::imshow("f. 1.1.f blur+thr",image_F_gray);
 
+        //performing well even without closing
         cv::Mat StructElement = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(5,5));
         cv::morphologyEx(image_F_gray,image_F_gray,cv::MORPH_CLOSE,StructElement);
         cv::morphologyEx(image_gray,image_gray,cv::MORPH_CLOSE,StructElement);
+        cv::imshow("f. 1.2 blur+thr+close",image_gray);
+        cv::imshow("f. 1.2.f blur+thr+close",image_F_gray);
 
         cv::adaptiveThreshold(image_F_gray,image_F_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
         cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
@@ -471,8 +474,8 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow(algo_name +" Match - RoI", RoiImage);
         cv::imshow(algo_name +" Match - original", image);
 
-        X_distance = (center_cols - F_center.x)*Calibration;
-        Y_distance = (center_rows - F_center.y)*Calibration;
+        X_distance = (center_cols - F_center.x)*(1./Calibration); //[um]
+        Y_distance = (center_rows - F_center.y)*(1./Calibration); //[um]
 
         //        cv::Scalar value_t = H.at<uchar>(0,0);
         //        double a = value_t.val[0];
