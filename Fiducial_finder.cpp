@@ -303,13 +303,11 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 
         cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
         cv::threshold(image_F_gray,image_F_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+
         cv::Mat StructElement = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(5,5));
-        //        for(int i=0;i<1;i++){
         cv::morphologyEx(image_F_gray,image_F_gray,cv::MORPH_CLOSE,StructElement);
         cv::morphologyEx(image_gray,image_gray,cv::MORPH_CLOSE,StructElement);
-        //            cv::morphologyEx(image_gray,image_gray,cv::MORPH_OPEN,StructElement);
-        //            cv::morphologyEx(image_F_gray,image_F_gray,cv::MORPH_OPEN,StructElement);
-        //        }
+
         cv::adaptiveThreshold(image_F_gray,image_F_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
         cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
 
@@ -460,33 +458,41 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::line(RoiImage, scene_corners[2], scene_corners[3], cv::Scalar(0, 255, 0), 4);
         cv::line(RoiImage, scene_corners[3], scene_corners[0], cv::Scalar(0, 255, 0), 4);
 
+        cv::Point2f RoItranslation = cv::Point2f((image.cols-window_size)*0.5, (image.rows-window_size)*0.5);
+        cv::line(image, scene_corners[0] + RoItranslation, scene_corners[1] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::line(image, scene_corners[1] + RoItranslation, scene_corners[2] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::line(image, scene_corners[2] + RoItranslation, scene_corners[3] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::line(image, scene_corners[3] + RoItranslation, scene_corners[0] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::circle(image, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
+
+
         cv::namedWindow(algo_name +" Match", CV_WINDOW_KEEPRATIO);
         cv::imshow(algo_name +" Match", result);
-        cv::imshow(algo_name +" Match - original", result);
+        cv::imshow(algo_name +" Match - RoI", RoiImage);
+        cv::imshow(algo_name +" Match - original", image);
 
+        X_distance = (center_cols - F_center.x)*Calibration;
+        Y_distance = (center_rows - F_center.y)*Calibration;
 
-        cv::Scalar value_t = H.at<uchar>(0,0);
-        double a = value_t.val[0];
-        value_t = H.at<uchar>(0,1);
-        double b = value_t.val[0];
-        value_t = H.at<uchar>(0,2);
-        double c = value_t.val[0];
-        value_t = H.at<uchar>(1,0);
-        double d = value_t.val[0];
-        value_t = H.at<uchar>(1,1);
-        double e = value_t.val[0];
-        value_t = H.at<uchar>(1,2);
-        double f = value_t.val[0];
-
-        double p = sqrt(a*a + b*b);
-        double r = (a*e - b*d)/(p);
-        double q = (a*d+b*e)/(a*e - b*d);
-        double theta = atan2(b,a);
-        qInfo("Rotation    :\t %.2f deg",((theta*180.)/3.14159));
-        qInfo("Translation :\t %.0f px,\t %.0f px",c,f);
-        qInfo("Scale       :\t %.2f\t%.2f",p,r);
-        qInfo("Shear       :\t %.2f",q);
-
+        //        cv::Scalar value_t = H.at<uchar>(0,0);
+        //        double a = value_t.val[0];
+        //        value_t = H.at<uchar>(0,1);//image_gray.at<uchar>(row,col)
+        //        double b = value_t.val[0];
+        //        value_t = H.at<uchar>(0,2);
+        //        double c = value_t.val[0];
+        //        value_t = H.at<uchar>(1,0);
+        //        double d = value_t.val[0];
+        //        value_t = H.at<uchar>(1,1);
+        //        double e = value_t.val[0];
+        //        value_t = H.at<uchar>(1,2);
+        //        double f = value_t.val[0];
+        //        double p_0 = sqrt(a*a + b*b);
+        //        double theta = atan(d/a);
+        //        qInfo("Rotation    :\t %.2f deg",((theta*180.)/3.14159));
+        //        qInfo("Translation :\t %.0f px,\t %.0f px",c,f);
+        //        qInfo("Scale 0      :\t %.2f",p_0);
+        //        X_distance = c*Calibration;
+        //        Y_distance = f*Calibration;
         return;
 }
 

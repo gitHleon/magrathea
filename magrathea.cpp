@@ -455,22 +455,40 @@ void Magrathea::FiducialFinderCaller(const int &input){
     bool from_file = ui->calib_from_file_Box->isChecked();
 
     if(from_file){
-        std::string Images[12] = {"C:/Users/Silicio/WORK/Full_Size/W080/0007.bmp",//failing
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0025.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp"
+//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",//0
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0005.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0023.bmp",//5
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",//10
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_3.bmp"
+//                                 };
+        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0001.bmp",//0
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0002.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_1.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_3.bmp",//5
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0013.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0013_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018_2.bmp",//9
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018_3.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0021.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0026.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027_5.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027.bmp"
                                  };
         Ffinder->SetImage(Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        std::cout<<"ok "<<std::endl;
         Ffinder->Set_calibration(1.6); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
@@ -492,21 +510,20 @@ void Magrathea::FiducialFinderCaller(const int &input){
 
     double distance_x = 888888888.8;
     double distance_y = 888888888.8;
-    qInfo("Displacement from expected position is: %5.3f in X, %5.3f in Y",distance_x,distance_y);
 
     if(input == 1){
         Ffinder->Find_circles(distance_x,distance_y);
         std::cout<<"1. "<<std::endl;
     } else if (input == 2){
         std::string Images[3] = {"C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0001_5dot_2.bmp",
                                  "C:/Users/Silicio/WORK/Full_Size/W080/0024_4dot_2.bmp"
                                  };
         Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
                 ,CV_LOAD_IMAGE_COLOR);
         Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y);
     }
-    qInfo("Displacement from expected position is: %5.3f in X, %5.3f in Y",distance_x,distance_y);
+    qInfo("Displacement from expected position is: %5.3f um along X, %5.3f um along Y",distance_x,distance_y);
     delete Ffinder;
     mCamera->start();
     return;
