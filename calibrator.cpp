@@ -75,7 +75,7 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
         return;
     }
 
-    log->append("ok 1");
+    //log->append("ok 1");
     const bool debug = false;
     int center_rows = image.rows/2.0; //Defining the center of the image
     int center_cols = image.cols/2.0;

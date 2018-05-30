@@ -44,6 +44,9 @@ private slots:
     void calibrationCaller(int input);
     void Calibration_ButtonClicked();
     void Calibration_2_ButtonClicked();
+    void FiducialFinderCaller(const int &input);
+    void Fiducial_finder_button_1_Clicked();
+    void Fiducial_finder_button_2_Clicked();
     void Camera_test();
 
     //gantry
@@ -64,6 +67,7 @@ private:
     //cv::VideoCapture cap;
     cv::Mat sub_frame;
 
+    double mCalibration = -100000.1;
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;

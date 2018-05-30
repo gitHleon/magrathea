@@ -14,6 +14,7 @@
 #include <QMessageBox>
 #include "calibrator.h"
 #include "focus_finder.h"
+#include "Fiducial_finder.h"
 #include <conio.h>
 #ifdef VANCOUVER
 #include <AerotechMotionhandler.h>
@@ -204,6 +205,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Calib_button_2,  SIGNAL(clicked(bool)), this, SLOT(Calibration_2_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
     connect(ui->focus_test      ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
+    connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -415,6 +418,118 @@ void Magrathea::Camera_test(){
 //------------------------------------------
 //------------------------------------------
 
+
+void Magrathea::Fiducial_finder_button_1_Clicked()
+{    FiducialFinderCaller(1); }
+
+void Magrathea::Fiducial_finder_button_2_Clicked()
+{    FiducialFinderCaller(2); }
+
+
+void Magrathea::FiducialFinderCaller(const int &input){
+    mCamera->stop(); //closing QCamera
+
+    //opening camera with opencv
+    cv::Mat mat_from_camera;
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return;}
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
+    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+
+    FiducialFinder * Ffinder = new FiducialFinder(this);
+
+    //adding: find square - find 5 dot fid - find F from francesco
+    //then implement a mix of F from francesco and squre and 5 dot fid
+    bool from_file = ui->calib_from_file_Box->isChecked();
+
+    if(from_file){
+//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",//0
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0005.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0023.bmp",//5
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",//10
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_3.bmp"
+//                                 };
+        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0001.bmp",//0
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0002.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_1.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_3.bmp",//5
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0013.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0013_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018_2.bmp",//9
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018_3.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0021.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0026.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027_5.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027.bmp"
+                                 };
+        Ffinder->SetImage(Images[ui->spinBox_input->value()]
+                ,CV_LOAD_IMAGE_COLOR);
+        Ffinder->Set_calibration(1.6); //get calibration from a private variable
+    }else{
+        bool bSuccess = cap.read(mat_from_camera);
+        if (!bSuccess){ //if not success
+            qInfo("Cannot read a frame from video stream");
+            return;
+        }
+        Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
+        Ffinder->SetImage(mat_from_camera);
+    }
+    if(!from_file && mCalibration < 0.){
+        qInfo("Calibration not set!! value is : %5.3f",mCalibration);
+        return;
+    } else{
+        qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
+    }
+
+    Ffinder->Set_log(outputLogTextEdit);
+
+    double distance_x = 888888888.8;
+    double distance_y = 888888888.8;
+
+    if(input == 1){
+        Ffinder->Find_circles(distance_x,distance_y);
+        std::cout<<"1. "<<std::endl;
+    } else if (input == 2){
+        std::string Images[3] = {"C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0001_5dot_2.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/W080/0024_4dot_2.bmp"
+                                 };
+        Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
+                ,CV_LOAD_IMAGE_COLOR);
+        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y);
+    }
+    qInfo("Displacement from expected position is: %5.3f um along X, %5.3f um along Y",distance_x,distance_y);
+    delete Ffinder;
+    mCamera->start();
+    return;
+}
+
+
 //------------------------------------------
 //calibrate
 
@@ -445,16 +560,15 @@ void Magrathea::calibrationCaller(int input){
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 20.0);
+    cap.set(CV_CAP_PROP_FPS, 5.0);
 
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
+    //cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
     cv::Mat mat_from_camera;
     if(from_file){
         std::string Images[12] = {"C:/Temporary_files/BNL_images/image_000_600_60_15.png",
@@ -484,9 +598,11 @@ void Magrathea::calibrationCaller(int input){
     double calibration_value_err = -10;
     bool is_px_over_micron = (input == 0);
     calibrator->Calibration_strips(calibration_value,calibration_value_err, is_px_over_micron);
-    QString unit = (is_px_over_micron ? " px/um" : " um/px");
+    QString unit = (is_px_over_micron ? " px/um : Value set!" : " um/px : Value NOT set");
     QString output = "C: "+QString::number(calibration_value)+ " +- "+QString::number(calibration_value_err)+ unit;
     ui->Calib_value_lineEdit->setText(output);
+    if(is_px_over_micron)
+        mCalibration = calibration_value;
     delete calibrator;
     cap.release();         //Going back to QCameraa
     mCamera->start();

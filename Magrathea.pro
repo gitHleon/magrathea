@@ -41,7 +41,8 @@ alglib-3.12.0\cpp\src\optimization.cpp \
 alglib-3.12.0\cpp\src\solvers.cpp \
 alglib-3.12.0\cpp\src\specialfunctions.cpp \
 alglib-3.12.0\cpp\src\statistics.cpp \
-        MotionHandler.cpp
+        MotionHandler.cpp \
+Fiducial_finder.cpp
 
 HEADERS += \
         magrathea.h \
@@ -61,21 +62,23 @@ alglib-3.12.0\cpp\src\solvers.h \
 alglib-3.12.0\cpp\src\specialfunctions.h \
 alglib-3.12.0\cpp\src\statistics.h \
 alglib-3.12.0\cpp\src\stdafx.h \
-        MotionHandler.h
+        MotionHandler.h \
+Fiducial_finder.h
 
 FORMS += \
         magrathea.ui
 
 INCLUDEPATH += alglib-3.12.0\cpp\src
-INCLUDEPATH += C:\opencv\build\include
-LIBS += C:\opencv-build\bin\libopencv_flann331.dll
-LIBS += C:\opencv-build\bin\libopencv_core331.dll
-LIBS += C:\opencv-build\bin\libopencv_highgui331.dll
-LIBS += C:\opencv-build\bin\libopencv_videoio331.dll
-LIBS += C:\opencv-build\bin\libopencv_imgcodecs331.dll
-LIBS += C:\opencv-build\bin\libopencv_imgproc331.dll
-LIBS += C:\opencv-build\bin\libopencv_features2d331.dll
-LIBS += C:\opencv-build\bin\libopencv_calib3d331.dll
+INCLUDEPATH += C:\opencv-build\install\include
+LIBS += C:\opencv-build\bin\libopencv_flann341.dll
+LIBS += C:\opencv-build\bin\libopencv_core341.dll
+LIBS += C:\opencv-build\bin\libopencv_highgui341.dll
+LIBS += C:\opencv-build\bin\libopencv_videoio341.dll
+LIBS += C:\opencv-build\bin\libopencv_imgcodecs341.dll
+LIBS += C:\opencv-build\bin\libopencv_imgproc341.dll
+LIBS += C:\opencv-build\bin\libopencv_features2d341.dll
+LIBS += C:\opencv-build\bin\libopencv_xfeatures2d341.dll
+LIBS += C:\opencv-build\bin\libopencv_calib3d341.dll
 
 #Vancouver
 win32 : exists(C:/Program Files (x86)/Aerotech/A3200/CLibrary/Include/A3200.h) {
