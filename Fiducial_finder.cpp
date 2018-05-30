@@ -293,12 +293,23 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
         cv::cvtColor(image_F_gray,image_F_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
 
-        cv::medianBlur(image_gray,image_gray,5);
-        cv::medianBlur(image_F_gray,image_F_gray,5);
+        for(int i=0;i<1;i++){
+            cv::medianBlur(image_gray,image_gray,5);
+            cv::medianBlur(image_F_gray,image_F_gray,5);
+        }
 
         cv::imshow("f. 1 blur",image_gray);
         cv::imshow("f. 1.f blur",image_F_gray);
 
+        cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+        cv::threshold(image_F_gray,image_F_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+        cv::Mat StructElement = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(5,5));
+        //        for(int i=0;i<1;i++){
+        cv::morphologyEx(image_F_gray,image_F_gray,cv::MORPH_CLOSE,StructElement);
+        cv::morphologyEx(image_gray,image_gray,cv::MORPH_CLOSE,StructElement);
+        //            cv::morphologyEx(image_gray,image_gray,cv::MORPH_OPEN,StructElement);
+        //            cv::morphologyEx(image_F_gray,image_F_gray,cv::MORPH_OPEN,StructElement);
+        //        }
         cv::adaptiveThreshold(image_F_gray,image_F_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
         cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
 
@@ -362,21 +373,27 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
         }else{
             log->append("Star, Surf, Sift matching");
-            if(flann_true){
+            if(flann_true){//flann is NOT working
                 int FLANN_INDEX_KDTREE = 0;
                 cv::Ptr<cv::flann::IndexParams> index_params;
+                std::cout<<"ok 1"<<std::endl;
                 index_params->setAlgorithm(FLANN_INDEX_KDTREE);
+                std::cout<<"ok 2"<<std::endl;
                 index_params->setInt("tree",5);
+                std::cout<<"ok 3"<<std::endl;
                 cv::Ptr<cv::flann::SearchParams> search_params = new cv::flann::SearchParams(50,0,true);
+                std::cout<<"ok 4"<<std::endl;
                 cv::Ptr<cv::FlannBasedMatcher> matcher_flann = new cv::FlannBasedMatcher(index_params,search_params);
+                std::cout<<"ok 5"<<std::endl;
                 matcher_flann->knnMatch(descriptorFiducial,descriptorImage,matches_2,2);
+                std::cout<<"ok 6"<<std::endl;
             }else{
                 matcher = cv::BFMatcher::create();
                 matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
             }
         }
         std::vector<cv::DMatch> SortedMatches;
-        const double Lowe_ratio = 0.9; //loose: 0.9, tight: 0.7
+        const double Lowe_ratio = 0.7; //loose: 0.9, tight: 0.7
         if(DescriptorAlgorithm == 2){//ORB
             SortedMatches = matches;
             sort(SortedMatches.begin(),SortedMatches.end(),Distance_sorter);
@@ -390,12 +407,11 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             }
         }
 
-        const unsigned int min_matches = 5;//add max number of matches?
+        const unsigned int min_matches = 4;//add max number of matches?
         std::cout<<" SortedMatches.size()  "<<SortedMatches.size()<<std::endl;
         if(SortedMatches.size() < min_matches){
             log->append("Error!! Not reached minimum number of matches.");
             return;}
-
 
         //debug
         cv::Mat test_1;
@@ -407,30 +423,6 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::Mat result;
         cv::drawMatches(image_F_gray, keypoints_F, image_gray, keypoints_image, SortedMatches, result);
 
- //       cv::Mat index;
- //       int nbMatch = int(SortedMatches.size());
- //       std::vector<cv::DMatch> bestMatches;
- //       int maxMatch = 10;//??
-//        if (nbMatch > maxMatch) {
-//            cv::Mat tab(nbMatch, 1, CV_32F);
-//            for (int i = 0; i < nbMatch; i++)
-//            {
-//                tab.at<float>(i, 0) = matches[i].distance;
-//                //std::cout << "Distance " << i << " is: " << matches[i].distance << std::endl;
-//            }
-//            cv::sortIdx(tab, index, CV_SORT_EVERY_COLUMN + CV_SORT_ASCENDING);
-//            for (int i = 0; i < maxMatch; i++)
-//            {
-//                bestMatches.push_back(matches[index.at<int>(i, 0)]);
-//            }
-//        }
-//        else {
-//            for (int i = 0; i < nbMatch; i++)
-//            {
-//                bestMatches.push_back(matches[index.at<int>(i, 0)]);
-//            }
-//        }
-
         //-- Localize the object
         std::vector<cv::Point2f> obj;
         std::vector<cv::Point2f> scene;
@@ -441,7 +433,9 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             scene.push_back(keypoints_image[SortedMatches[i].trainIdx].pt);
         }
 
-        cv::Mat H = cv::findHomography(obj, scene, CV_RANSAC,5.0);
+        //cv::Mat H = cv::findHomography(obj, scene, CV_RANSAC,5.0);
+        //cv::Mat H = cv::estimateAffine2D(obj, scene,cv::noArray(),cv::RANSAC,5.0);
+        cv::Mat H = cv::estimateAffinePartial2D(obj, scene,cv::noArray(),cv::RANSAC,5.0);
 
         //-- Get the corners from the image_1 ( the object to be "detected" )
         std::vector<cv::Point2f> obj_corners(4);
@@ -451,7 +445,8 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         obj_corners[3] = cv::Point(0, image_F_gray.rows);
         std::vector<cv::Point2f> scene_corners(4);
 
-        cv::perspectiveTransform(obj_corners, scene_corners, H);
+        //cv::perspectiveTransform(obj_corners, scene_corners, H);
+        cv::transform(obj_corners, scene_corners, H);
 
         cv::line(result, scene_corners[0] + cv::Point2f(image_F_gray.cols, 0), scene_corners[1] + cv::Point2f(image_F_gray.cols, 0), cv::Scalar(0, 255, 0), 4);
         cv::line(result, scene_corners[1] + cv::Point2f(image_F_gray.cols, 0), scene_corners[2] + cv::Point2f(image_F_gray.cols, 0), cv::Scalar(0, 255, 0), 4);
@@ -467,6 +462,30 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 
         cv::namedWindow(algo_name +" Match", CV_WINDOW_KEEPRATIO);
         cv::imshow(algo_name +" Match", result);
+        cv::imshow(algo_name +" Match - original", result);
+
+
+        cv::Scalar value_t = H.at<uchar>(0,0);
+        double a = value_t.val[0];
+        value_t = H.at<uchar>(0,1);
+        double b = value_t.val[0];
+        value_t = H.at<uchar>(0,2);
+        double c = value_t.val[0];
+        value_t = H.at<uchar>(1,0);
+        double d = value_t.val[0];
+        value_t = H.at<uchar>(1,1);
+        double e = value_t.val[0];
+        value_t = H.at<uchar>(1,2);
+        double f = value_t.val[0];
+
+        double p = sqrt(a*a + b*b);
+        double r = (a*e - b*d)/(p);
+        double q = (a*d+b*e)/(a*e - b*d);
+        double theta = atan2(b,a);
+        qInfo("Rotation    :\t %.2f deg",((theta*180.)/3.14159));
+        qInfo("Translation :\t %.0f px,\t %.0f px",c,f);
+        qInfo("Scale       :\t %.2f\t%.2f",p,r);
+        qInfo("Shear       :\t %.2f",q);
 
         return;
 }
