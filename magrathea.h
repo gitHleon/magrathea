@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTextEdit>
 #include <opencv2/opencv.hpp>
+#include "fiducial_locations.h"
 
 namespace Ui {
 class Magrathea;
@@ -74,6 +75,7 @@ private:
     QVBoxLayout *mCameraLayout;
     MotionHandler *mMotionHandler;
     QTimer *mPositionTimer;
+    fiducial_locations *f_locations;
 
     int autoRepeatDelay;
     int autoRepeatInterval;

@@ -117,7 +117,7 @@ void Focus_finder::find_focus(double &focus_height)
     }//while (!focus not found)
 
     log->append("Focus: max z : "+QString::number(Z_MAX)+
-                    " ;  stddev_MAX : "+QString::number(StdDev_MAX));
+                " ;  stddev_MAX : "+QString::number(StdDev_MAX));
     double Z_out = 0.;
     perform_fit(Z_out);log->append("Focus fit z : "+QString::number(Z_out));
     focus_height = Z_out;
@@ -230,7 +230,7 @@ void::Focus_finder::Eval_syst_moving(){
         }
         double StdDev_t = eval_stddev(mat_from_outside);
         log->append("<< i : "+QString::number(i)+
-                        " ; z : "+QString::number(gantry->whereAmI().at(2))+
+                    " ; z : "+QString::number(gantry->whereAmI().at(2))+
                     " ; std dev : "+QString::number(StdDev_t));
         gantry->moveZBy(z_step);
         Sleeper::sleep(1);

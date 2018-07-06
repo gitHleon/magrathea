@@ -166,6 +166,10 @@ Magrathea::Magrathea(QWidget *parent) :
     //add the layout to the frame area in the GUI
     ui->frame->setLayout(mCameraLayout);
 
+    //////////////////7
+    f_locations = new fiducial_locations();
+    ///////////////////
+
     //------------------------------------------
     //gantry
     autoRepeatDelay=1000;//ms
@@ -559,11 +563,18 @@ void Magrathea::Calibration_2_ButtonClicked()
 void Magrathea::calibrationCaller(int input){
     //Eventually add conmmand to move the gantry to the place where the
     //calibration area is.
+    /////////////////////////////////////////
+    //    cv::Point2f temp_coord;
+    //    std::string temp_str = "dumb";
+    //    f_locations->initialise();
+    //    bool status = f_locations->get_value(1,temp_str,temp_coord);
+    //    std::cout<<"st: "<<status<<" identifier: "<<temp_str<<" ; x: "<< temp_coord.x<<" y: "<<temp_coord.y<<std::endl;
+    //    return;
+    ////////////////////////////////////////
     mCamera->stop(); //closing QCamera
     Calibrator * calibrator = new Calibrator(this);
 
     bool from_file = ui->calib_from_file_Box->isChecked();
-    //CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
 
     if (!cap.isOpened()){
@@ -585,7 +596,6 @@ void Magrathea::calibrationCaller(int input){
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    //cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
     cv::Mat mat_from_camera;
     if(from_file){
         std::string Images[12] = {"C:/Temporary_files/BNL_images/image_000_600_60_15.png",

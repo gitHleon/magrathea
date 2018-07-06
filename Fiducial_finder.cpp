@@ -321,10 +321,10 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         //const int DescriptorAlgorithm = ui->algorithm_box->value();//set as input to the function
         std::string algo_name = "none";
         if(DescriptorAlgorithm == 0){
-            detector = cv::xfeatures2d ::SURF::create();
+            detector = cv::xfeatures2d::SURF::create();
             algo_name = "SURF";
         }else if (DescriptorAlgorithm == 1){
-            detector = cv::xfeatures2d ::SIFT::create();
+            detector = cv::xfeatures2d::SIFT::create();
             algo_name = "SIFT";
         }else if (DescriptorAlgorithm == 2){
             //https://docs.opencv.org/2.4/modules/features2d/doc/feature_detection_and_description.html

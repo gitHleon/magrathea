@@ -374,6 +374,7 @@ bool ACSCMotionHandler::moveTo(double x, double y, double z, double speed)
 //------------------------------------------
 bool ACSCMotionHandler::moveXTo(double x, double speed) {
     qInfo("moving x axis to %.3f mm at %.3f mm/s speed", x, speed);
+    //change to acsc_ExtToPoint sec 4.15 C library manual
     if(acsc_SetVelocity(gantry,X_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed X axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,X_axis,x,ACSC_SYNCHRONOUS) != 0) { //move to destination here
@@ -562,6 +563,7 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
 //------------------------------------------
 bool ACSCMotionHandler::runX(double direction, double speed)
 {
+    //see jog functions
     qWarning("Could not free run along X axis");
     return true;
 }
@@ -618,6 +620,7 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
     double position_tmp = -99999.9;
     if(!gantryConnected)
         return position;
+    //try difference with acsc_GetTargetPosition sec 4.16 C library manual
     if(acsc_GetFPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error get position X axis: %d ",acsc_GetLastError());
     position[0] = position_tmp;
