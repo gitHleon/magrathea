@@ -9,6 +9,7 @@ ACSCMotionHandler::ACSCMotionHandler() :
     xAxisEnabled(false),
     yAxisEnabled(false),
     zAxisEnabled(false),
+    z_2_AxisEnabled(false),
     uAxisEnabled(false)
     {
     gantry = NULL;
@@ -36,16 +37,11 @@ ACSCMotionHandler::~ACSCMotionHandler() {
             qWarning("Error stopping all axes: %d ",acsc_GetLastError());
         else
             qWarning("stopped all axes");
-        if(acsc_CloseSimulator() == 0 )
-            qWarning("Closing simulator error: %d ",acsc_GetLastError());
-        else
-            qWarning("closed simulator");
-        ///////////////////////////////////////////////
         //connection functions: see: SPiiPlus C Library Reference Programmer Guide.pdf
-        //if(!acsc_CloseComm(gantry));
-        //  qWarning("Closing gantry connection error: %d ",acsc_GetLastError());
-        //else
-        //  qWarning("Connection closed");
+        if(!acsc_CloseComm(gantry))
+            qWarning("Closing gantry connection error: %d ",acsc_GetLastError());
+        else
+            qWarning("Connection closed");
         ///////////////////////////////////////////////
     }
 }
@@ -70,14 +66,11 @@ bool ACSCMotionHandler::connectGantry(bool flag)
                 qInfo("Application %s connection closed.",str.toLocal8Bit().constData());
         }
         //end of closing pending connections
-
-        //add code for real gantry in comment
         qInfo("connecting gantry...");
-        gantry = acsc_OpenCommSimulator(); //connect gantry here
         ///////////////////////////////////////////////
         //connection functions: see: SPiiPlus C Library Reference Programmer Guide.pdf
-        //gantry = acsc_OpenCommSerial(1,ACSC_AUTO);
-        //gantry = acsc_OpenCommEthernetTCP(<address>,<port>); //see manual for reference
+        int Port = 703;//to be verified
+        gantry = acsc_OpenCommEthernetTCP("10.0.0.1",Port); //see manual for reference <----
         //gantry = acsc_OpenCommEthernetUDP(<address>,<port>); //see manual for reference
         ///////////////////////////////////////////////
         if(gantry == ACSC_INVALID){ //connect gantry here
@@ -92,13 +85,14 @@ bool ACSCMotionHandler::connectGantry(bool flag)
         }
     } else {
         qInfo("disconnecting gantry...");
-        if (acsc_CloseSimulator() != 0 ) { //disconnect gantry here
-            qInfo("gantry disconnected");
-            gantryConnected=false;
-            return true;
-        }else {
+        if(!acsc_CloseComm(gantry)){
+            qWarning("Closing gantry connection error: %d ",acsc_GetLastError());
             qWarning("could not disconnect gantry");
             return false;
+        }else{
+            qWarning("Connection closed");
+            gantryConnected=false;
+            return true;
         }
     }
     return true;
@@ -113,8 +107,8 @@ bool ACSCMotionHandler::disconnectGantry()
 //------------------------------------------
 bool ACSCMotionHandler::stop(){
     qInfo("stopping...");
-    int Axes[5] = {X_axis,Y_axis,
-                         Z_axis,U_axis,-1};
+    int Axes[6] = {X_axis,Y_axis,Z_axis,
+                         Z_2_axis,U_axis,-1};
     if (acsc_BreakM(gantry,Axes,ACSC_SYNCHRONOUS) != 0) { //stop here
         qInfo("stop");
         return true;
@@ -145,8 +139,8 @@ bool ACSCMotionHandler::enableAxes(bool flag)
 {
     if (flag) {
         qInfo("enabling axes...");
-        int Axes[5] = {X_axis,Y_axis,
-                             Z_axis,U_axis,-1};
+        int Axes[6] = {X_axis,Y_axis,Z_axis,
+                             Z_2_axis,U_axis,-1};
         if (acsc_EnableM(gantry,Axes,ACSC_SYNCHRONOUS) != 0 ) { //enable all axes here
             qInfo("axes enabled");
             return true;
@@ -237,7 +231,7 @@ bool ACSCMotionHandler::enableZAxis(bool flag)
             zAxisEnabled=true;
             return true;
         } else {
-            qInfo("Error initiating axis 2: %d ",acsc_GetLastError());
+            qInfo("Error initiating axis z: %d ",acsc_GetLastError());
             qInfo("could not enable z axis");
             return false;
         }
@@ -250,6 +244,35 @@ bool ACSCMotionHandler::enableZAxis(bool flag)
             return true;
         } else {
             qInfo("could not disable z axis");
+            return false;
+        }
+    }
+    return true;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::enableZ_2_Axis(bool flag)
+{
+    if (flag) {
+        qInfo("enabling z 2 axis...");
+        if (acsc_Enable(gantry,Z_2_axis,ACSC_SYNCHRONOUS) != 0 ) { //enable z axis here
+            qInfo("z 2 axis enabled");
+            z_2_AxisEnabled=true;
+            return true;
+        } else {
+            qInfo("Error initiating axis z 2: %d ",acsc_GetLastError());
+            qInfo("could not enable z 2 axis");
+            return false;
+        }
+    } else {
+        qInfo("disabling z 2 axis...");
+        if (true) { //disable z axis here
+            //add axes disabling function
+            qInfo("z 2 axis disabled");
+            zAxisEnabled=false;
+            return true;
+        } else {
+            qInfo("could not disable z 2 axis");
             return false;
         }
     }
@@ -310,6 +333,12 @@ bool ACSCMotionHandler::disableZAxis()
 }
 
 //------------------------------------------
+bool ACSCMotionHandler::disableZ_2_Axis()
+{
+    return enableZ_2_Axis(false);
+}
+
+//------------------------------------------
 bool ACSCMotionHandler::disableUAxis()
 {
     return enableUAxis(false);
@@ -324,6 +353,7 @@ bool ACSCMotionHandler::home() {
     homeX();
     homeY();
     homeZ();
+    homeZ_2();
     homeU();
     return true;
 }
@@ -350,9 +380,16 @@ bool ACSCMotionHandler::homeZ() {
 }
 
 //------------------------------------------
+bool ACSCMotionHandler::homeZ_2() {
+    qInfo("homing z 2 axis...");
+    moveZTo(Home_coord[3],default_speed);
+    return true;
+}
+
+//------------------------------------------
 bool ACSCMotionHandler::homeU() {
     qInfo("homing u axis...");
-    moveUTo(Home_coord[3],default_angular_speed);
+    moveUTo(Home_coord[4],default_angular_speed);
     return true;
 }
 
@@ -363,10 +400,22 @@ bool ACSCMotionHandler::homeU() {
 //------------------------------------------
 bool ACSCMotionHandler::moveTo(double x, double y, double z, double speed)
 {
-    qInfo("moving to (%.3f mm, %.3f mm, %.3f mm) at %.3f mm/s speed...", x, y, z, speed);
-    moveXTo(x,speed);
-    moveYTo(y,speed);
-    moveZTo(z,speed);
+    x = x+0.01;
+    y = y+0.01;
+    z = z+0.01;
+    speed = speed + 0.01;
+    qInfo("Deprecated in Valencia, use the function with array input");
+    return true;
+}
+//------------------------------------------
+bool ACSCMotionHandler::moveTo(double positions[4], double speed)
+{
+    qInfo("moving to (%.3f mm, %.3f mm, %.3f mm, %.3f mm) at %.3f mm/s speed...",
+          positions[0],positions[1],positions[2],positions[3], speed);
+    moveXTo(positions[0],speed);
+    moveYTo(positions[1],speed);
+    moveZTo(positions[2],speed);
+    moveZ_2_To(positions[3],speed);
     qInfo("...");
     return true;
 }
@@ -436,6 +485,27 @@ bool ACSCMotionHandler::moveZTo(double z, double speed) {
 }
 
 //------------------------------------------
+bool ACSCMotionHandler::moveZ_2_To(double z, double speed) {
+    qInfo("moving z 2 axis to %.3f mm at %.3f mm/s speed", z, speed);
+    if(acsc_SetVelocity(gantry,Z_2_axis,speed,ACSC_SYNCHRONOUS) == 0)
+        qWarning("Error gantry, setting speed Z axis: %d ",acsc_GetLastError());
+    if (acsc_ToPoint(gantry,0,Z_2_axis,z,ACSC_SYNCHRONOUS) != 0) { //move to destination here
+        if(acsc_WaitMotionEnd(gantry,Z_2_axis,TimeOut) == 0)
+            qWarning("Error gantry, waiting motion Z 2 axis to end: %d ",acsc_GetLastError());//wait
+        qInfo("moved Z 2 axis to destination");
+        emit updatePositions_s();
+        return true;
+    } else {
+        qWarning("Error gantry, motion Z 2 axis: %d ",acsc_GetLastError());
+        qWarning("could not move Z 2 axis to destination");
+        emit updatePositions_s();
+        return false;
+    }
+    emit updatePositions_s();
+    return true;
+}
+
+//------------------------------------------
 bool ACSCMotionHandler::moveUTo(double u, double speed) {
     qInfo("moving U axis to %.3f <set angle units> at %.3f <set angle units>/s speed", u, speed);
     if(acsc_SetVelocity(gantry,U_axis,speed,ACSC_SYNCHRONOUS) == 0)
@@ -461,12 +531,25 @@ bool ACSCMotionHandler::moveUTo(double u, double speed) {
 // NOTE units in mm, mm/s and deg/s
 
 //------------------------------------------
-bool ACSCMotionHandler::moveBy(double x, double y, double z, double speed)
+bool ACSCMotionHandler::moveBy(double x, double y, double z,double speed)
 {
-    qInfo("moving to (%.3f mm, %.3f mm, %.3f mm) at %.3f mm/s speed...", x, y, z, speed);
-    moveXTo(x,speed);
-    moveYTo(y,speed);
-    moveZTo(z,speed);
+    x = x+0.01;
+    y = y+0.01;
+    z = z+0.01;
+    speed = speed + 0.01;
+    qInfo("Deprecated in Valencia, use the function with array input");
+    return true;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::moveBy(double positions[4], double speed)
+{
+    qInfo("moving to (%.3f mm, %.3f mm, %.3f mm, %.3f mm) at %.3f mm/s speed...",
+          positions[0],positions[1],positions[2],positions[3],speed);
+    moveXTo(positions[0],speed);
+    moveYTo(positions[1],speed);
+    moveZTo(positions[2],speed);
+    moveZ_2_To(positions[3],speed);
     qInfo("...");
     return true;
 }
@@ -535,6 +618,27 @@ bool ACSCMotionHandler::moveZBy(double z, double speed) {
 }
 
 //------------------------------------------
+bool ACSCMotionHandler::moveZ_2_By(double z, double speed) {
+    qInfo("moving z 2 axis to %.3f mm at %.3f mm/s speed", z, speed);
+    if(acsc_SetVelocity(gantry,Z_2_axis,speed,ACSC_SYNCHRONOUS) == 0)
+        qWarning("Error gantry, setting speed Z 2 axis: %d ",acsc_GetLastError());
+    if (acsc_ToPoint(gantry,ACSC_AMF_RELATIVE,Z_2_axis,z,ACSC_SYNCHRONOUS) != 0) { //move to destination here
+        if(acsc_WaitMotionEnd(gantry,Z_2_axis,TimeOut) == 0)
+            qWarning("Error gantry, waiting motion Z 2 axis to end: %d ",acsc_GetLastError());//wait
+        qInfo("moved Z 2 axis to destination");
+        emit updatePositions_s();
+        return true;
+    } else {
+        qWarning("Error gantry, motion Z 2 axis: %d ",acsc_GetLastError());
+        qWarning("could not move Z 2 axis to destination");
+        emit updatePositions_s();
+        return false;
+    }
+    emit updatePositions_s();
+    return true;
+}
+
+//------------------------------------------
 bool ACSCMotionHandler::moveUBy(double u, double speed) {
     qInfo("moving U axis to %.3f <set angle units> at %.3f <set angle units>/s speed", u, speed);
     if(acsc_SetVelocity(gantry,U_axis,speed,ACSC_SYNCHRONOUS) == 0)
@@ -555,7 +659,6 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
     return true;
 }
 
-
 //******************************************
 // free run
 // NOTE units in mm, mm/s and deg/s
@@ -563,64 +666,163 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
 //------------------------------------------
 bool ACSCMotionHandler::runX(double direction, double speed)
 {
-    //see jog functions
-    qWarning("Could not free run along X axis");
+    double sign = direction<0?-1.:1.;
+    speed = fabs(speed);
+    qInfo("free running %s X axis at %.1f mm/s", direction<0?"-":"+", speed);
+    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,X_axis,sign*speed,ACSC_SYNCHRONOUS)){
+        qInfo("running X axis");
+        return true;
+    }else{
+        qWarning("Error gantry, jog motion X axis: %d ",acsc_GetLastError());
+        qWarning("Could not free run along X axis");
+        return false;
+    }
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::endRunX()
 {
+    if(!acsc_Halt(gantry,X_axis,ACSC_SYNCHRONOUS)){
+        qInfo("STOP running X axis");
+        return true;
+    }else{
+        qWarning("Error gantry,stop jog motion X axis: %d ",acsc_GetLastError());
+        return false;
+    }
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::runY(double direction, double speed)
 {
-    qWarning("Could not free run along Y axis");
+    double sign = direction<0?-1.:1.;
+    speed = fabs(speed);
+    qInfo("free running %s Y axis at %.1f mm/s", direction<0?"-":"+", speed);
+    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,Y_axis,sign*speed,ACSC_SYNCHRONOUS)){
+        qInfo("running Y axis");
+        return true;
+    }else{
+        qWarning("Error gantry, jog motion Y axis: %d ",acsc_GetLastError());
+        qWarning("Could not free run along Y axis");
+        return false;
+    }
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::endRunY()
 {
+    if(!acsc_Halt(gantry,Y_axis,ACSC_SYNCHRONOUS)){
+        qInfo("STOP running Y axis");
+        return true;
+    }else{
+        qWarning("Error gantry,stop jog motion Y axis: %d ",acsc_GetLastError());
+        return false;
+    }
     return true;
+
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::runZ(double direction, double speed)
 {
-    qWarning("Could not free run along Z axis");
+    double sign = direction<0?-1.:1.;
+    speed = fabs(speed);
+    qInfo("free running %s Z axis at %.1f mm/s", direction<0?"-":"+", speed);
+    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_axis,sign*speed,ACSC_SYNCHRONOUS)){
+        qInfo("running Z axis");
+        return true;
+    }else{
+        qWarning("Error gantry, jog motion Z axis: %d ",acsc_GetLastError());
+        qWarning("Could not free run along Z axis");
+        return false;
+    }
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::endRunZ()
 {
+    if(!acsc_Halt(gantry,Z_axis,ACSC_SYNCHRONOUS)){
+        qInfo("STOP running Z axis");
+        return true;
+    }else{
+        qWarning("Error gantry,stop jog motion Z axis: %d ",acsc_GetLastError());
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::runZ_2(double direction, double speed)
+{
+    double sign = direction<0?-1.:1.;
+    speed = fabs(speed);
+    qInfo("free running %s Z 2 axis at %.1f mm/s", direction<0?"-":"+", speed);
+    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_2_axis,sign*speed,ACSC_SYNCHRONOUS)){
+        qInfo("running Z 2 axis");
+        return true;
+    }else{
+        qWarning("Error gantry, jog motion Z 2 axis: %d ",acsc_GetLastError());
+        qWarning("Could not free run along Z 2 axis");
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::endRunZ_2()
+{
+    if(!acsc_Halt(gantry,Z_2_axis,ACSC_SYNCHRONOUS)){
+        qInfo("STOP running Z 2 axis");
+        return true;
+    }else{
+        qWarning("Error gantry,stop jog motion Z 2 axis: %d ",acsc_GetLastError());
+        return false;
+    }
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::runU(double direction, double speed)
 {
-    qWarning("Could not free run along U axis");
+    double sign = direction<0?-1.:1.;
+    speed = fabs(speed);
+    qInfo("free running %s U axis at %.1f rad/s", direction<0?"-":"+", speed);
+    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,U_axis,sign*speed,ACSC_SYNCHRONOUS)){
+        qInfo("running U axis");
+        return true;
+    }else{
+        qWarning("Error gantry, jog motion U axis: %d ",acsc_GetLastError());
+        qWarning("Could not free run along U axis");
+        return false;
+    }
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::endRunU()
 {
+    if(!acsc_Halt(gantry,U_axis,ACSC_SYNCHRONOUS)){
+        qInfo("STOP running U axis");
+        return true;
+    }else{
+        qWarning("Error gantry,stop jog motion U axis: %d ",acsc_GetLastError());
+        return false;
+    }
     return true;
 }
 
 //******************************************
 //gantry current position
 std::vector<double> ACSCMotionHandler::whereAmI() {
-    std::vector<double> position = {-99990.0,-99990.0,-99990.0,-99990.0};
+    std::vector<double> position = {-99990.0,-99990.0,-99990.0,-99990.0,-99990.0};
     double position_tmp = -99999.9;
     if(!gantryConnected)
         return position;
     //try difference with acsc_GetTargetPosition sec 4.16 C library manual
+    //try also APOS variable
     if(acsc_GetFPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error get position X axis: %d ",acsc_GetLastError());
     position[0] = position_tmp;
@@ -633,9 +835,30 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
         qWarning("Error get position Z axis: %d ",acsc_GetLastError());
     position[2] = position_tmp;
 
-    if(acsc_GetFPosition(gantry,U_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    if(acsc_GetFPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
     position[3] = position_tmp;
 
+    if(acsc_GetFPosition(gantry,U_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    position[4] = position_tmp;
+
     return position;
+}
+
+//******************************************
+// Safety limits for movement
+bool ACSCMotionHandler::validate_target_pos(double x, double y, double z_1,double z_2)
+{
+    qInfo("checking if target position is safe");
+    if (y > 300 && z_2 < -40) { // condition is true, position is NOT valid, abort motion.
+        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
+        return true;
+    } else if (y < -300 && z_1 < -40){
+        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
+        return true;
+    } else { // conditions are not met, position is valid, carry on...
+        return false;
+    }
+    return true;
 }

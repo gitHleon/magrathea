@@ -182,6 +182,33 @@ bool MotionHandler::enableZAxis(bool flag)
 }
 
 //------------------------------------------
+bool MotionHandler::enableZ_2_Axis(bool flag)
+{
+    if (flag) {
+        qInfo("enabling z 2 axis...");
+        if (true) { //enable z axis here
+            qInfo("z 2 axis enabled");
+            zAxisEnabled=true;
+            return true;
+        } else {
+            qInfo("could not enable z 2 axis");
+            return false;
+        }
+    } else {
+        qInfo("disabling z 2 axis...");
+        if (true) { //disable z axis here
+            qInfo("z 2 axis disabled");
+            zAxisEnabled=false;
+            return true;
+        } else {
+            qInfo("could not disable z 2 axis");
+            return false;
+        }
+    }
+    return true;
+}
+
+//------------------------------------------
 bool MotionHandler::enableUAxis(bool flag)
 {
     if (flag) {
@@ -230,6 +257,12 @@ bool MotionHandler::disableYAxis()
 bool MotionHandler::disableZAxis()
 {
     return enableZAxis(false);
+}
+
+//------------------------------------------
+bool MotionHandler::disableZ_2_Axis()
+{
+    return enableZ_2_Axis(false);
 }
 
 //------------------------------------------
@@ -288,6 +321,19 @@ bool MotionHandler::homeZ() {
         return true;
     } else {
         qWarning("could not home z axis");
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------
+bool MotionHandler::homeZ_2() {
+    qInfo("homing z 2 axis...");
+    if (true) { //home z axis here
+        qInfo("z 2 axis homed");
+        return true;
+    } else {
+        qWarning("could not home z 2 axis");
         return false;
     }
     return true;
@@ -364,8 +410,21 @@ bool MotionHandler::moveZTo(double z, double speed) {
 }
 
 //------------------------------------------
+bool MotionHandler::moveZ_2_To(double z, double speed) {
+    qInfo("moving z 2 axis to %.3f mm at %.3f mm/s speed", z, speed);
+    if (true) { //move to destination here
+        qInfo("moved z 2 axis to destination");
+        return true;
+    } else {
+        qWarning("could not move z 2 axis to destination");
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------
 bool MotionHandler::moveUTo(double u, double speed) {
-    qInfo("moving u axis to %.3f mm at %.3f mm/s speed", u, speed);
+    qInfo("moving u axis to %.3f deg at %.3f deg/s speed", u, speed);
     if (true) { //move to destination here
         qInfo("moved u axis to destination");
         return true;
@@ -428,6 +487,19 @@ bool MotionHandler::moveZBy(double z, double speed) {
         return true;
     } else {
         qWarning("could not move z axis by step");
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------
+bool MotionHandler::moveZ_2_By(double z, double speed) {
+    qInfo("moving z 2 axis by %.3f mm at %.3f mm/s", z, speed);
+    if (true) { //move by step here
+        qInfo("moved z 2 axis by step");
+        return true;
+    } else {
+        qWarning("could not move z 2 axis by step");
         return false;
     }
     return true;
@@ -530,6 +602,32 @@ bool MotionHandler::endRunZ()
 }
 
 //------------------------------------------
+bool MotionHandler::runZ_2(double direction, double speed)
+{
+    qInfo("free running %s z 2 axis at %.3f mm/s", direction<0?"-":"+", speed);
+    if (true) { //free run here
+        return true;
+    } else {
+        qWarning("could not free run along z 2 axis");
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------
+bool MotionHandler::endRunZ_2()
+{
+    qInfo("stop free running along z 2 axis");
+    if (true) { //stop free run here
+        return true;
+    } else {
+        qWarning("could not stop free run along z 2 axis");
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------
 bool MotionHandler::runU(double direction, double speed)
 {
     qInfo("free running %su axis at %.3f deg/s", direction<0?"-":"+", speed);
@@ -563,4 +661,18 @@ std::vector<double> MotionHandler::whereAmI() {
         position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     }
     return position;
+}
+
+//******************************************
+// Safety limits for movement
+bool MotionHandler::validate_target_pos(double x, double y, double z)
+{
+    qInfo("checking if target position is safe");
+    if (true) { // condition is true, position is NOT valid, abort motion.
+        return true;
+    } else { // conditions are not met, position is valid, carry on...
+        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
+        return false;
+    }
+    return true;
 }

@@ -720,6 +720,8 @@ void Magrathea::enableAxesClicked(bool checked)
     ui->negativeYButton->setEnabled(mMotionHandler->yAxisEnabled);
     ui->positiveZButton->setEnabled(mMotionHandler->zAxisEnabled);
     ui->negativeZButton->setEnabled(mMotionHandler->zAxisEnabled);
+    ui->positiveZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
+    ui->negativeZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
     ui->positiveUButton->setEnabled(mMotionHandler->uAxisEnabled);
     ui->negativeUButton->setEnabled(mMotionHandler->uAxisEnabled);
 
@@ -765,6 +767,8 @@ void Magrathea::enableJoystickFreeRun(bool checked)
         ui->negativeYButton->disconnect();
         ui->positiveZButton->disconnect();
         ui->negativeZButton->disconnect();
+        ui->positiveZ_2_Button->disconnect();
+        ui->negativeZ_2_Button->disconnect();
         ui->positiveUButton->disconnect();
         ui->negativeUButton->disconnect();
 
@@ -776,6 +780,8 @@ void Magrathea::enableJoystickFreeRun(bool checked)
         connect(ui->negativeYButton, SIGNAL(pressed()), this, SLOT(freeRun()));
         connect(ui->positiveZButton, SIGNAL(pressed()), this, SLOT(freeRun()));
         connect(ui->negativeZButton, SIGNAL(pressed()), this, SLOT(freeRun()));
+        connect(ui->positiveZ_2_Button, SIGNAL(pressed()), this, SLOT(freeRun()));
+        connect(ui->negativeZ_2_Button, SIGNAL(pressed()), this, SLOT(freeRun()));
         connect(ui->positiveUButton, SIGNAL(pressed()), this, SLOT(freeRun()));
         connect(ui->negativeUButton, SIGNAL(pressed()), this, SLOT(freeRun()));
 
@@ -786,6 +792,8 @@ void Magrathea::enableJoystickFreeRun(bool checked)
         connect(ui->negativeYButton, &QPushButton::released, mMotionHandler, &MotionHandler::endRunY);
         connect(ui->positiveZButton, &QPushButton::released, mMotionHandler, &MotionHandler::endRunZ);
         connect(ui->negativeZButton, &QPushButton::released, mMotionHandler, &MotionHandler::endRunZ);
+        connect(ui->positiveZ_2_Button, &QPushButton::released, mMotionHandler, &MotionHandler::endRunZ_2);
+        connect(ui->negativeZ_2_Button, &QPushButton::released, mMotionHandler, &MotionHandler::endRunZ_2);
         connect(ui->positiveUButton, &QPushButton::released, mMotionHandler, &MotionHandler::endRunU);
         connect(ui->negativeUButton, &QPushButton::released, mMotionHandler, &MotionHandler::endRunU);
     }
@@ -807,6 +815,10 @@ void Magrathea::freeRun()
         mMotionHandler->runZ(+1, ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZButton)
         mMotionHandler->runZ(-1, ui->zAxisSpeedDoubleSpinBox->value());
+    else if (sender() == ui->positiveZ_2_Button)
+        mMotionHandler->runZ_2(+1, ui->zAxisSpeedDoubleSpinBox->value());
+    else if (sender() == ui->negativeZ_2_Button)
+        mMotionHandler->runZ_2(-1, ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveUButton)
         mMotionHandler->runU(+1, ui->uAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeUButton)
@@ -828,6 +840,8 @@ void Magrathea::enableJoystickStepMotion(bool checked)
         ui->negativeYButton->disconnect();
         ui->positiveZButton->disconnect();
         ui->negativeZButton->disconnect();
+        ui->positiveZ_2_Button->disconnect();
+        ui->negativeZ_2_Button->disconnect();
         ui->positiveUButton->disconnect();
         ui->negativeUButton->disconnect();
 
@@ -839,6 +853,8 @@ void Magrathea::enableJoystickStepMotion(bool checked)
         connect(ui->negativeYButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
         connect(ui->positiveZButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
         connect(ui->negativeZButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
+        connect(ui->positiveZ_2_Button, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
+        connect(ui->negativeZ_2_Button, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
         connect(ui->positiveUButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
         connect(ui->negativeUButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
 
@@ -852,6 +868,8 @@ void Magrathea::enableJoystickStepMotion(bool checked)
         ui->zAxisStepMoveButton->setAutoRepeatDelay(autoRepeatDelay);
         ui->positiveZButton->setAutoRepeatDelay(autoRepeatDelay);
         ui->negativeZButton->setAutoRepeatDelay(autoRepeatDelay);
+        ui->positiveZ_2_Button->setAutoRepeatDelay(autoRepeatDelay);
+        ui->negativeZ_2_Button->setAutoRepeatDelay(autoRepeatDelay);
         ui->uAxisStepMoveButton->setAutoRepeatDelay(autoRepeatDelay);
         ui->positiveUButton->setAutoRepeatDelay(autoRepeatDelay);
         ui->negativeUButton->setAutoRepeatDelay(autoRepeatDelay);
@@ -866,6 +884,8 @@ void Magrathea::enableJoystickStepMotion(bool checked)
         ui->zAxisStepMoveButton->setAutoRepeatInterval(autoRepeatInterval);
         ui->positiveZButton->setAutoRepeatInterval(autoRepeatInterval);
         ui->negativeZButton->setAutoRepeatInterval(autoRepeatInterval);
+        ui->positiveZ_2_Button->setAutoRepeatInterval(autoRepeatInterval);
+        ui->negativeZ_2_Button->setAutoRepeatInterval(autoRepeatInterval);
         ui->uAxisStepMoveButton->setAutoRepeatInterval(autoRepeatInterval);
         ui->positiveUButton->setAutoRepeatInterval(autoRepeatInterval);
         ui->negativeUButton->setAutoRepeatInterval(autoRepeatInterval);
@@ -889,6 +909,10 @@ void Magrathea::stepMotion()
         mMotionHandler->moveZBy(+1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZButton)
         mMotionHandler->moveZBy(-1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+    else if (sender() == ui->positiveZ_2_Button)//
+        mMotionHandler->moveZ_2_By(+1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+    else if (sender() == ui->negativeZ_2_Button)
+        mMotionHandler->moveZ_2_By(-1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveUButton)
         mMotionHandler->moveUBy(+1*abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeUButton)
