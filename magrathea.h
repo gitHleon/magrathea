@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTextEdit>
+//#include <QShortcut>
 #include <opencv2/opencv.hpp>
 #include "fiducial_locations.h"
 
@@ -79,6 +80,20 @@ private:
 
     int autoRepeatDelay;
     int autoRepeatInterval;
+
+    //keyboard shortcut for joystick
+//    QShortcut *shortcut_PX;
+//    QShortcut *shortcut_NX;
+//    QShortcut *shortcut_PY;
+//    QShortcut *shortcut_NY;
+//    QShortcut *shortcut_PZ;
+//    QShortcut *shortcut_NZ;
+//    QShortcut *shortcut_PZ_2;
+//    QShortcut *shortcut_NZ_2;
+//    QShortcut *shortcut_PU;
+//    QShortcut *shortcut_NU;
+//    QShortcut *shortcut_STOP;
+
 };
 
 #endif // MAGRATHEA_H

@@ -226,6 +226,18 @@ Magrathea::Magrathea(QWidget *parent) :
     //joystick
     connect(ui->freeRunRadioButton, SIGNAL(clicked(bool)), this, SLOT(enableJoystickFreeRun(bool)));
     connect(ui->stepRadioButton,    SIGNAL(clicked(bool)), this, SLOT(enableJoystickStepMotion(bool)));
+    //SHORTCUTS
+//    shortcut_PX   = Qshortcut(QKeySequence("Alt+W"),this);
+//    shortcut_NX   = Qshortcut(QKeySequence("Alt+S"),this);
+//    shortcut_PY   = Qshortcut(QKeySequence("Alt+A"),this);
+//    shortcut_NY   = Qshortcut(QKeySequence("Alt+D"),this);
+//    shortcut_PZ   = Qshortcut(QKeySequence("Alt+Q"),this);
+//    shortcut_NZ   = Qshortcut(QKeySequence("Alt+Z"),this);
+//    shortcut_PZ_2 = Qshortcut(QKeySequence("Alt+E"),this);
+//    shortcut_NZ_2 = Qshortcut(QKeySequence("Alt+C"),this);
+//    shortcut_PU   = Qshortcut(QKeySequence("Alt+R"),this);
+//    shortcut_NU   = Qshortcut(QKeySequence("Alt+V"),this);
+//    shortcut_STOP = Qshortcut(QKeySequence("Alt+X"),this);
 
     //home axes
     connect(ui->axesHomeButton,  &QPushButton::clicked, mMotionHandler, &MotionHandler::home);

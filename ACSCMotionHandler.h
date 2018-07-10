@@ -111,8 +111,8 @@ private:
     const int X_axis = ACSC_AXIS_0;
     const int Y_axis = ACSC_AXIS_1;
     //AXIS 2 is y axis jog, AXIS 3 does not exists
-    const int Z_axis = ACSC_AXIS_4;
-    const int Z_2_axis = ACSC_AXIS_5;
+    const int Z_axis = ACSC_AXIS_5;//I need the camera to stay on axis z1
+    const int Z_2_axis = ACSC_AXIS_4;
     const int U_axis = ACSC_AXIS_6;
 
     const int TimeOut = 10000;//timeout in ms

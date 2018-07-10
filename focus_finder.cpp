@@ -13,6 +13,8 @@
 #include <ACSCMotionHandler.h>
 #endif
 
+//add thresholds and indeces as Valencia and Vancouver variables
+
 //from exaple http://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/
 
 Focus_finder::Focus_finder(QObject *parent) : QObject(parent)
@@ -80,8 +82,7 @@ void Focus_finder::find_focus(double &focus_height)
                 log->append("Error : Not able to open camera.");
                 return;
             }
-            z_from_outside = gantry->whereAmI().at(2);
-            //SetImage(mat_from_outside);
+            z_from_outside = gantry->whereAmI().at(z_pos_index);
             StdDev_t = eval_stddev(mat_from_outside);
             if(StdDev_t > StdDev_MAX){
                 StdDev_MAX = StdDev_t;
@@ -112,7 +113,7 @@ void Focus_finder::find_focus(double &focus_height)
         z_temp = Z_MAX;//destination
         if(!Focus_found)
             z_temp = z_temp - z_step*4; //4 steps correction, only if focus is not found, otherwise move to focus position
-        z_temp = z_temp - gantry->whereAmI().at(2); // relative distance from current position
+        z_temp = z_temp - gantry->whereAmI().at(z_pos_index); // relative distance from current position
         gantry->moveZBy(z_temp);
     }//while (!focus not found)
 
@@ -121,7 +122,7 @@ void Focus_finder::find_focus(double &focus_height)
     double Z_out = 0.;
     perform_fit(Z_out);log->append("Focus fit z : "+QString::number(Z_out));
     focus_height = Z_out;
-    z_temp = Z_out - gantry->whereAmI().at(2); // relative distance from current position
+    z_temp = Z_out - gantry->whereAmI().at(z_pos_index); // relative distance from current position
     gantry->moveZBy(z_temp);
 }
 
@@ -170,7 +171,7 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
 }
 
 void Focus_finder::Eval_syst_scan(){
-    double z_temp = gantry->whereAmI().at(2);
+    double z_temp = gantry->whereAmI().at(z_pos_index);
     double z_step = 0.01;// to be changed according the units of your gantry and shape of focus-heught distribution
     log->append("Performing systematic scan near the focus position : "
                     +QString::number(z_temp));
@@ -187,13 +188,13 @@ void Focus_finder::Eval_syst_scan(){
         //SetImage(mat_from_outside);
         double StdDev_t = eval_stddev(mat_from_outside);
         log->append("i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(2))+
+                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
                     " ; Laplacian : "+QString::number(StdDev_t));
     }
 }
 
 void Focus_finder::Eval_syst_time(){
-    double z_temp = gantry->whereAmI().at(2);
+    double z_temp = gantry->whereAmI().at(z_pos_index);
     log->append("Performing systematic scan in time (2 sec intervals) at position : "
                     +QString::number(z_temp));
     cv::Mat mat_from_outside;
@@ -208,14 +209,14 @@ void Focus_finder::Eval_syst_time(){
 
         double StdDev_t = eval_stddev(mat_from_outside);
         log->append("i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(2))+
+                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
                     " ; std dev : "+QString::number(StdDev_t));
     }
 }
 
 void::Focus_finder::Eval_syst_moving(){
     cv::Mat mat_from_outside;
-    double z_temp = gantry->whereAmI().at(2);
+    double z_temp = gantry->whereAmI().at(z_pos_index);
     log->append("Performing systematic fwd-bkwd stability scan at position : "
                     +QString::number(z_temp));
     double z_step = 1.5; // to be changed according the units of your gantry and shape of focus-height distribution
@@ -230,7 +231,7 @@ void::Focus_finder::Eval_syst_moving(){
         }
         double StdDev_t = eval_stddev(mat_from_outside);
         log->append("<< i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(2))+
+                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
                     " ; std dev : "+QString::number(StdDev_t));
         gantry->moveZBy(z_step);
         Sleeper::sleep(1);
@@ -242,7 +243,7 @@ void::Focus_finder::Eval_syst_moving(){
         }
         StdDev_t = eval_stddev(mat_from_outside);
         log->append(">>>> i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(2))+
+                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
                     " ; std dev : "+QString::number(StdDev_t));
     }
 }
