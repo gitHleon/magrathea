@@ -171,13 +171,14 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
 }
 
 void Focus_finder::Eval_syst_scan(){
+    int numb_steps = 20;
     double z_temp = gantry->whereAmI().at(z_pos_index);
     double z_step = 0.01;// to be changed according the units of your gantry and shape of focus-heught distribution
     log->append("Performing systematic scan near the focus position : "
                     +QString::number(z_temp));
-    gantry->moveZBy(-z_step*6);
+    gantry->moveZBy(-z_step*numb_steps*0.6);
     cv::Mat mat_from_outside;
-    for(int i=0; i<11;i++){
+    for(int i=0; i<numb_steps;i++){
         gantry->moveZBy(z_step);
         if (cap.isOpened()){
             cap >> mat_from_outside;
@@ -189,7 +190,7 @@ void Focus_finder::Eval_syst_scan(){
         double StdDev_t = eval_stddev(mat_from_outside);
         log->append("i : "+QString::number(i)+
                     " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
-                    " ; Laplacian : "+QString::number(StdDev_t));
+                    " ; Std. dev. : "+QString::number(StdDev_t));
     }
 }
 
@@ -198,7 +199,7 @@ void Focus_finder::Eval_syst_time(){
     log->append("Performing systematic scan in time (2 sec intervals) at position : "
                     +QString::number(z_temp));
     cv::Mat mat_from_outside;
-    for(int i=0; i<11;i++){
+    for(int i=0; i<7;i++){
         Sleeper::sleep(2);
         if (cap.isOpened()){
             cap >> mat_from_outside;
@@ -215,12 +216,13 @@ void Focus_finder::Eval_syst_time(){
 }
 
 void::Focus_finder::Eval_syst_moving(){
+    int numb_steps = 10;
     cv::Mat mat_from_outside;
     double z_temp = gantry->whereAmI().at(z_pos_index);
     log->append("Performing systematic fwd-bkwd stability scan at position : "
                     +QString::number(z_temp));
     double z_step = 1.5; // to be changed according the units of your gantry and shape of focus-height distribution
-    for(int i=0; i<11;i++){
+    for(int i=0; i<numb_steps;i++){
         gantry->moveZBy(-z_step);
         Sleeper::sleep(1);
         if (cap.isOpened()){
