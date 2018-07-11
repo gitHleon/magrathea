@@ -69,8 +69,8 @@ bool ACSCMotionHandler::connectGantry(bool flag)
         qInfo("connecting gantry...");
         ///////////////////////////////////////////////
         //connection functions: see: SPiiPlus C Library Reference Programmer Guide.pdf
-        int Port = 703;//to be verified
-        gantry = acsc_OpenCommEthernetTCP("10.0.0.1",Port); //see manual for reference <----
+        int Port = 701;//to be verified
+        gantry = acsc_OpenCommEthernetTCP("10.0.0.100",Port); //see manual for reference <----
         //gantry = acsc_OpenCommEthernetUDP(<address>,<port>); //see manual for reference
         ///////////////////////////////////////////////
         if(gantry == ACSC_INVALID){ //connect gantry here
@@ -351,7 +351,7 @@ bool ACSCMotionHandler::disableUAxis()
 bool ACSCMotionHandler::home() {
 
     qInfo("Running homing buffer...");
-    acsc_RunBuffer(gantry,0,NULL,ACSC_SYNCHRONOUS);
+    acsc_RunBuffer(gantry,1,NULL,ACSC_SYNCHRONOUS);
     //    qInfo("homing axes...");
     //    homeX();
     //    homeY();
