@@ -493,14 +493,14 @@ bool AerotechMotionHandler::endRunU()
 //******************************************
 //gantry current position
 std::vector<double> AerotechMotionHandler::whereAmI() {
-    std::vector<double> position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
+    std::vector<double> position = {qQNaN(), qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     if (gantryConnected) {
         double x, y, z, u;
         A3200StatusGetItem(gantry, xIndex, STATUSITEM_PositionFeedback, 0, &x);
         A3200StatusGetItem(gantry, yIndex, STATUSITEM_PositionFeedback, 0, &y);
         A3200StatusGetItem(gantry, zIndex, STATUSITEM_PositionFeedback, 0, &z);
         A3200StatusGetItem(gantry, uIndex, STATUSITEM_PositionFeedback, 0, &u);
-        position = {x, y, z, u};
+        position = {x, y, z, u,-99999.8};//to avoid seg fault with valencia 5 axis system
     }
     return position;
 }

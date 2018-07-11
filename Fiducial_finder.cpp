@@ -4,6 +4,29 @@ bool Distance_sorter(cv::DMatch m_1,cv::DMatch m_2){
     return m_1.distance < m_2.distance;
 }
 
+//std::string type2str(int type) {
+//  std::string r;
+
+//  uchar depth = type & CV_MAT_DEPTH_MASK;
+//  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+//  switch ( depth ) {
+//    case CV_8U:  r = "8U"; break;
+//    case CV_8S:  r = "8S"; break;
+//    case CV_16U: r = "16U"; break;
+//    case CV_16S: r = "16S"; break;
+//    case CV_32S: r = "32S"; break;
+//    case CV_32F: r = "32F"; break;
+//    case CV_64F: r = "64F"; break;
+//    default:     r = "User"; break;
+//  }
+
+//  r += "C";
+//  r += (chans+'0');
+
+//  return r;
+//}
+
 FiducialFinder::FiducialFinder(QWidget *parent) : QWidget(parent)
 {}
 
@@ -195,13 +218,13 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
     int center_rows = image.rows/2.0; //Defining the center of the image
     int center_cols = image.cols/2.0;
     //cv::Point2i Center_point = {center_cols,center_rows};
-    const int window_size = 420; //1000
+    const int window_size = 420;
     cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
     cv::Mat RoiImage = image(regione_interessante);
     //cv::circle(image, cv::Point(center_cols,center_rows), 3, cv::Scalar(206,78,137), -1, 8, 0 );
     cv::imshow("0 image",image);
     cv::imshow("0.1 image ROI",RoiImage);
-    cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
+    cv::Mat image_gray = RoiImage.clone(); // Selecting ROI from the input image
     cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
     cv::medianBlur(image_gray,image_gray,5);
     cv::imshow("1 blur",RoiImage);
@@ -437,7 +460,19 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         //cv::Mat H = cv::findHomography(obj, scene, CV_RANSAC,5.0);
         //cv::Mat H = cv::estimateAffine2D(obj, scene,cv::noArray(),cv::RANSAC,5.0);
         cv::Mat H = cv::estimateAffinePartial2D(obj, scene,cv::noArray(),cv::RANSAC,5.0);
-
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //WARNING!!! It works but output H is inconsitent with what said by manual of function estimateAffinePartial2D.
+        //understand meaning of matrix elements
+        ///////////////////////////////////////////////////////////////////////////////////////
+        std::cout<<"H.rows: "<<H.rows <<" ;H.cols "<<H.cols<<std::endl;
+        //cv::Scalar value_t = image_gray.at<uchar>(row,col);
+        std::cout<<"H[1,1] "<< cv::Scalar(H.at<uchar>(0,0)).val[0]<<" H[1,2] "<<cv::Scalar(H.at<uchar>(0,1)).val[0]<<" H[1,3] "<<cv::Scalar(H.at<uchar>(0,2)).val[0]<<std::endl;
+        std::cout<<"H[2,1] "<< cv::Scalar(H.at<uchar>(1,0)).val[0]<<" H[2,2] "<<cv::Scalar(H.at<uchar>(1,1)).val[0]<<" H[2,3] "<<cv::Scalar(H.at<uchar>(1,2)).val[0]<<std::endl;
+        qInfo("H[1,1] : %2.2f H[1,2] : %2.2f H[1,3] : %2.2f",cv::Scalar(H.at<uchar>(0,0)).val[0],cv::Scalar(H.at<uchar>(0,1)).val[0],cv::Scalar(H.at<uchar>(0,2)).val[0]);
+        qInfo("H[2,1] : %2.2f H[2,2] : %2.2f H[2,3] : %2.2f",cv::Scalar(H.at<uchar>(1,0)).val[0],cv::Scalar(H.at<uchar>(1,1)).val[0],cv::Scalar(H.at<uchar>(1,2)).val[0]);
+        //std::string ty = type2str( H.type() );
+        //qInfo("Matrix: %s %dx%d \n", ty.c_str(), H.cols, H.rows );
+        //Matrix type 64FC1
         //-- Get the corners from the image_1 ( the object to be "detected" )
         std::vector<cv::Point2f> obj_corners(4);
         obj_corners[0] = cv::Point(0, 0);
@@ -467,7 +502,6 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::line(image, scene_corners[2] + RoItranslation, scene_corners[3] + RoItranslation, cv::Scalar(0, 255, 0), 4);
         cv::line(image, scene_corners[3] + RoItranslation, scene_corners[0] + RoItranslation, cv::Scalar(0, 255, 0), 4);
         cv::circle(image, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
-
 
         cv::namedWindow(algo_name +" Match", CV_WINDOW_KEEPRATIO);
         cv::imshow(algo_name +" Match", result);

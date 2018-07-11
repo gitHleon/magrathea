@@ -105,7 +105,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="joystickTab">
         <attribute name="title">
@@ -317,58 +317,6 @@
            </item>
            <item>
             <layout class="QGridLayout" name="gridLayout_8">
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="xAxisPositionLine2">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <spacer name="horizontalSpacer_6">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Fixed</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>50</width>
-                 <height>16</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="1" column="2">
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Fixed</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>50</width>
-                 <height>16</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="3">
-              <widget class="QLabel" name="label_69">
-               <property name="text">
-                <string>u axis [deg]:</string>
-               </property>
-              </widget>
-             </item>
              <item row="1" column="0">
               <widget class="QLabel" name="label_67">
                <property name="text">
@@ -447,6 +395,81 @@
                 <string>x axis [mm]:</string>
                </property>
               </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="xAxisPositionLine2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>50</width>
+                 <height>16</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="1" column="2">
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>50</width>
+                 <height>16</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="label_69">
+               <property name="text">
+                <string>u axis [deg]:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>z 2 axis [mm]:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <spacer name="horizontalSpacer_18">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLineEdit" name="z_2_AxisPositionLine2"/>
              </item>
             </layout>
            </item>
@@ -838,6 +861,9 @@
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item row="2" column="4">
@@ -897,6 +923,196 @@
             </item>
             <item row="1" column="2">
              <widget class="QDoubleSpinBox" name="xAxisPositionMoveDoubleSpinBox"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QGroupBox" name="zAxisGroupBox">
+           <property name="title">
+            <string>z axis</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_19">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="zAxisEnableBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>enable</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_52">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>move by [mm]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QPushButton" name="zAxisStepMoveButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>move</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_53">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>position [mm]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <spacer name="horizontalSpacer_24">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLineEdit" name="zAxisPositionLine">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="5">
+             <spacer name="horizontalSpacer_56">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_51">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>speed [mm/s]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="zAxisPositionMoveButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>move</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="zAxisHomeButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>home</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="label_50">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>move to [mm]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="4">
+             <widget class="QCheckBox" name="zAxisStepRepeatBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>continous</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5">
+             <spacer name="horizontalSpacer_58">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="4">
+             <widget class="QDoubleSpinBox" name="zAxisSpeedDoubleSpinBox"/>
+            </item>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="zAxisStepDoubleSpinBox"/>
+            </item>
+            <item row="1" column="2">
+             <widget class="QDoubleSpinBox" name="zAxisPositionMoveDoubleSpinBox"/>
             </item>
            </layout>
           </widget>
@@ -1088,14 +1304,40 @@
            </layout>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QGroupBox" name="zAxisGroupBox">
+         <item row="5" column="0">
+          <widget class="QGroupBox" name="uAxisGroupBox">
            <property name="title">
-            <string>z axis</string>
+            <string>u axis</string>
            </property>
-           <layout class="QGridLayout" name="gridLayout_19">
+           <layout class="QGridLayout" name="gridLayout_20">
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_57">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>position [deg]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_55">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>speed [deg/s]:</string>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="0">
-             <widget class="QCheckBox" name="zAxisEnableBox">
+             <widget class="QCheckBox" name="uAxisEnableBox">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1107,21 +1349,37 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="label_52">
+            <item row="0" column="2">
+             <widget class="QLineEdit" name="uAxisPositionLine">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="text">
-               <string>move by [mm]:</string>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
+            <item row="2" column="5">
+             <spacer name="horizontalSpacer_62">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
             <item row="2" column="3">
-             <widget class="QPushButton" name="zAxisStepMoveButton">
+             <widget class="QPushButton" name="uAxisStepMoveButton">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1133,21 +1391,21 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_53">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+            <item row="1" column="5">
+             <spacer name="horizontalSpacer_60">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-              <property name="text">
-               <string>position [mm]:</string>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
               </property>
-             </widget>
+             </spacer>
             </item>
             <item row="0" column="5">
-             <spacer name="horizontalSpacer_24">
+             <spacer name="horizontalSpacer_25">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -1158,48 +1416,9 @@
                </size>
               </property>
              </spacer>
-            </item>
-            <item row="0" column="2">
-             <widget class="QLineEdit" name="zAxisPositionLine">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="5">
-             <spacer name="horizontalSpacer_56">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="0" column="3">
-             <widget class="QLabel" name="label_51">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>speed [mm/s]:</string>
-              </property>
-             </widget>
             </item>
             <item row="1" column="3">
-             <widget class="QPushButton" name="zAxisPositionMoveButton">
+             <widget class="QPushButton" name="uAxisPositionMoveButton">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1212,7 +1431,7 @@
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QPushButton" name="zAxisHomeButton">
+             <widget class="QPushButton" name="uAxisHomeButton">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1221,76 +1440,6 @@
               </property>
               <property name="text">
                <string>home</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="label_50">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>move to [mm]:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="4">
-             <widget class="QCheckBox" name="zAxisStepRepeatBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>continous</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="5">
-             <spacer name="horizontalSpacer_58">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="0" column="4">
-             <widget class="QDoubleSpinBox" name="zAxisSpeedDoubleSpinBox"/>
-            </item>
-            <item row="2" column="2">
-             <widget class="QDoubleSpinBox" name="zAxisStepDoubleSpinBox"/>
-            </item>
-            <item row="1" column="2">
-             <widget class="QDoubleSpinBox" name="zAxisPositionMoveDoubleSpinBox"/>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QGroupBox" name="uAxisGroupBox">
-           <property name="title">
-            <string>u axis</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_20">
-            <item row="0" column="2">
-             <widget class="QLineEdit" name="uAxisPositionLine">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
@@ -1320,122 +1469,8 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="uAxisHomeButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>home</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="uAxisEnableBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>enable</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="5">
-             <spacer name="horizontalSpacer_62">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="0" column="5">
-             <spacer name="horizontalSpacer_25">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="2" column="3">
-             <widget class="QPushButton" name="uAxisStepMoveButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>move</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_57">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>position [deg]:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="3">
-             <widget class="QLabel" name="label_55">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>speed [deg/s]:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QPushButton" name="uAxisPositionMoveButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>move</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="5">
-             <spacer name="horizontalSpacer_60">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
+            <item row="0" column="4">
+             <widget class="QDoubleSpinBox" name="uAxisSpeedDoubleSpinBox"/>
             </item>
             <item row="2" column="1">
              <widget class="QLabel" name="label_56">
@@ -1450,9 +1485,6 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="4">
-             <widget class="QDoubleSpinBox" name="uAxisSpeedDoubleSpinBox"/>
-            </item>
             <item row="2" column="2">
              <widget class="QDoubleSpinBox" name="uAxisStepDoubleSpinBox"/>
             </item>
@@ -1462,7 +1494,7 @@
            </layout>
           </widget>
          </item>
-         <item row="5" column="0">
+         <item row="6" column="0">
           <spacer name="verticalSpacer_6">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -1474,6 +1506,139 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="4" column="0">
+          <widget class="QGroupBox" name="Z_2_AxisGroupBox">
+           <property name="title">
+            <string>z 2 axis</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_11">
+            <item row="1" column="5">
+             <spacer name="horizontalSpacer_14">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="z_2_AxisHomeButton">
+              <property name="text">
+               <string>home</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>move to [mm]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>speed [mm/s]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLineEdit" name="z_2_AxisPositionLine">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>move by [mm]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5">
+             <spacer name="horizontalSpacer_17">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="5">
+             <spacer name="horizontalSpacer_11">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="z_2_AxisEnableBox">
+              <property name="text">
+               <string>enable</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>position [mm]:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QDoubleSpinBox" name="z_2_AxisPositionMoveDoubleSpinBox"/>
+            </item>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="z_2_AxisStepDoubleSpinBox"/>
+            </item>
+            <item row="0" column="4">
+             <widget class="QDoubleSpinBox" name="z_2_AxisSpeedDoubleSpinBox"/>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="z_2_AxisPositionMoveButton">
+              <property name="text">
+               <string>move</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QPushButton" name="z_2_AxisStepMoveButton">
+              <property name="text">
+               <string>move</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="4">
+             <widget class="QCheckBox" name="z_2_AxisStepRepeatBox">
+              <property name="text">
+               <string>continuous</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </item>
         </layout>
        </item>

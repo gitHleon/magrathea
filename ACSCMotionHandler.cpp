@@ -349,12 +349,16 @@ bool ACSCMotionHandler::disableUAxis()
 
 //------------------------------------------
 bool ACSCMotionHandler::home() {
-    qInfo("homing axes...");
-    homeX();
-    homeY();
-    homeZ();
-    homeZ_2();
-    homeU();
+
+    qInfo("Running homing buffer...");
+    acsc_RunBuffer(gantry,0,NULL,ACSC_SYNCHRONOUS);
+    //    qInfo("homing axes...");
+    //    homeX();
+    //    homeY();
+    //    homeZ();
+    //    homeZ_2();
+    //    homeU();
+    qInfo("Done...");
     return true;
 }
 
@@ -822,7 +826,7 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
     if(!gantryConnected)
         return position;
     //try difference with acsc_GetTargetPosition sec 4.16 C library manual
-    //try also APOS variable
+    //try also APOS variable with acsc_ReadReal function (4.4.3)
     if(acsc_GetFPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error get position X axis: %d ",acsc_GetLastError());
     position[0] = position_tmp;
@@ -835,12 +839,12 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
         qWarning("Error get position Z axis: %d ",acsc_GetLastError());
     position[2] = position_tmp;
 
-    if(acsc_GetFPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
-        qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
-    position[3] = position_tmp;
-
     if(acsc_GetFPosition(gantry,U_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    position[3] = position_tmp;
+
+    if(acsc_GetFPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
     position[4] = position_tmp;
 
     return position;

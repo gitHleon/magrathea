@@ -22,6 +22,29 @@
 #include <ACSCMotionHandler.h>
 #endif
 
+//std::string type2str(int type) {
+//  std::string r;
+
+//  uchar depth = type & CV_MAT_DEPTH_MASK;
+//  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+//  switch ( depth ) {
+//    case CV_8U:  r = "8U"; break;
+//    case CV_8S:  r = "8S"; break;
+//    case CV_16U: r = "16U"; break;
+//    case CV_16S: r = "16S"; break;
+//    case CV_32S: r = "32S"; break;
+//    case CV_32F: r = "32F"; break;
+//    case CV_64F: r = "64F"; break;
+//    default:     r = "User"; break;
+//  }
+
+//  r += "C";
+//  r += (chans+'0');
+
+//  return r;
+//}
+
 //******************************************
 Magrathea::Magrathea(QWidget *parent) :
     QWidget(parent),
@@ -60,11 +83,13 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->xAxisPositionLine->setFont(font);
     ui->yAxisPositionLine->setFont(font);
     ui->zAxisPositionLine->setFont(font);
+    ui->z_2_AxisPositionLine->setFont(font);
     ui->uAxisPositionLine->setFont(font);
 
     ui->xAxisPositionLine2->setFont(font);
     ui->yAxisPositionLine2->setFont(font);
     ui->zAxisPositionLine2->setFont(font);
+    ui->z_2_AxisPositionLine2->setFont(font);
     ui->uAxisPositionLine2->setFont(font);
 
     //step move
@@ -86,6 +111,12 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->zAxisStepDoubleSpinBox->setMaximum(300.0);
     ui->zAxisStepDoubleSpinBox->setDecimals(3);
     ui->zAxisStepDoubleSpinBox->setAlignment(Qt::AlignRight);
+    ui->z_2_AxisStepDoubleSpinBox->setFont(font);
+    ui->z_2_AxisStepDoubleSpinBox->setValue(10.0);
+    ui->z_2_AxisStepDoubleSpinBox->setMinimum(-100.0);
+    ui->z_2_AxisStepDoubleSpinBox->setMaximum(100.0);
+    ui->z_2_AxisStepDoubleSpinBox->setDecimals(3);
+    ui->z_2_AxisStepDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->uAxisStepDoubleSpinBox->setFont(font);
     ui->uAxisStepDoubleSpinBox->setValue(10.0);
     ui->uAxisStepDoubleSpinBox->setDecimals(3);
@@ -110,6 +141,12 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->zAxisPositionMoveDoubleSpinBox->setMaximum(0.0);
     ui->zAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->zAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
+    ui->z_2_AxisPositionMoveDoubleSpinBox->setFont(font);
+    ui->z_2_AxisPositionMoveDoubleSpinBox->setValue(0.0);
+    ui->z_2_AxisPositionMoveDoubleSpinBox->setMinimum(-100.0);
+    ui->z_2_AxisPositionMoveDoubleSpinBox->setMaximum(100.0);
+    ui->z_2_AxisPositionMoveDoubleSpinBox->setDecimals(3);
+    ui->z_2_AxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->uAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->uAxisPositionMoveDoubleSpinBox->setValue(0.0);
     ui->uAxisPositionMoveDoubleSpinBox->setMinimum(0.0);
@@ -136,6 +173,12 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->zAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->zAxisSpeedDoubleSpinBox->setDecimals(1);
     ui->zAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
+    ui->z_2_AxisSpeedDoubleSpinBox->setFont(font);
+    ui->z_2_AxisSpeedDoubleSpinBox->setValue(30.0);
+    ui->z_2_AxisSpeedDoubleSpinBox->setMinimum(0.0);
+    ui->z_2_AxisSpeedDoubleSpinBox->setMaximum(50.0);
+    ui->z_2_AxisSpeedDoubleSpinBox->setDecimals(1);
+    ui->z_2_AxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->uAxisSpeedDoubleSpinBox->setFont(font);
     ui->uAxisSpeedDoubleSpinBox->setValue(30.0);
     ui->uAxisSpeedDoubleSpinBox->setMinimum(0.0);
@@ -179,6 +222,7 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->xAxisEnableBox->setEnabled(false);
     ui->yAxisEnableBox->setEnabled(false);
     ui->zAxisEnableBox->setEnabled(false);
+    ui->z_2_AxisEnableBox->setEnabled(false);
     ui->uAxisEnableBox->setEnabled(false);
     ui->resetErrorButton->setEnabled(false);
     enableAxesClicked(false);
@@ -189,6 +233,7 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->xAxisPositionLine2->setReadOnly(true);
     ui->yAxisPositionLine2->setReadOnly(true);
     ui->zAxisPositionLine2->setReadOnly(true);
+    ui->z_2_AxisPositionLine2->setReadOnly(true);
     ui->uAxisPositionLine2->setReadOnly(true);
 
     //------------------------------------------
@@ -196,6 +241,7 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->xAxisPositionLine->setReadOnly(true);
     ui->yAxisPositionLine->setReadOnly(true);
     ui->zAxisPositionLine->setReadOnly(true);
+    ui->z_2_AxisPositionLine->setReadOnly(true);
     ui->uAxisPositionLine->setReadOnly(true);
 
     //------------------------------------------
@@ -219,6 +265,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->xAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
     connect(ui->yAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
     connect(ui->zAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
+    connect(ui->z_2_AxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
     connect(ui->uAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
     connect(ui->resetErrorButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::acknowledgeMotionFaultGantry);
     connect(ui->stopButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::stop);
@@ -244,24 +291,28 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->xAxisHomeButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::homeX);
     connect(ui->yAxisHomeButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::homeY);
     connect(ui->zAxisHomeButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::homeZ);
+    connect(ui->z_2_AxisHomeButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::homeZ_2);
     connect(ui->uAxisHomeButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::homeU);
 
     //position move
     connect(ui->xAxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
     connect(ui->yAxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
     connect(ui->zAxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
+    connect(ui->z_2_AxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
     connect(ui->uAxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
 
     //step motion
     connect(ui->xAxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
     connect(ui->yAxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
     connect(ui->zAxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
+    connect(ui->z_2_AxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
     connect(ui->uAxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
 
     //step motion autorepeat box
     connect(ui->xAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->yAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->zAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
+    connect(ui->z_2_AxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->uAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
 }
 
@@ -280,10 +331,12 @@ void Magrathea::updatePosition(){
     ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
     ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
     ui->zAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
+    ui->z_2_AxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
     ui->uAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
     ui->xAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
     ui->yAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
     ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
+    ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
     return;
 }
@@ -305,6 +358,7 @@ void Magrathea::enableCameraBoxClicked(bool clicked)
 void Magrathea::focusButtonClicked()
 {
     qInfo(" > camera focus ... ");
+
     Focus_finder * FocusFinder = new Focus_finder(this);
     mCamera->stop(); //closing QCamera
 
@@ -313,11 +367,22 @@ void Magrathea::focusButtonClicked()
         //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
+    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     FocusFinder->Set_camera(cap);
     double focus_position = -1.;
     FocusFinder->find_focus(focus_position);
-    qInfo(" > camera focus : %5.7f",focus_position);
+    qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;
     cap.release();         //Going back to QCameraa
     mCamera->start();
@@ -335,7 +400,8 @@ void Magrathea::captureButtonClicked()
     mCameraImageCapture->setCaptureDestination(QCameraImageCapture::CaptureToFile);
     QImageEncoderSettings imageEncoderSettings;
     imageEncoderSettings.setCodec("image/jpeg");
-    imageEncoderSettings.setResolution(1600, 1200);
+    //imageEncoderSettings.setResolution(1600, 1200);
+    imageEncoderSettings.setResolution(3856, 2764);
     mCameraImageCapture->setEncodingSettings(imageEncoderSettings);
     mCamera->setCaptureMode(QCamera::CaptureStillImage);
     mCamera->start();
@@ -364,15 +430,15 @@ void Magrathea::Camera_test(){
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
-    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));//https://www.fourcc.org/yuv.php
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
 
     //cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
     //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 20.0);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
 
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
@@ -456,7 +522,7 @@ void Magrathea::FiducialFinderCaller(const int &input){
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 4.0);
@@ -471,22 +537,22 @@ void Magrathea::FiducialFinderCaller(const int &input){
     bool from_file = ui->calib_from_file_Box->isChecked();
 
     if(from_file){
-//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",//0  F
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0005.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0023.bmp",//5
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",//10
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_3.bmp"
-//                                 };
+        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",//0  F
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0005.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0023.bmp",//5
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",//10
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
+                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_3.bmp"
+                                 };
 //        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0001.bmp",//0   5dot
 //                                  "C:/Users/Silicio/WORK/Full_Size/W080/0002.bmp",
 //                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008.bmp",
@@ -503,22 +569,22 @@ void Magrathea::FiducialFinderCaller(const int &input){
 //                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027_5.bmp",
 //                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027.bmp"
 //                                 };
-        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0015.bmp",//0   5dot
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0015_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0015_3.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0039.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0046.bmp",//4
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0007.bmp",//5
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0009.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0010.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014_3.bmp",//9
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0016.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0024_3.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0038.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0058_2.bmp"
-                                 };
+//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0015.bmp",//0   5dot
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0015_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0015_3.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0039.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0046.bmp",//4
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0007.bmp",//5
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0009.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0010.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014_3.bmp",//9
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0016.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0024_3.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0038.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0058_2.bmp"
+//                                 };
         Ffinder->SetImage(Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
         Ffinder->Set_calibration(1.6); //get calibration from a private variable
@@ -599,10 +665,11 @@ void Magrathea::calibrationCaller(int input){
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 5.0);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
 
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
@@ -664,7 +731,8 @@ void Magrathea::connectGantryBoxClicked(bool checked)
             qWarning("could not connect to gantry");
         }
     } else {
-        if (mMotionHandler->xAxisEnabled || mMotionHandler->yAxisEnabled || mMotionHandler->zAxisEnabled || mMotionHandler->uAxisEnabled) {
+        if (mMotionHandler->xAxisEnabled || mMotionHandler->yAxisEnabled || mMotionHandler->zAxisEnabled ||
+                mMotionHandler->z_2_AxisEnabled || mMotionHandler->uAxisEnabled) {
             ui->connectGantryBox->setChecked(true);
             qWarning("disable axes before disconnecting from gantry");
         } else {
@@ -681,6 +749,7 @@ void Magrathea::connectGantryBoxClicked(bool checked)
     ui->xAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
     ui->yAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
     ui->zAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
+    ui->z_2_AxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
     ui->uAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
     ui->resetErrorButton->setEnabled(mMotionHandler->gantryConnected);
 
@@ -696,33 +765,39 @@ void Magrathea::enableAxesClicked(bool checked)
         ui->xAxisEnableBox->setChecked(true);
         ui->yAxisEnableBox->setChecked(true);
         ui->zAxisEnableBox->setChecked(true);
+        ui->z_2_AxisEnableBox->setChecked(true);
         ui->uAxisEnableBox->setChecked(true);
     } else if (sender() == ui->disableAxesButton) {
         ui->xAxisEnableBox->setChecked(false);
         ui->yAxisEnableBox->setChecked(false);
         ui->zAxisEnableBox->setChecked(false);
+        ui->z_2_AxisEnableBox->setChecked(false);
         ui->uAxisEnableBox->setChecked(false);
     } else if (sender() == ui->xAxisEnableBox) mMotionHandler->enableXAxis(checked);
-      else if (sender() == ui->yAxisEnableBox) mMotionHandler->enableYAxis(checked);
-      else if (sender() == ui->zAxisEnableBox) mMotionHandler->enableZAxis(checked);
-      else if (sender() == ui->uAxisEnableBox) mMotionHandler->enableUAxis(checked);
+    else if (sender() == ui->yAxisEnableBox) mMotionHandler->enableYAxis(checked);
+    else if (sender() == ui->zAxisEnableBox) mMotionHandler->enableZAxis(checked);
+    else if (sender() == ui->z_2_AxisEnableBox) mMotionHandler->enableZ_2_Axis(checked);
+    else if (sender() == ui->uAxisEnableBox) mMotionHandler->enableUAxis(checked);
 
     //gantry connection
     ui->connectGantryBox->setEnabled(!(mMotionHandler->xAxisEnabled ||
                                        mMotionHandler->yAxisEnabled ||
                                        mMotionHandler->zAxisEnabled ||
+                                       mMotionHandler->z_2_AxisEnabled ||
                                        mMotionHandler->uAxisEnabled));
 
     //stop
     ui->stopButton->setEnabled(mMotionHandler->xAxisEnabled ||
                                mMotionHandler->yAxisEnabled ||
                                mMotionHandler->zAxisEnabled ||
+                               mMotionHandler->z_2_AxisEnabled ||
                                mMotionHandler->uAxisEnabled);
 
     //joystick
     ui->leftTabWidget->widget(0)->setEnabled(mMotionHandler->xAxisEnabled ||
                                              mMotionHandler->yAxisEnabled ||
                                              mMotionHandler->zAxisEnabled ||
+                                             mMotionHandler->z_2_AxisEnabled ||
                                              mMotionHandler->uAxisEnabled);
 
     //enable/disable buttons according to axes status
@@ -741,22 +816,26 @@ void Magrathea::enableAxesClicked(bool checked)
     ui->axesHomeButton->setEnabled(mMotionHandler->xAxisEnabled ||
                                    mMotionHandler->yAxisEnabled ||
                                    mMotionHandler->zAxisEnabled ||
+                                   mMotionHandler->z_2_AxisEnabled ||
                                    mMotionHandler->uAxisEnabled);
     ui->xAxisHomeButton->setEnabled(mMotionHandler->xAxisEnabled);
     ui->yAxisHomeButton->setEnabled(mMotionHandler->yAxisEnabled);
     ui->zAxisHomeButton->setEnabled(mMotionHandler->zAxisEnabled);
+    ui->z_2_AxisHomeButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
     ui->uAxisHomeButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     //step move
     ui->xAxisStepMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
     ui->yAxisStepMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
     ui->zAxisStepMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
+    ui->z_2_AxisStepMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
     ui->uAxisStepMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     //position move
     ui->xAxisPositionMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
     ui->yAxisPositionMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
     ui->zAxisPositionMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
+    ui->z_2_AxisPositionMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
     ui->uAxisPositionMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     return;
@@ -828,9 +907,9 @@ void Magrathea::freeRun()
     else if (sender() == ui->negativeZButton)
         mMotionHandler->runZ(-1, ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveZ_2_Button)
-        mMotionHandler->runZ_2(+1, ui->zAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->runZ_2(+1, ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZ_2_Button)
-        mMotionHandler->runZ_2(-1, ui->zAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->runZ_2(-1, ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveUButton)
         mMotionHandler->runU(+1, ui->uAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeUButton)
@@ -880,6 +959,7 @@ void Magrathea::enableJoystickStepMotion(bool checked)
         ui->zAxisStepMoveButton->setAutoRepeatDelay(autoRepeatDelay);
         ui->positiveZButton->setAutoRepeatDelay(autoRepeatDelay);
         ui->negativeZButton->setAutoRepeatDelay(autoRepeatDelay);
+        ui->z_2_AxisStepMoveButton->setAutoRepeatDelay(autoRepeatDelay);
         ui->positiveZ_2_Button->setAutoRepeatDelay(autoRepeatDelay);
         ui->negativeZ_2_Button->setAutoRepeatDelay(autoRepeatDelay);
         ui->uAxisStepMoveButton->setAutoRepeatDelay(autoRepeatDelay);
@@ -896,6 +976,7 @@ void Magrathea::enableJoystickStepMotion(bool checked)
         ui->zAxisStepMoveButton->setAutoRepeatInterval(autoRepeatInterval);
         ui->positiveZButton->setAutoRepeatInterval(autoRepeatInterval);
         ui->negativeZButton->setAutoRepeatInterval(autoRepeatInterval);
+        ui->z_2_AxisStepMoveButton->setAutoRepeatInterval(autoRepeatInterval);
         ui->positiveZ_2_Button->setAutoRepeatInterval(autoRepeatInterval);
         ui->negativeZ_2_Button->setAutoRepeatInterval(autoRepeatInterval);
         ui->uAxisStepMoveButton->setAutoRepeatInterval(autoRepeatInterval);
@@ -921,10 +1002,10 @@ void Magrathea::stepMotion()
         mMotionHandler->moveZBy(+1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZButton)
         mMotionHandler->moveZBy(-1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->positiveZ_2_Button)//
-        mMotionHandler->moveZ_2_By(+1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+    else if (sender() == ui->positiveZ_2_Button)
+        mMotionHandler->moveZ_2_By(+1*abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZ_2_Button)
-        mMotionHandler->moveZ_2_By(-1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZ_2_By(-1*abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveUButton)
         mMotionHandler->moveUBy(+1*abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeUButton)
@@ -937,6 +1018,8 @@ void Magrathea::stepMotion()
         mMotionHandler->moveYBy(ui->yAxisStepDoubleSpinBox->value(), ui->yAxisSpeedDoubleSpinBox->value());
     else if  (sender() == ui->zAxisStepMoveButton)
         mMotionHandler->moveZBy(ui->zAxisStepDoubleSpinBox->value(), ui->zAxisSpeedDoubleSpinBox->value());
+    else if  (sender() == ui->z_2_AxisStepMoveButton)
+        mMotionHandler->moveZBy(ui->z_2_AxisStepDoubleSpinBox->value(), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if  (sender() == ui->uAxisStepMoveButton)
         mMotionHandler->moveUBy(ui->uAxisStepDoubleSpinBox->value(), ui->uAxisSpeedDoubleSpinBox->value());
     return;
@@ -952,6 +1035,8 @@ void Magrathea::positionMove()
         mMotionHandler->moveYTo(ui->yAxisPositionMoveDoubleSpinBox->value(), ui->yAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->zAxisPositionMoveButton)
         mMotionHandler->moveZTo(ui->zAxisPositionMoveDoubleSpinBox->value(), ui->zAxisSpeedDoubleSpinBox->value());
+    else if (sender() == ui->z_2_AxisPositionMoveButton)
+        mMotionHandler->moveZ_2_To(ui->z_2_AxisPositionMoveDoubleSpinBox->value(), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->uAxisPositionMoveButton)
         mMotionHandler->moveUTo(ui->uAxisPositionMoveDoubleSpinBox->value(), ui->uAxisSpeedDoubleSpinBox->value());
     return;
@@ -975,6 +1060,11 @@ void Magrathea::axisStepRepeatBoxClicked(bool checked)
         ui->zAxisStepMoveButton->setAutoRepeat(checked);
         ui->positiveZButton->setAutoRepeat(checked);
         ui->negativeZButton->setAutoRepeat(checked);
+    }
+    else if (sender() == ui->z_2_AxisStepRepeatBox) {
+        ui->z_2_AxisStepMoveButton->setAutoRepeat(checked);
+        ui->positiveZ_2_Button->setAutoRepeat(checked);
+        ui->negativeZ_2_Button->setAutoRepeat(checked);
     }
     else if (sender() == ui->uAxisStepRepeatBox) {
         ui->uAxisStepMoveButton->setAutoRepeat(checked);
