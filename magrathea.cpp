@@ -729,6 +729,9 @@ void Magrathea::connectGantryBoxClicked(bool checked)
         if (!mMotionHandler->connectGantry()) {
             ui->connectGantryBox->setChecked(false);
             qWarning("could not connect to gantry");
+        } else {
+            ui->connectGantryBox->setChecked(true);
+            mMotionHandler->gantryConnected = true;
         }
     } else {
         if (mMotionHandler->xAxisEnabled || mMotionHandler->yAxisEnabled || mMotionHandler->zAxisEnabled ||
