@@ -338,6 +338,12 @@ void Magrathea::updatePosition(){
     ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
     ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+    //axes status update
+    mMotionHandler->getXAxisState();
+    mMotionHandler->getYAxisState();
+    mMotionHandler->getZAxisState();
+    mMotionHandler->getZ_2_AxisState();
+    mMotionHandler->getUAxisState();
     return;
 }
 

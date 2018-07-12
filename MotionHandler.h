@@ -50,6 +50,12 @@ public slots:
     //******************************************
     // gantry current position
     virtual std::vector<double> whereAmI();
+    // gantry current status
+    virtual bool getXAxisState();
+    virtual bool getYAxisState();
+    virtual bool getZAxisState();
+    virtual bool getZ_2_AxisState();
+    virtual bool getUAxisState();
 
     //******************************************
     // home axes

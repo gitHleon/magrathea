@@ -173,18 +173,18 @@ bool ACSCMotionHandler::enableXAxis(bool flag)
             xAxisEnabled=true;
             return true;
         } else {
-            qInfo("Error initiating axis 0: %d ",acsc_GetLastError());
+            qInfo("Error initiating axis x: %d ",acsc_GetLastError());
             qInfo("could not enable x axis");
             return false;
         }
     } else {
         qInfo("disabling x axis...");
-        if (true) { //disable x axis here
-            //add axes disabling function
+        if (acsc_Disable(gantry,X_axis,ACSC_SYNCHRONOUS)) {
             qInfo("x axis disabled");
             xAxisEnabled=false;
             return true;
         } else {
+            qInfo("Error disabling axis X: %d ",acsc_GetLastError());
             qInfo("could not disable x axis");
             return false;
         }
@@ -208,13 +208,13 @@ bool ACSCMotionHandler::enableYAxis(bool flag)
         }
     } else {
         qInfo("disabling y axis...");
-        if (true) { //disable y axis here
-            //add axes disabling function
-            qInfo("y axis disabled");
+        if (acsc_Disable(gantry,Y_axis,ACSC_SYNCHRONOUS)) {
+            qInfo("Y axis disabled");
             yAxisEnabled=false;
             return true;
         } else {
-            qInfo("could not disable y axis");
+            qInfo("Error disabling axis Y: %d ",acsc_GetLastError());
+            qInfo("could not disable Y axis");
             return false;
         }
     }
@@ -237,13 +237,13 @@ bool ACSCMotionHandler::enableZAxis(bool flag)
         }
     } else {
         qInfo("disabling z axis...");
-        if (true) { //disable z axis here
-            //add axes disabling function
-            qInfo("z axis disabled");
+        if (acsc_Disable(gantry,Z_axis,ACSC_SYNCHRONOUS)) {
+            qInfo("Z axis disabled");
             zAxisEnabled=false;
             return true;
         } else {
-            qInfo("could not disable z axis");
+            qInfo("Error disabling axis Z: %d ",acsc_GetLastError());
+            qInfo("could not disable Z axis");
             return false;
         }
     }
@@ -266,13 +266,13 @@ bool ACSCMotionHandler::enableZ_2_Axis(bool flag)
         }
     } else {
         qInfo("disabling z 2 axis...");
-        if (true) { //disable z axis here
-            //add axes disabling function
-            qInfo("z 2 axis disabled");
-            zAxisEnabled=false;
+        if (acsc_Disable(gantry,Z_2_axis,ACSC_SYNCHRONOUS)) {
+            qInfo("Z2 axis disabled");
+            z_2_AxisEnabled=false;
             return true;
         } else {
-            qInfo("could not disable z 2 axis");
+            qInfo("Error disabling axis Z: %d ",acsc_GetLastError());
+            qInfo("could not disable Z axis");
             return false;
         }
     }
@@ -295,13 +295,13 @@ bool ACSCMotionHandler::enableUAxis(bool flag)
         }
     } else {
         qInfo("disabling u axis...");
-        if (true) { //disable u axis here
-            //add axes disabling function
-            qInfo("u axis disabled");
+        if (acsc_Disable(gantry,U_axis,ACSC_SYNCHRONOUS)) {
+            qInfo("U axis disabled");
             uAxisEnabled=false;
             return true;
         } else {
-            qInfo("could not disable u axis");
+            qInfo("Error disabling axis U: %d ",acsc_GetLastError());
+            qInfo("could not disable U axis");
             return false;
         }
     }
@@ -827,6 +827,8 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
         return position;
     //try difference with acsc_GetTargetPosition sec 4.16 C library manual
     //try also APOS variable with acsc_ReadReal function (4.4.3)
+    //try difference with acsc_GetRPosition sec 4.12 C library manual
+
     if(acsc_GetFPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error get position X axis: %d ",acsc_GetLastError());
     position[0] = position_tmp;
@@ -848,6 +850,63 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
     position[4] = position_tmp;
 
     return position;
+}
+
+//******************************************
+//Get Axis states
+//------------------------------------------
+bool ACSCMotionHandler::getXAxisState(){
+    int State;
+    if(!acsc_GetMotorState(gantry,X_axis,&State,ACSC_SYNCHRONOUS)){
+        qWarning("Error get X axis state: %d ",acsc_GetLastError());
+    }else{
+        xAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+    }
+    return xAxisEnabled;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::getYAxisState(){
+    int State;
+    if(!acsc_GetMotorState(gantry,Y_axis,&State,ACSC_SYNCHRONOUS)){
+        qWarning("Error get Y axis state: %d ",acsc_GetLastError());
+    }else{
+        yAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+    }
+    return yAxisEnabled;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::getZAxisState(){
+    int State;
+    if(!acsc_GetMotorState(gantry,Z_axis,&State,ACSC_SYNCHRONOUS)){
+        qWarning("Error get Z axis state: %d ",acsc_GetLastError());
+    }else{
+        zAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+    }
+    return zAxisEnabled;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::getZ_2_AxisState(){
+    int State;
+    if(!acsc_GetMotorState(gantry,Z_2_axis,&State,ACSC_SYNCHRONOUS)){
+        qWarning("Error get Z axis state: %d ",acsc_GetLastError());
+    }else{
+        z_2_AxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+    }
+    return z_2_AxisEnabled;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::getUAxisState(){
+    int State;
+    if(!acsc_GetMotorState(gantry,U_axis,&State,ACSC_SYNCHRONOUS)){
+        qWarning("Error get U axis state: %d ",acsc_GetLastError());
+    }else{
+        uAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+    }
+    return uAxisEnabled;
 }
 
 //******************************************
