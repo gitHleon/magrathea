@@ -781,12 +781,14 @@ void Magrathea::enableAxesClicked(bool checked)
         ui->zAxisEnableBox->setChecked(true);
         ui->z_2_AxisEnableBox->setChecked(true);
         ui->uAxisEnableBox->setChecked(true);
+        mMotionHandler->enableAxes(checked);
     } else if (sender() == ui->disableAxesButton) {
         ui->xAxisEnableBox->setChecked(false);
         ui->yAxisEnableBox->setChecked(false);
         ui->zAxisEnableBox->setChecked(false);
         ui->z_2_AxisEnableBox->setChecked(false);
         ui->uAxisEnableBox->setChecked(false);
+        mMotionHandler->enableAxes(checked);
     } else if (sender() == ui->xAxisEnableBox) mMotionHandler->enableXAxis(checked);
     else if (sender() == ui->yAxisEnableBox) mMotionHandler->enableYAxis(checked);
     else if (sender() == ui->zAxisEnableBox) mMotionHandler->enableZAxis(checked);

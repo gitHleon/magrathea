@@ -140,7 +140,7 @@ bool ACSCMotionHandler::enableAxes(bool flag)
         qInfo("enabling axes...");
         int Axes[6] = {X_axis,Y_axis,Z_axis,
                              Z_2_axis,U_axis,-1};
-        if (acsc_EnableM(gantry,Axes,ACSC_SYNCHRONOUS) != 0 ) { //enable all axes here
+        if (acsc_EnableM(gantry,Axes,ACSC_SYNCHRONOUS)) { //enable all axes here
             qInfo("axes enabled");
             return true;
         } else {
@@ -150,7 +150,7 @@ bool ACSCMotionHandler::enableAxes(bool flag)
         }
     } else {
         qInfo("disabling axes...");
-        if (acsc_DisableAll(gantry,ACSC_SYNCHRONOUS) != 0 ) { //disable all axes here
+        if (acsc_DisableAll(gantry,ACSC_SYNCHRONOUS)) { //disable all axes here
             qInfo("axes disabled");
             return true;
         } else {
@@ -167,7 +167,7 @@ bool ACSCMotionHandler::enableXAxis(bool flag)
 {
     if (flag) {
         qInfo("enabling x axis...");
-        if (acsc_Enable(gantry,X_axis,ACSC_SYNCHRONOUS) != 0 ) { //enable x axis here
+        if (acsc_Enable(gantry,X_axis,ACSC_SYNCHRONOUS)) { //enable x axis here
             qInfo("x axis enabled");
             xAxisEnabled=true;
             return true;
@@ -196,7 +196,7 @@ bool ACSCMotionHandler::enableYAxis(bool flag)
 {
     if (flag) {
         qInfo("enabling y axis...");
-        if (acsc_Enable(gantry,Y_axis,ACSC_SYNCHRONOUS) != 0 ) { //enable y axis here
+        if (acsc_Enable(gantry,Y_axis,ACSC_SYNCHRONOUS)) { //enable y axis here
             qInfo("y axis enabled");
             yAxisEnabled=true;
             return true;
@@ -225,7 +225,7 @@ bool ACSCMotionHandler::enableZAxis(bool flag)
 {
     if (flag) {
         qInfo("enabling z axis...");
-        if (acsc_Enable(gantry,Z_axis,ACSC_SYNCHRONOUS) != 0 ) { //enable z axis here
+        if (acsc_Enable(gantry,Z_axis,ACSC_SYNCHRONOUS)) { //enable z axis here
             qInfo("z axis enabled");
             zAxisEnabled=true;
             return true;
@@ -254,7 +254,7 @@ bool ACSCMotionHandler::enableZ_2_Axis(bool flag)
 {
     if (flag) {
         qInfo("enabling z 2 axis...");
-        if (acsc_Enable(gantry,Z_2_axis,ACSC_SYNCHRONOUS) != 0 ) { //enable z axis here
+        if (acsc_Enable(gantry,Z_2_axis,ACSC_SYNCHRONOUS)) { //enable z axis here
             qInfo("z 2 axis enabled");
             z_2_AxisEnabled=true;
             return true;
@@ -283,7 +283,7 @@ bool ACSCMotionHandler::enableUAxis(bool flag)
 {
     if (flag) {
         qInfo("enabling u axis...");
-        if (acsc_Enable(gantry,U_axis,ACSC_SYNCHRONOUS) != 0 ) { //enable u axis here
+        if (acsc_Enable(gantry,U_axis,ACSC_SYNCHRONOUS)) { //enable u axis here
             qInfo("u axis enabled");
             uAxisEnabled=true;
             return true;
@@ -861,7 +861,7 @@ bool ACSCMotionHandler::getXAxisState(){
     if(!acsc_GetMotorState(gantry,X_axis,&State,ACSC_SYNCHRONOUS)){
         qWarning("Error get X axis state: %d ",acsc_GetLastError());
     }else{
-        xAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+        xAxisEnabled = State & ACSC_MST_ENABLE;
     }
     return xAxisEnabled;
 }
