@@ -740,6 +740,11 @@ void Magrathea::connectGantryBoxClicked(bool checked)
             mMotionHandler->gantryConnected = true;
         }
     } else {
+//        std::cout<<" x axis : "<<mMotionHandler->xAxisEnabled <<
+//                   "  y axis : "<<mMotionHandler->yAxisEnabled <<
+//                   "  Z axis : "<<mMotionHandler->zAxisEnabled <<
+//                   "  Z2 axis : "<<mMotionHandler->z_2_AxisEnabled <<
+//                   "  U axis : "<<mMotionHandler->uAxisEnabled <<std::endl;
         if (mMotionHandler->xAxisEnabled || mMotionHandler->yAxisEnabled || mMotionHandler->zAxisEnabled ||
                 mMotionHandler->z_2_AxisEnabled || mMotionHandler->uAxisEnabled) {
             ui->connectGantryBox->setChecked(true);

@@ -69,11 +69,10 @@ bool ACSCMotionHandler::connectGantry(bool flag)
         qInfo("connecting gantry...");
         ///////////////////////////////////////////////
         //connection functions: see: SPiiPlus C Library Reference Programmer Guide.pdf
-        int Port = 701;//to be verified
+        int Port = 701;
         gantry = acsc_OpenCommEthernetTCP("10.0.0.100",Port); //see manual for reference <----
-        //gantry = acsc_OpenCommEthernetUDP(<address>,<port>); //see manual for reference
         ///////////////////////////////////////////////
-        if(gantry == ACSC_INVALID){ //connect gantry here
+        if(gantry == ACSC_INVALID){
             qWarning("Error init Gantry: %d ",acsc_GetLastError());
             qWarning("could not connect gantry");
             gantryConnected=false;
@@ -386,14 +385,14 @@ bool ACSCMotionHandler::homeZ() {
 //------------------------------------------
 bool ACSCMotionHandler::homeZ_2() {
     qInfo("homing z 2 axis...");
-    moveZTo(Home_coord[3],default_speed);
+    moveZTo(Home_coord[4],default_speed);
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::homeU() {
     qInfo("homing u axis...");
-    moveUTo(Home_coord[4],default_angular_speed);
+    moveUTo(Home_coord[3],default_angular_speed);
     return true;
 }
 
@@ -857,6 +856,8 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
 //------------------------------------------
 bool ACSCMotionHandler::getXAxisState(){
     int State;
+    if(!gantryConnected)
+        return false;
     if(!acsc_GetMotorState(gantry,X_axis,&State,ACSC_SYNCHRONOUS)){
         qWarning("Error get X axis state: %d ",acsc_GetLastError());
     }else{
@@ -868,6 +869,8 @@ bool ACSCMotionHandler::getXAxisState(){
 //------------------------------------------
 bool ACSCMotionHandler::getYAxisState(){
     int State;
+    if(!gantryConnected)
+        return false;
     if(!acsc_GetMotorState(gantry,Y_axis,&State,ACSC_SYNCHRONOUS)){
         qWarning("Error get Y axis state: %d ",acsc_GetLastError());
     }else{
@@ -879,6 +882,8 @@ bool ACSCMotionHandler::getYAxisState(){
 //------------------------------------------
 bool ACSCMotionHandler::getZAxisState(){
     int State;
+    if(!gantryConnected)
+        return false;
     if(!acsc_GetMotorState(gantry,Z_axis,&State,ACSC_SYNCHRONOUS)){
         qWarning("Error get Z axis state: %d ",acsc_GetLastError());
     }else{
@@ -890,8 +895,10 @@ bool ACSCMotionHandler::getZAxisState(){
 //------------------------------------------
 bool ACSCMotionHandler::getZ_2_AxisState(){
     int State;
+    if(!gantryConnected)
+        return false;
     if(!acsc_GetMotorState(gantry,Z_2_axis,&State,ACSC_SYNCHRONOUS)){
-        qWarning("Error get Z axis state: %d ",acsc_GetLastError());
+        qWarning("Error get Z2 axis state: %d ",acsc_GetLastError());
     }else{
         z_2_AxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
     }
@@ -901,6 +908,8 @@ bool ACSCMotionHandler::getZ_2_AxisState(){
 //------------------------------------------
 bool ACSCMotionHandler::getUAxisState(){
     int State;
+    if(!gantryConnected)
+        return false;
     if(!acsc_GetMotorState(gantry,U_axis,&State,ACSC_SYNCHRONOUS)){
         qWarning("Error get U axis state: %d ",acsc_GetLastError());
     }else{
