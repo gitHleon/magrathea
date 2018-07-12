@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTextEdit>
+#include <QLabel>
 //#include <QShortcut>
 #include <opencv2/opencv.hpp>
 #include "fiducial_locations.h"
@@ -64,6 +65,7 @@ private slots:
     void axisStepRepeatBoxClicked(bool checked);
     void dummy_enable_test();
     void dummy_disable_test();
+    void led_label(QLabel *label, bool value);
 
 private:
     Ui::Magrathea *ui;

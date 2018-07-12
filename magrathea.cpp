@@ -343,12 +343,16 @@ void Magrathea::updatePosition(){
     ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
     //axes status update
-    mMotionHandler->getXAxisState();
-    mMotionHandler->getYAxisState();
-    mMotionHandler->getZAxisState();
-    mMotionHandler->getZ_2_AxisState();
-    mMotionHandler->getUAxisState();
-    if(mMotionHandler->getXAxisState()){
+    led_label(ui->label_8,  mMotionHandler->getXAxisState());
+    led_label(ui->label_10, mMotionHandler->getYAxisState());
+    led_label(ui->label_12, mMotionHandler->getZAxisState());
+    led_label(ui->label_14, mMotionHandler->getZ_2_AxisState());
+    led_label(ui->label_16, mMotionHandler->getUAxisState());
+    //    mMotionHandler->getYAxisState();
+    //    mMotionHandler->getZAxisState();
+    //    mMotionHandler->getZ_2_AxisState();
+    //    mMotionHandler->getUAxisState();
+    if(mMotionHandler->getXAxisState()){//implement this as a function
         ui->label_7->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
         ui->label_7->setText("ON");
     }else{
@@ -808,64 +812,64 @@ void Magrathea::enableAxesClicked(bool checked)
     else if (sender() == ui->uAxisEnableBox) mMotionHandler->enableUAxis(checked);
 
     //gantry connection
-    ui->connectGantryBox->setEnabled(!(mMotionHandler->xAxisEnabled ||
-                                       mMotionHandler->yAxisEnabled ||
-                                       mMotionHandler->zAxisEnabled ||
-                                       mMotionHandler->z_2_AxisEnabled ||
-                                       mMotionHandler->uAxisEnabled));
+//    ui->connectGantryBox->setEnabled(!(mMotionHandler->xAxisEnabled ||
+//                                       mMotionHandler->yAxisEnabled ||
+//                                       mMotionHandler->zAxisEnabled ||
+//                                       mMotionHandler->z_2_AxisEnabled ||
+//                                       mMotionHandler->uAxisEnabled));
 
     //stop
-    ui->stopButton->setEnabled(mMotionHandler->xAxisEnabled ||
-                               mMotionHandler->yAxisEnabled ||
-                               mMotionHandler->zAxisEnabled ||
-                               mMotionHandler->z_2_AxisEnabled ||
-                               mMotionHandler->uAxisEnabled);
+//    ui->stopButton->setEnabled(mMotionHandler->xAxisEnabled ||
+//                               mMotionHandler->yAxisEnabled ||
+//                               mMotionHandler->zAxisEnabled ||
+//                               mMotionHandler->z_2_AxisEnabled ||
+//                               mMotionHandler->uAxisEnabled);
 
     //joystick
-    ui->leftTabWidget->widget(0)->setEnabled(mMotionHandler->xAxisEnabled ||
-                                             mMotionHandler->yAxisEnabled ||
-                                             mMotionHandler->zAxisEnabled ||
-                                             mMotionHandler->z_2_AxisEnabled ||
-                                             mMotionHandler->uAxisEnabled);
+//    ui->leftTabWidget->widget(0)->setEnabled(mMotionHandler->xAxisEnabled ||
+//                                             mMotionHandler->yAxisEnabled ||
+//                                             mMotionHandler->zAxisEnabled ||
+//                                             mMotionHandler->z_2_AxisEnabled ||
+//                                             mMotionHandler->uAxisEnabled);
 
     //enable/disable buttons according to axes status
-    ui->positiveXButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->negativeXButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->positiveYButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->negativeYButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->positiveZButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->negativeZButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->positiveZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->negativeZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->positiveUButton->setEnabled(mMotionHandler->uAxisEnabled);
-    ui->negativeUButton->setEnabled(mMotionHandler->uAxisEnabled);
+//    ui->positiveXButton->setEnabled(mMotionHandler->xAxisEnabled);
+//    ui->negativeXButton->setEnabled(mMotionHandler->xAxisEnabled);
+//    ui->positiveYButton->setEnabled(mMotionHandler->yAxisEnabled);
+//    ui->negativeYButton->setEnabled(mMotionHandler->yAxisEnabled);
+//    ui->positiveZButton->setEnabled(mMotionHandler->zAxisEnabled);
+//    ui->negativeZButton->setEnabled(mMotionHandler->zAxisEnabled);
+//    ui->positiveZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
+//    ui->negativeZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
+//    ui->positiveUButton->setEnabled(mMotionHandler->uAxisEnabled);
+//    ui->negativeUButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     //home
-    ui->axesHomeButton->setEnabled(mMotionHandler->xAxisEnabled ||
-                                   mMotionHandler->yAxisEnabled ||
-                                   mMotionHandler->zAxisEnabled ||
-                                   mMotionHandler->z_2_AxisEnabled ||
-                                   mMotionHandler->uAxisEnabled);
-    ui->xAxisHomeButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->yAxisHomeButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->zAxisHomeButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->z_2_AxisHomeButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->uAxisHomeButton->setEnabled(mMotionHandler->uAxisEnabled);
+//    ui->axesHomeButton->setEnabled(mMotionHandler->xAxisEnabled ||
+//                                   mMotionHandler->yAxisEnabled ||
+//                                   mMotionHandler->zAxisEnabled ||
+//                                   mMotionHandler->z_2_AxisEnabled ||
+//                                   mMotionHandler->uAxisEnabled);
+//    ui->xAxisHomeButton->setEnabled(mMotionHandler->xAxisEnabled);
+//    ui->yAxisHomeButton->setEnabled(mMotionHandler->yAxisEnabled);
+//    ui->zAxisHomeButton->setEnabled(mMotionHandler->zAxisEnabled);
+//    ui->z_2_AxisHomeButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
+//    ui->uAxisHomeButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     //step move
-    ui->xAxisStepMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->yAxisStepMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->zAxisStepMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->z_2_AxisStepMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->uAxisStepMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
+//    ui->xAxisStepMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
+//    ui->yAxisStepMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
+//    ui->zAxisStepMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
+//    ui->z_2_AxisStepMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
+//    ui->uAxisStepMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     //position move
-    ui->xAxisPositionMoveButton->setEnabled(true);
+//    ui->xAxisPositionMoveButton->setEnabled(true);
     //ui->xAxisPositionMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->yAxisPositionMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->zAxisPositionMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->z_2_AxisPositionMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->uAxisPositionMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
+//    ui->zAxisPositionMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
+//    ui->yAxisPositionMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
+//    ui->z_2_AxisPositionMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
+//    ui->uAxisPositionMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     return;
 }
@@ -1123,4 +1127,15 @@ void Magrathea::dummy_disable_test(){
         ui->label_6->setStyleSheet("QLabel { background-color : yellow; color : blue; }");
         ui->label_6->setText("OFF");
     }
+}
+
+void Magrathea::led_label(QLabel *label, bool value){
+    if(value){
+        label->setStyleSheet("QLabel { background-color : green; color : black; }");
+        label->setText("ON");
+    }else{
+        label->setStyleSheet("QLabel { background-color : red; color : white; }");
+        label->setText("OFF");
+    }
+
 }
