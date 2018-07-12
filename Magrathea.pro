@@ -71,16 +71,16 @@ FORMS += \
         magrathea.ui
 
 INCLUDEPATH += alglib-3.12.0\cpp\src
-INCLUDEPATH += C:\opencv-build\install\include
-       LIBS += C:\opencv-build\bin\libopencv_flann341.dll
-       LIBS += C:\opencv-build\bin\libopencv_core341.dll
-       LIBS += C:\opencv-build\bin\libopencv_highgui341.dll
-       LIBS += C:\opencv-build\bin\libopencv_videoio341.dll
-       LIBS += C:\opencv-build\bin\libopencv_imgcodecs341.dll
-       LIBS += C:\opencv-build\bin\libopencv_imgproc341.dll
-       LIBS += C:\opencv-build\bin\libopencv_features2d341.dll
-       LIBS += C:\opencv-build\bin\libopencv_xfeatures2d341.dll
-       LIBS += C:\opencv-build\bin\libopencv_calib3d341.dll
+INCLUDEPATH += D:\opencv-build\install\include
+       LIBS += D:\opencv-build\bin\libopencv_flann341.dll
+       LIBS += D:\opencv-build\bin\libopencv_core341.dll
+       LIBS += D:\opencv-build\bin\libopencv_highgui341.dll
+       LIBS += D:\opencv-build\bin\libopencv_videoio341.dll
+       LIBS += D:\opencv-build\bin\libopencv_imgcodecs341.dll
+       LIBS += D:\opencv-build\bin\libopencv_imgproc341.dll
+       LIBS += D:\opencv-build\bin\libopencv_features2d341.dll
+       LIBS += D:\opencv-build\bin\libopencv_xfeatures2d341.dll
+       LIBS += D:\opencv-build\bin\libopencv_calib3d341.dll
 
 #Vancouver
 win32 : exists(C:/Program Files (x86)/Aerotech/A3200/CLibrary/Include/A3200.h) {
@@ -101,6 +101,6 @@ win32 : exists(ACSC/C_CPP/ACSC.h) {
         ACSC\C_CPP\ACSC.h \
         DEFINES += ACSC
         DEFINES += VALENCIA
-        #LIBS += D:\Code\magrathea\ACSC\C_CPP\ACSCL_x86.LIB
-        LIBS += C:\Users\Silicio\WORK\Opencv_Qt_proj\Loader\ACSC\C_CPP\ACSCL_x86.LIB
+        LIBS += D:\Code\magrathea\ACSC\C_CPP\ACSCL_x86.LIB
+        #LIBS += C:\Users\Silicio\WORK\Opencv_Qt_proj\Loader\ACSC\C_CPP\ACSCL_x86.LIB
 }

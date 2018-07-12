@@ -62,6 +62,8 @@ private slots:
     void stepMotion();
     void positionMove();
     void axisStepRepeatBoxClicked(bool checked);
+    void dummy_enable_test();
+    void dummy_disable_test();
 
 private:
     Ui::Magrathea *ui;

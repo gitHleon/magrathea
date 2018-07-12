@@ -314,6 +314,10 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->zAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->z_2_AxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->uAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
+
+    //test
+    connect(ui->dummy_enable,SIGNAL(clicked(bool)),this,SLOT(dummy_enable_test()));
+    connect(ui->dummy_disable,SIGNAL(clicked(bool)),this,SLOT(dummy_disable_test()));
 }
 
 //******************************************
@@ -344,6 +348,14 @@ void Magrathea::updatePosition(){
     mMotionHandler->getZAxisState();
     mMotionHandler->getZ_2_AxisState();
     mMotionHandler->getUAxisState();
+    if(mMotionHandler->getXAxisState()){
+        ui->label_7->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
+        ui->label_7->setText("ON");
+    }else{
+        ui->label_7->setStyleSheet("QLabel { background-color : yellow; color : blue; }");
+        ui->label_7->setText("OFF");
+    }
+
     return;
 }
 
@@ -848,7 +860,8 @@ void Magrathea::enableAxesClicked(bool checked)
     ui->uAxisStepMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
 
     //position move
-    ui->xAxisPositionMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
+    ui->xAxisPositionMoveButton->setEnabled(true);
+    //ui->xAxisPositionMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
     ui->yAxisPositionMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
     ui->zAxisPositionMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
     ui->z_2_AxisPositionMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
@@ -1088,4 +1101,26 @@ void Magrathea::axisStepRepeatBoxClicked(bool checked)
         ui->negativeUButton->setAutoRepeat(checked);
     }
     return;
+}
+
+void Magrathea::dummy_enable_test(){
+    mMotionHandler->enableXAxis(true);
+    if(mMotionHandler->getXAxisState()){
+        ui->label_6->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
+        ui->label_6->setText("ON");
+    }else{
+        ui->label_6->setStyleSheet("QLabel { background-color : yellow; color : blue; }");
+        ui->label_6->setText("OFF");
+    }
+}
+
+void Magrathea::dummy_disable_test(){
+    mMotionHandler->enableXAxis(false);
+    if(mMotionHandler->getXAxisState()){
+        ui->label_6->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
+        ui->label_6->setText("ON");
+    }else{
+        ui->label_6->setStyleSheet("QLabel { background-color : yellow; color : blue; }");
+        ui->label_6->setText("OFF");
+    }
 }

@@ -105,7 +105,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="joystickTab">
         <attribute name="title">
@@ -510,13 +510,26 @@
         <widget class="QWidget" name="gridLayoutWidget">
          <property name="geometry">
           <rect>
-           <x>10</x>
-           <y>40</y>
-           <width>371</width>
+           <x>30</x>
+           <y>10</y>
+           <width>429</width>
            <height>138</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
+          <item row="4" column="2">
+           <widget class="QSpinBox" name="algorithm_box">
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>4</number>
+            </property>
+            <property name="value">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0">
            <widget class="QPushButton" name="focus_test">
             <property name="text">
@@ -596,16 +609,37 @@
           <item row="1" column="1">
            <widget class="QSpinBox" name="spinBox_dummy"/>
           </item>
-          <item row="4" column="2">
-           <widget class="QSpinBox" name="algorithm_box">
-            <property name="minimum">
-             <number>0</number>
+          <item row="0" column="4">
+           <widget class="QPushButton" name="dummy_enable">
+            <property name="text">
+             <string>Enable x</string>
             </property>
-            <property name="maximum">
-             <number>4</number>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>bho</string>
             </property>
-            <property name="value">
-             <number>2</number>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QPushButton" name="dummy_disable">
+            <property name="text">
+             <string>Disable x</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="4">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>asdf</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
