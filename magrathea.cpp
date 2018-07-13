@@ -219,14 +219,7 @@ Magrathea::Magrathea(QWidget *parent) :
     autoRepeatInterval=1000;//ms
     ui->enableAxesButton->setEnabled(false);
     ui->disableAxesButton->setEnabled(false);
-    ui->xAxisEnableBox->setEnabled(false);
-    ui->yAxisEnableBox->setEnabled(false);
-    ui->zAxisEnableBox->setEnabled(false);
-    ui->z_2_AxisEnableBox->setEnabled(false);
-    ui->uAxisEnableBox->setEnabled(false);
     ui->resetErrorButton->setEnabled(false);
-    enableAxesClicked(false);
-    //ui->freeRunRadioButton->setChecked(true);
 
     //------------------------------------------
     //position tab
@@ -260,15 +253,15 @@ Magrathea::Magrathea(QWidget *parent) :
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
-    connect(ui->enableAxesButton, SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked(bool)));
-    connect(ui->disableAxesButton,SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked(bool)));
-    connect(ui->xAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
-    connect(ui->yAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
-    connect(ui->zAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
-    connect(ui->z_2_AxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
-    connect(ui->uAxisEnableBox,   SIGNAL(toggled(bool)), this, SLOT(enableAxesClicked(bool)));
+    connect(ui->enableAxesButton, SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked()));
+    connect(ui->disableAxesButton,SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked()));
     connect(ui->resetErrorButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::acknowledgeMotionFaultGantry);
     connect(ui->stopButton, &QPushButton::clicked, mMotionHandler, &MotionHandler::stop);
+    connect(ui->EnableButton_X,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
+    connect(ui->EnableButton_Y,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
+    connect(ui->EnableButton_Z,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
+    connect(ui->EnableButton_Z_2,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
+    connect(ui->EnableButton_U,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
 
     //joystick
     connect(ui->freeRunRadioButton, SIGNAL(clicked(bool)), this, SLOT(enableJoystickFreeRun(bool)));
@@ -338,6 +331,26 @@ void Magrathea::updatePosition(){
     ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
     ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+    //axes status update
+    bool current =  mMotionHandler->getXAxisState();
+    led_label(ui->label_8,  mMotionHandler->getXAxisState());
+    ui->EnableButton_X->setText((current ? "Disable" : "Enable"));
+
+    current =  mMotionHandler->getYAxisState();
+    led_label(ui->label_10, current);
+    ui->EnableButton_Y->setText((current ? "Disable" : "Enable"));
+
+    current =  mMotionHandler->getZAxisState();
+    led_label(ui->label_12, current);
+    ui->EnableButton_Z->setText((current ? "Disable" : "Enable"));
+
+    current =  mMotionHandler->getZ_2_AxisState();
+    led_label(ui->label_14, current);
+    ui->EnableButton_Z_2->setText((current ? "Disable" : "Enable"));
+
+    current =  mMotionHandler->getUAxisState();
+    led_label(ui->label_16, current);
+    ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
     return;
 }
 
@@ -734,8 +747,11 @@ void Magrathea::connectGantryBoxClicked(bool checked)
             mMotionHandler->gantryConnected = true;
         }
     } else {
-        if (mMotionHandler->xAxisEnabled || mMotionHandler->yAxisEnabled || mMotionHandler->zAxisEnabled ||
-                mMotionHandler->z_2_AxisEnabled || mMotionHandler->uAxisEnabled) {
+        if (    mMotionHandler->getXAxisState() ||
+                mMotionHandler->getYAxisState() ||
+                mMotionHandler->getZAxisState() ||
+                mMotionHandler->getZ_2_AxisState() ||
+                mMotionHandler->getUAxisState()) {
             ui->connectGantryBox->setChecked(true);
             qWarning("disable axes before disconnecting from gantry");
         } else {
@@ -749,11 +765,6 @@ void Magrathea::connectGantryBoxClicked(bool checked)
     //enable/disable buttons according to gantry connection status
     ui->enableAxesButton->setEnabled(mMotionHandler->gantryConnected);
     ui->disableAxesButton->setEnabled(mMotionHandler->gantryConnected);
-    ui->xAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
-    ui->yAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
-    ui->zAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
-    ui->z_2_AxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
-    ui->uAxisEnableBox->setEnabled(mMotionHandler->gantryConnected);
     ui->resetErrorButton->setEnabled(mMotionHandler->gantryConnected);
 
     return;
@@ -762,85 +773,14 @@ void Magrathea::connectGantryBoxClicked(bool checked)
 //------------------------------------------
 //enable axes
 //proxy function to handle the EnableAxes and DisableAxes functions from MotionHandler
-void Magrathea::enableAxesClicked(bool checked)
+void Magrathea::enableAxesClicked()
 {
-    if (sender() == ui->enableAxesButton) {
-        ui->xAxisEnableBox->setChecked(true);
-        ui->yAxisEnableBox->setChecked(true);
-        ui->zAxisEnableBox->setChecked(true);
-        ui->z_2_AxisEnableBox->setChecked(true);
-        ui->uAxisEnableBox->setChecked(true);
-    } else if (sender() == ui->disableAxesButton) {
-        ui->xAxisEnableBox->setChecked(false);
-        ui->yAxisEnableBox->setChecked(false);
-        ui->zAxisEnableBox->setChecked(false);
-        ui->z_2_AxisEnableBox->setChecked(false);
-        ui->uAxisEnableBox->setChecked(false);
-    } else if (sender() == ui->xAxisEnableBox) mMotionHandler->enableXAxis(checked);
-    else if (sender() == ui->yAxisEnableBox) mMotionHandler->enableYAxis(checked);
-    else if (sender() == ui->zAxisEnableBox) mMotionHandler->enableZAxis(checked);
-    else if (sender() == ui->z_2_AxisEnableBox) mMotionHandler->enableZ_2_Axis(checked);
-    else if (sender() == ui->uAxisEnableBox) mMotionHandler->enableUAxis(checked);
+    if (sender() == ui->enableAxesButton)
+        mMotionHandler->enableAxes(true);
+    else if (sender() == ui->disableAxesButton)
+        mMotionHandler->enableAxes(false);
 
-    //gantry connection
-    ui->connectGantryBox->setEnabled(!(mMotionHandler->xAxisEnabled ||
-                                       mMotionHandler->yAxisEnabled ||
-                                       mMotionHandler->zAxisEnabled ||
-                                       mMotionHandler->z_2_AxisEnabled ||
-                                       mMotionHandler->uAxisEnabled));
-
-    //stop
-    ui->stopButton->setEnabled(mMotionHandler->xAxisEnabled ||
-                               mMotionHandler->yAxisEnabled ||
-                               mMotionHandler->zAxisEnabled ||
-                               mMotionHandler->z_2_AxisEnabled ||
-                               mMotionHandler->uAxisEnabled);
-
-    //joystick
-    ui->leftTabWidget->widget(0)->setEnabled(mMotionHandler->xAxisEnabled ||
-                                             mMotionHandler->yAxisEnabled ||
-                                             mMotionHandler->zAxisEnabled ||
-                                             mMotionHandler->z_2_AxisEnabled ||
-                                             mMotionHandler->uAxisEnabled);
-
-    //enable/disable buttons according to axes status
-    ui->positiveXButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->negativeXButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->positiveYButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->negativeYButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->positiveZButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->negativeZButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->positiveZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->negativeZ_2_Button->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->positiveUButton->setEnabled(mMotionHandler->uAxisEnabled);
-    ui->negativeUButton->setEnabled(mMotionHandler->uAxisEnabled);
-
-    //home
-    ui->axesHomeButton->setEnabled(mMotionHandler->xAxisEnabled ||
-                                   mMotionHandler->yAxisEnabled ||
-                                   mMotionHandler->zAxisEnabled ||
-                                   mMotionHandler->z_2_AxisEnabled ||
-                                   mMotionHandler->uAxisEnabled);
-    ui->xAxisHomeButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->yAxisHomeButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->zAxisHomeButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->z_2_AxisHomeButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->uAxisHomeButton->setEnabled(mMotionHandler->uAxisEnabled);
-
-    //step move
-    ui->xAxisStepMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->yAxisStepMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->zAxisStepMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->z_2_AxisStepMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->uAxisStepMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
-
-    //position move
-    ui->xAxisPositionMoveButton->setEnabled(mMotionHandler->xAxisEnabled);
-    ui->yAxisPositionMoveButton->setEnabled(mMotionHandler->yAxisEnabled);
-    ui->zAxisPositionMoveButton->setEnabled(mMotionHandler->zAxisEnabled);
-    ui->z_2_AxisPositionMoveButton->setEnabled(mMotionHandler->z_2_AxisEnabled);
-    ui->uAxisPositionMoveButton->setEnabled(mMotionHandler->uAxisEnabled);
-
+    updatePosition();
     return;
 }
 
@@ -1075,4 +1015,41 @@ void Magrathea::axisStepRepeatBoxClicked(bool checked)
         ui->negativeUButton->setAutoRepeat(checked);
     }
     return;
+}
+
+void Magrathea::AxisEnableDisableButton(){
+    bool current = false;
+    if(sender() == ui->EnableButton_X){
+        current = mMotionHandler->getXAxisState();
+        mMotionHandler->enableXAxis(!current);
+        ui->EnableButton_X->setText((current ? "Enable" : "Disable"));
+    }else if (sender() == ui->EnableButton_Y){
+        current = mMotionHandler->getYAxisState();
+        mMotionHandler->enableYAxis(!current);
+        ui->EnableButton_Y->setText((current ? "Enable" : "Disable"));
+    }else if (sender() == ui->EnableButton_Z){
+        current = mMotionHandler->getZAxisState();
+        mMotionHandler->enableZAxis(!current);
+        ui->EnableButton_Z->setText((current ? "Enable" : "Disable"));
+    }else if (sender() == ui->EnableButton_Z_2){
+        current = mMotionHandler->getZ_2_AxisState();
+        mMotionHandler->enableZ_2_Axis(!current);
+        ui->EnableButton_Z_2->setText((current ? "Enable" : "Disable"));
+    }else if (sender() == ui->EnableButton_U){
+        current = mMotionHandler->getUAxisState();
+        mMotionHandler->enableUAxis(!current);
+        ui->EnableButton_U->setText((current ? "Enable" : "Disable"));
+    }else
+        qWarning("Warning! Improper use of function AxisEnableDisableButton.");
+}
+
+
+void Magrathea::led_label(QLabel *label, bool value){
+    if(value){
+        label->setStyleSheet("QLabel { background-color : green; color : black; }");
+        label->setText("ON");
+    }else{
+        label->setStyleSheet("QLabel { background-color : red; color : white; }");
+        label->setText("OFF");
+    }
 }

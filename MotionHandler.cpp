@@ -272,6 +272,33 @@ bool MotionHandler::disableUAxis()
 }
 
 //******************************************
+//Get Axis states
+//------------------------------------------
+bool MotionHandler::getXAxisState(){
+    return xAxisEnabled;
+}
+
+//------------------------------------------
+bool MotionHandler::getYAxisState(){
+    return yAxisEnabled;
+}
+
+//------------------------------------------
+bool MotionHandler::getZAxisState(){
+    return zAxisEnabled;
+}
+
+//------------------------------------------
+bool MotionHandler::getZ_2_AxisState(){
+    return z_2_AxisEnabled;
+}
+
+//------------------------------------------
+bool MotionHandler::getUAxisState(){
+    return uAxisEnabled;
+}
+
+//******************************************
 // home axes
 
 //------------------------------------------

@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QTextEdit>
+#include <QLabel>
+#include <QPushButton>
 //#include <QShortcut>
 #include <opencv2/opencv.hpp>
 #include "fiducial_locations.h"
@@ -53,7 +55,7 @@ private slots:
 
     //gantry
     void connectGantryBoxClicked(bool checked);
-    void enableAxesClicked(bool checked);
+    void enableAxesClicked();
 
     //motion
     void enableJoystickFreeRun(bool checked);
@@ -62,6 +64,8 @@ private slots:
     void stepMotion();
     void positionMove();
     void axisStepRepeatBoxClicked(bool checked);
+    void AxisEnableDisableButton();
+    void led_label(QLabel *label, bool value);
 
 private:
     Ui::Magrathea *ui;
