@@ -65,6 +65,7 @@ private slots:
     void axisStepRepeatBoxClicked(bool checked);
     void dummy_enable_test();
     void dummy_disable_test();
+    void dummy_test_button();
     void led_label(QLabel *label, bool value);
 
 private:

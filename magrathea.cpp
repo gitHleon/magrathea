@@ -318,6 +318,7 @@ Magrathea::Magrathea(QWidget *parent) :
     //test
     connect(ui->dummy_enable,SIGNAL(clicked(bool)),this,SLOT(dummy_enable_test()));
     connect(ui->dummy_disable,SIGNAL(clicked(bool)),this,SLOT(dummy_disable_test()));
+    connect(ui->test_button,SIGNAL(clicked(bool)),this,SLOT(dummy_test_button()));
 }
 
 //******************************************
@@ -1128,6 +1129,16 @@ void Magrathea::dummy_disable_test(){
         ui->label_6->setText("OFF");
     }
 }
+
+void Magrathea::dummy_test_button(){
+    bool current = mMotionHandler->getXAxisState();
+    mMotionHandler->enableXAxis(!current);
+    if(current)
+        ui->test_button->setText("Disable");
+    else
+        ui->test_button->setText("Enable");
+}
+
 
 void Magrathea::led_label(QLabel *label, bool value){
     if(value){
