@@ -517,43 +517,6 @@
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="4" column="2">
-           <widget class="QSpinBox" name="algorithm_box">
-            <property name="minimum">
-             <number>0</number>
-            </property>
-            <property name="maximum">
-             <number>4</number>
-            </property>
-            <property name="value">
-             <number>2</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="focus_test">
-            <property name="text">
-             <string>focus test 1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLineEdit" name="Calib_value_lineEdit">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QCheckBox" name="calib_from_file_Box">
-            <property name="text">
-             <string>Calibration from file</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item row="3" column="3">
            <widget class="QSpinBox" name="spinBox_input_F">
             <property name="maximum">
@@ -609,44 +572,40 @@
           <item row="1" column="1">
            <widget class="QSpinBox" name="spinBox_dummy"/>
           </item>
-          <item row="0" column="4">
-           <widget class="QPushButton" name="dummy_enable">
-            <property name="text">
-             <string>Enable x</string>
+          <item row="4" column="2">
+           <widget class="QSpinBox" name="algorithm_box">
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>4</number>
+            </property>
+            <property name="value">
+             <number>2</number>
             </property>
            </widget>
           </item>
-          <item row="2" column="4">
-           <widget class="QLabel" name="label_6">
+          <item row="2" column="0">
+           <widget class="QPushButton" name="focus_test">
             <property name="text">
-             <string>bho</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <string>focus test 1</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="4">
-           <widget class="QPushButton" name="dummy_disable">
-            <property name="text">
-             <string>Disable x</string>
+          <item row="0" column="2">
+           <widget class="QLineEdit" name="Calib_value_lineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="3" column="4">
-           <widget class="QLabel" name="label_7">
+          <item row="2" column="2">
+           <widget class="QCheckBox" name="calib_from_file_Box">
             <property name="text">
-             <string>asdf</string>
+             <string>Calibration from file</string>
             </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="4">
-           <widget class="QPushButton" name="test_button">
-            <property name="text">
-             <string>PushButton</string>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -781,19 +740,6 @@
               </property>
               <property name="value">
                <double>0.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="xAxisEnableBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>enable</string>
               </property>
              </widget>
             </item>
@@ -949,7 +895,24 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
+            <item row="1" column="2">
+             <widget class="QDoubleSpinBox" name="xAxisPositionMoveDoubleSpinBox"/>
+            </item>
+            <item row="1" column="5">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="EnableButton_X">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
              <widget class="QPushButton" name="xAxisHomeButton">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -962,20 +925,13 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="QDoubleSpinBox" name="xAxisPositionMoveDoubleSpinBox"/>
-            </item>
-            <item row="0" column="5">
+            <item row="1" column="0">
              <widget class="QLabel" name="label_8">
               <property name="text">
                <string>TextLabel</string>
               </property>
-             </widget>
-            </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>TextLabel</string>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -988,19 +944,6 @@
             <string>z axis</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_19">
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="zAxisEnableBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>enable</string>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="1">
              <widget class="QLabel" name="label_52">
               <property name="sizePolicy">
@@ -1108,19 +1051,6 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="zAxisHomeButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>home</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="1">
              <widget class="QLabel" name="label_50">
               <property name="sizePolicy">
@@ -1169,17 +1099,40 @@
             <item row="1" column="2">
              <widget class="QDoubleSpinBox" name="zAxisPositionMoveDoubleSpinBox"/>
             </item>
-            <item row="0" column="5">
-             <widget class="QLabel" name="label_12">
+            <item row="1" column="5">
+             <widget class="QLabel" name="label_13">
               <property name="text">
                <string>TextLabel</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_13">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="EnableButton_Z">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="zAxisHomeButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>home</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_12">
               <property name="text">
                <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -1241,32 +1194,6 @@
               </property>
               <property name="text">
                <string>continous</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="yAxisEnableBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>enable</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="yAxisHomeButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>home</string>
               </property>
              </widget>
             </item>
@@ -1370,17 +1297,40 @@
               </property>
              </spacer>
             </item>
-            <item row="0" column="5">
-             <widget class="QLabel" name="label_10">
+            <item row="1" column="5">
+             <widget class="QLabel" name="label_11">
               <property name="text">
                <string>TextLabel</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_11">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="EnableButton_Y">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="yAxisHomeButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>home</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_10">
               <property name="text">
                <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -1416,19 +1366,6 @@
               </property>
               <property name="text">
                <string>speed [deg/s]:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="uAxisEnableBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>enable</string>
               </property>
              </widget>
             </item>
@@ -1513,19 +1450,6 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="uAxisHomeButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>home</string>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="4">
              <widget class="QCheckBox" name="uAxisStepRepeatBox">
               <property name="sizePolicy">
@@ -1574,17 +1498,40 @@
             <item row="1" column="2">
              <widget class="QDoubleSpinBox" name="uAxisPositionMoveDoubleSpinBox"/>
             </item>
-            <item row="0" column="5">
-             <widget class="QLabel" name="label_16">
+            <item row="1" column="5">
+             <widget class="QLabel" name="label_17">
               <property name="text">
                <string>TextLabel</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_17">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="EnableButton_U">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="uAxisHomeButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>home</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_16">
               <property name="text">
                <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -1622,13 +1569,6 @@
                </size>
               </property>
              </spacer>
-            </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="z_2_AxisHomeButton">
-              <property name="text">
-               <string>home</string>
-              </property>
-             </widget>
             </item>
             <item row="1" column="1">
              <widget class="QLabel" name="label_2">
@@ -1690,13 +1630,6 @@
               </property>
              </spacer>
             </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="z_2_AxisEnableBox">
-              <property name="text">
-               <string>enable</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="1">
              <widget class="QLabel" name="label">
               <property name="text">
@@ -1734,17 +1667,34 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="5">
-             <widget class="QLabel" name="label_14">
+            <item row="1" column="5">
+             <widget class="QLabel" name="label_15">
               <property name="text">
                <string>TextLabel</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_15">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="EnableButton_Z_2">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="z_2_AxisHomeButton">
+              <property name="text">
+               <string>home</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_14">
               <property name="text">
                <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -1785,25 +1735,17 @@
   <tabstop>disableAxesButton</tabstop>
   <tabstop>axesHomeButton</tabstop>
   <tabstop>resetErrorButton</tabstop>
-  <tabstop>xAxisEnableBox</tabstop>
-  <tabstop>xAxisHomeButton</tabstop>
   <tabstop>xAxisPositionLine</tabstop>
   <tabstop>xAxisPositionMoveButton</tabstop>
   <tabstop>xAxisStepMoveButton</tabstop>
   <tabstop>xAxisStepRepeatBox</tabstop>
-  <tabstop>yAxisEnableBox</tabstop>
-  <tabstop>yAxisHomeButton</tabstop>
   <tabstop>yAxisPositionMoveButton</tabstop>
   <tabstop>yAxisStepMoveButton</tabstop>
   <tabstop>yAxisStepRepeatBox</tabstop>
-  <tabstop>zAxisEnableBox</tabstop>
-  <tabstop>zAxisHomeButton</tabstop>
   <tabstop>zAxisPositionLine</tabstop>
   <tabstop>zAxisPositionMoveButton</tabstop>
   <tabstop>zAxisStepMoveButton</tabstop>
   <tabstop>zAxisStepRepeatBox</tabstop>
-  <tabstop>uAxisEnableBox</tabstop>
-  <tabstop>uAxisHomeButton</tabstop>
   <tabstop>uAxisPositionLine</tabstop>
   <tabstop>uAxisPositionMoveButton</tabstop>
   <tabstop>uAxisStepMoveButton</tabstop>

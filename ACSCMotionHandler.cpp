@@ -1,8 +1,6 @@
 #include "ACSCMotionHandler.h"
 #include <QtMessageHandler>
 
-///// Understand why the simulator freeze sometimes....
-
 //******************************************
 ACSCMotionHandler::ACSCMotionHandler() :
     gantryConnected(false),
@@ -861,7 +859,7 @@ bool ACSCMotionHandler::getXAxisState(){
     if(!acsc_GetMotorState(gantry,X_axis,&State,ACSC_SYNCHRONOUS)){
         qWarning("Error get X axis state: %d ",acsc_GetLastError());
     }else{
-        xAxisEnabled = State & ACSC_MST_ENABLE;
+        xAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
     }
     return xAxisEnabled;
 }
