@@ -173,7 +173,7 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
 void Focus_finder::Eval_syst_scan(){
     int numb_steps = 20;
     double z_temp = gantry->whereAmI().at(z_pos_index);
-    double z_step = 0.05;// to be changed according the units of your gantry and shape of focus-heught distribution
+    double z_step = 0.2;// to be changed according the units of your gantry and shape of focus-heught distribution
     qInfo("Performing systematic scan near the focus position : %5.5f",z_temp);
     gantry->moveZBy(-z_step*numb_steps*0.6);
     cv::Mat mat_from_outside;
@@ -189,7 +189,7 @@ void Focus_finder::Eval_syst_scan(){
         int center_rows = mat_from_outside.rows/2.0; //Defining the center of the image
         int center_cols = mat_from_outside.cols/2.0;
         cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
-        cv::Mat RoiImage = image(regione_interessante);
+        cv::Mat RoiImage = mat_from_outside(regione_interessante);
         double StdDev_t = eval_stddev(RoiImage);
         cv::imshow("image ROI",RoiImage);
         qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,gantry->whereAmI().at(z_pos_index),StdDev_t);
