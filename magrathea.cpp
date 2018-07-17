@@ -248,6 +248,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Calib_button_2,  SIGNAL(clicked(bool)), this, SLOT(Calibration_2_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
     connect(ui->focus_test      ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
     connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
 
@@ -395,7 +396,19 @@ void Magrathea::focusButtonClicked()
 
     FocusFinder->Set_camera(cap);
     double focus_position = -1.;
+
+    if(sender() == ui->focus_test){
     FocusFinder->find_focus(focus_position);
+    } else if (sender() == ui->std_dev_button){
+        cv::Mat mat_from_camera;
+        bool bSuccess = cap.read(mat_from_camera);
+        if (!bSuccess){ //if not success
+            qInfo("Cannot read a frame from video stream");
+            return;
+        }
+        double value_std_dev = FocusFinder->eval_stddev(mat_from_camera);
+        qInfo(" std dev value : %5.5f",value_std_dev);
+    }
     qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;
     cap.release();         //Going back to QCameraa
