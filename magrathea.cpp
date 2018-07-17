@@ -397,6 +397,7 @@ void Magrathea::focusButtonClicked()
 
     FocusFinder->Set_camera(cap);
     FocusFinder->Set_gantry(mMotionHandler);
+    FocusFinder->Set_log(outputLogTextEdit);
     double focus_position = -1.;
 
     if(sender() == ui->focus_test){

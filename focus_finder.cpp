@@ -186,7 +186,12 @@ void Focus_finder::Eval_syst_scan(){
             return;
         }
         //SetImage(mat_from_outside);
-        double StdDev_t = eval_stddev(mat_from_outside);
+        int center_rows = mat_from_outside.rows/2.0; //Defining the center of the image
+        int center_cols = mat_from_outside.cols/2.0;
+        cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
+        cv::Mat RoiImage = image(regione_interessante);
+        double StdDev_t = eval_stddev(RoiImage);
+        cv::imshow("image ROI",RoiImage);
         qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,gantry->whereAmI().at(z_pos_index),StdDev_t);
     }
 }
