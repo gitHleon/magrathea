@@ -173,13 +173,12 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
 void Focus_finder::Eval_syst_scan(){
     int numb_steps = 20;
     double z_temp = gantry->whereAmI().at(z_pos_index);
-    double z_step = 0.01;// to be changed according the units of your gantry and shape of focus-heught distribution
-    log->append("Performing systematic scan near the focus position : "
-                    +QString::number(z_temp));
+    double z_step = 0.05;// to be changed according the units of your gantry and shape of focus-heught distribution
+    qInfo("Performing systematic scan near the focus position : %5.5f",z_temp);
     gantry->moveZBy(-z_step*numb_steps*0.6);
     cv::Mat mat_from_outside;
     for(int i=0; i<numb_steps;i++){
-        gantry->moveZBy(z_step);
+        gantry->moveZBy(z_step,1.);//1 mm/s
         if (cap.isOpened()){
             cap >> mat_from_outside;
         } else {
@@ -188,9 +187,7 @@ void Focus_finder::Eval_syst_scan(){
         }
         //SetImage(mat_from_outside);
         double StdDev_t = eval_stddev(mat_from_outside);
-        log->append("i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
-                    " ; Std. dev. : "+QString::number(StdDev_t));
+        qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,gantry->whereAmI().at(z_pos_index),StdDev_t);
     }
 }
 

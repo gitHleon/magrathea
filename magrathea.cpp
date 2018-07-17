@@ -249,6 +249,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
     connect(ui->focus_test      ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
     connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
 
@@ -395,6 +396,7 @@ void Magrathea::focusButtonClicked()
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     FocusFinder->Set_camera(cap);
+    FocusFinder->Set_gantry(mMotionHandler);
     double focus_position = -1.;
 
     if(sender() == ui->focus_test){
@@ -408,6 +410,8 @@ void Magrathea::focusButtonClicked()
         }
         double value_std_dev = FocusFinder->eval_stddev(mat_from_camera);
         qInfo(" std dev value : %5.5f",value_std_dev);
+    } else if(sender() == ui->std_dev_many_button){
+        FocusFinder->Eval_syst_scan();
     }
     qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;

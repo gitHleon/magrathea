@@ -616,6 +616,13 @@
             </property>
            </widget>
           </item>
+          <item row="1" column="4">
+           <widget class="QPushButton" name="std_dev_many_button">
+            <property name="text">
+             <string>std dev many</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </widget>
