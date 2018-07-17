@@ -384,7 +384,8 @@ void Magrathea::focusButtonClicked()
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 4.0);
@@ -443,7 +444,8 @@ void Magrathea::Camera_test(){
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));//https://www.fourcc.org/yuv.php
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
 
@@ -535,7 +537,8 @@ void Magrathea::FiducialFinderCaller(const int &input){
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 4.0);
@@ -678,8 +681,8 @@ void Magrathea::calibrationCaller(int input){
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 4.0);

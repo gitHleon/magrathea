@@ -101,15 +101,15 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     //cv::Rect regione_interessante(center_cols-(256,center_rows-256,512,512); //Rectangle that will be the RegionOfInterest (ROI)
     cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
 
-    if(debug)
-        cv::imshow("0. image original",image);
+
+    cv::imshow("0. image original",image);
     cv::Mat RoiImage = image(regione_interessante);
     cv::imshow("0.1 image ROI",RoiImage);
     cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
     cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
 
-    if(debug)
-        cv::imshow("1. gray",image_gray);
+
+    cv::imshow("1. gray",image_gray);
     //Performing fourier analysis for rotation detection and compensation
     //https://docs.opencv.org/2.4/doc/tutorials/core/discrete_fourier_transform/discrete_fourier_transform.html#discretfouriertransform
 
@@ -357,8 +357,8 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     cv::Scalar Stddv;
     cv::meanStdDev(pitch,Mean,Stddv);
 
-    double Object_size     = 80.0; //Strip pitch [um]- SCT sensor, W21
-    //double Object_size     = 74.5; //Strip pitch [um]- mini sensor
+    //double Object_size     = 80.0; //Strip pitch [um]- SCT sensor, W21
+    double Object_size     = 74.5; //Strip pitch [um]- mini sensor
     double Object_size_err = 0.0;
     std::cout<<"Output Distance: "<<Mean.val[0]<<" ; std dev: "<<Stddv.val[0]<<" ; pitch.size() : "<<pitch.size()<<std::endl;
     double Mean_pitch     = Mean.val[0];
