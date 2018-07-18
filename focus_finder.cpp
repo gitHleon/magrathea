@@ -48,82 +48,78 @@ void Focus_finder::find_focus(double &focus_height)
     //Function that return the focus z coordinate
     //https://en.wikipedia.org/wiki/Parabola
     //https://rechneronline.de/function-graphs/
-
-    double z_step = 0.5;//to be changed according the units of your gantry and shape of focus-height distribution
+    //http://doc.qt.io/qt-4.8/signalsandslots.html
+    qInfo("Auto-focus start");
+    double z_step = 0.5;// mm //to be changed according the units of your gantry and shape of focus-height distribution
     if(z_step>1){//to be changed according the units of your gantry and shape of focus-height distribution
-        log->append("Step is too big.");
+        qWarning("Step is too big.");
         return;
     }
-    double z_temp = 1.; //ui->doubleSpinBox_Z_start->value();
+    double z_temp = 1.;
     double z_from_outside;
     cv::Mat mat_from_outside;
     if(!gantry->gantryConnected){
         QMessageBox::critical(nullptr, tr("Error"), tr("Gantry not connected!! Can not perform autofocus."));
         return;
     }
-    //http://doc.qt.io/qt-4.8/signalsandslots.html
+
     bool Is_Max      = false;
     bool Focus_found = false;
     double direction = 1.;
     double StdDev_t  = 1.1;
-    double StdDev_MAX  = 1.1;
+    double StdDev_MAX = 1.1;
     double Z_MAX     = 1.;
     int Iterations   = 1.;
     double threshold = 0.02;
-    log->append("Start while loop.");
+    qInfo("Start while loop.");
     while(!Focus_found){
-        log->append("Iteration : "+QString::number(Iterations));
+        qInfo("Iteration : %i",Iterations);
         //add user defined condition to tell software if focus is forward or backward wrt current position
         for(int i=0; i<measure_points;i++){
-            gantry->moveZBy(direction*z_step);
+            gantry->moveZBy(direction*z_step,1.);
+            Sleeper::msleep(200);
             if (cap.isOpened()){
                 cap >> mat_from_outside;
             } else {
-                log->append("Error : Not able to open camera.");
+                qWarning("Error : Not able to open camera.");
                 return;
             }
-            z_from_outside = gantry->whereAmI().at(z_pos_index);
+            z_from_outside = gantry->whereAmI(1).at(z_pos_index);
             StdDev_t = eval_stddev(mat_from_outside);
             if(StdDev_t > StdDev_MAX){
                 StdDev_MAX = StdDev_t;
                 Z_MAX = z_from_outside;
             }
-            log->append("i : "+QString::number(i)+
-                        " ; z_step : "+QString::number(z_step)+
-                        " ; z : "+QString::number(z_from_outside)+
-                        " ; stddev : "+QString::number(StdDev_t)+
-                        " ; z max : "+QString::number(Z_MAX)+
-                        " ; stddev_MAX: "+QString::number(StdDev_MAX));
+            qInfo("i : %i ; z_step : %3.4f ; z : %3.4f ; stddev : %5.5f ;; z max : %3.4f ; stddev_MAX: %5.5f",
+                  i,z_step,z_from_outside,StdDev_t,Z_MAX,StdDev_MAX);
             if((0.33 * z_step) <= threshold){
                 //this has to be the last iteration
                 x[i] = z_from_outside;
                 y[i] = StdDev_t;
             }
         }// for 6
-        Is_Max = (StdDev_MAX > 1);//adjust this value acording to the performance of your camera
+        Is_Max = (StdDev_MAX > 45);//adjust this value acording to the performance of your camera
         if(!Is_Max){
-            QMessageBox::critical(nullptr, tr("Error"), tr("Error: No max is found. Try changing search range or step size."));
-            log->append("Error: No max is found. Try changing search range or step size.");
+            qWarning("Error: No max is found. Try changing search range or step size.");
             return;
         }
-        z_step = 0.33 * z_step; //if step start as 0.5 it should reach 0.02 in 3 iterations (i.e 3*8 sec < 40 sec )
+        z_step = 0.33 * z_step; //if step start as 0.5 it should reach 0.02 in 3 iterations
         Iterations++;
         if(z_step <= threshold)
             Focus_found = true;
         z_temp = Z_MAX;//destination
         if(!Focus_found)
             z_temp = z_temp - z_step*4; //4 steps correction, only if focus is not found, otherwise move to focus position
-        z_temp = z_temp - gantry->whereAmI().at(z_pos_index); // relative distance from current position
+        z_temp = z_temp - gantry->whereAmI(1).at(z_pos_index); // relative distance from current position
         gantry->moveZBy(z_temp);
     }//while (!focus not found)
-
-    log->append("Focus: max z : "+QString::number(Z_MAX)+
-                " ;  stddev_MAX : "+QString::number(StdDev_MAX));
+    qInfo("Focus: max z : %3.4f ;  stddev_MAX : %5.5f ",Z_MAX,StdDev_MAX);
     double Z_out = 0.;
-    perform_fit(Z_out);log->append("Focus fit z : "+QString::number(Z_out));
+    perform_fit(Z_out);
+    qInfo("Focus fit z : %3.4f",Z_out);
     focus_height = Z_out;
-    z_temp = Z_out - gantry->whereAmI().at(z_pos_index); // relative distance from current position
-    gantry->moveZBy(z_temp);
+    z_temp = Z_out - gantry->whereAmI(1).at(z_pos_index); // relative distance from current position
+    gantry->moveZBy(z_temp,1.);
 }
 
 void Focus_finder::perform_fit(double &z_output)
@@ -179,6 +175,7 @@ void Focus_finder::Eval_syst_scan(){
     cv::Mat mat_from_outside;
     for(int i=0; i<numb_steps;i++){
         gantry->moveZBy(z_step,1.);//1 mm/s
+        Sleeper::msleep(200);
         if (cap.isOpened()){
             cap >> mat_from_outside;
         } else {

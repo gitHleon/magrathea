@@ -247,7 +247,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Calib_button,    SIGNAL(clicked(bool)), this, SLOT(Calibration_ButtonClicked()));
     connect(ui->Calib_button_2,  SIGNAL(clicked(bool)), this, SLOT(Calibration_2_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
-    connect(ui->focus_test      ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->focusButton     ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
@@ -397,10 +397,10 @@ void Magrathea::focusButtonClicked()
 
     FocusFinder->Set_camera(cap);
     FocusFinder->Set_gantry(mMotionHandler);
-    //FocusFinder->Set_log(outputLogTextEdit);
+    FocusFinder->Set_log(outputLogTextEdit);
     double focus_position = -1.;
 
-    if(sender() == ui->focus_test){
+    if(sender() == ui->focusButton){
     FocusFinder->find_focus(focus_position);
     } else if (sender() == ui->std_dev_button){
         cv::Mat mat_from_camera;
