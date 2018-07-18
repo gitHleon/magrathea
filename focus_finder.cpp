@@ -77,7 +77,7 @@ void Focus_finder::find_focus(double &focus_height)
         //add user defined condition to tell software if focus is forward or backward wrt current position
         for(int i=0; i<measure_points;i++){
             gantry->moveZBy(direction*z_step,1.);
-            Sleeper::msleep(200);
+            Sleeper::msleep(220);
             if (cap.isOpened()){
                 cap >> mat_from_outside;
             } else {
@@ -175,7 +175,7 @@ void Focus_finder::Eval_syst_scan(){
     cv::Mat mat_from_outside;
     for(int i=0; i<numb_steps;i++){
         gantry->moveZBy(z_step,1.);//1 mm/s
-        Sleeper::msleep(200);
+        Sleeper::msleep(220);
         if (cap.isOpened()){
             cap >> mat_from_outside;
         } else {

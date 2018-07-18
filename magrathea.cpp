@@ -390,7 +390,7 @@ void Magrathea::focusButtonClicked()
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
+    cap.set(CV_CAP_PROP_FPS, 5.0);
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
