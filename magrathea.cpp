@@ -452,7 +452,7 @@ void Magrathea::Camera_test(){
 
     if (!cap.isOpened())  // if not success, exit program
     {
-        qInfo("Cannot open the video cam");
+        qWarning("Cannot open the video cam");
         _getch();
         return;
     }
@@ -501,7 +501,7 @@ void Magrathea::Camera_test(){
 
     cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
     bool bEnd = false;
-    int img = 100;
+    int img = 10;
     while (!bEnd && img > 0)
     {
         cv::Mat frame;
