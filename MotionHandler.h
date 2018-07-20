@@ -101,7 +101,7 @@ public slots:
 
     //******************************************
     // Safety limits for movement
-    virtual bool validate_target_pos(double x, double y, double z);
+    virtual bool validate_target_pos(double x, double y, double z, double z_2=0);
 
     //******************************************
     // default speeds

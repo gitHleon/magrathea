@@ -323,16 +323,34 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
-    ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-    ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-    ui->zAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-    ui->z_2_AxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-    ui->uAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
-    ui->xAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-    ui->yAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-    ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-    ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-    ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+    std::vector <double> pos_t = mMotionHandler->whereAmI();
+
+    ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
+    ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
+    ui->zAxisPositionLine->setText(QString::number(    pos_t[2], 'f', 3));
+    ui->z_2_AxisPositionLine->setText(QString::number( pos_t[4], 'f', 3));
+    ui->uAxisPositionLine->setText(QString::number(    pos_t[3], 'f', 3));
+    ui->xAxisPositionLine2->setText(QString::number(   pos_t[0], 'f', 3));
+    ui->yAxisPositionLine2->setText(QString::number(   pos_t[1], 'f', 3));
+    ui->zAxisPositionLine2->setText(QString::number(   pos_t[2], 'f', 3));
+    ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
+    ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
+
+    if(mMotionHandler->validate_target_pos(pos_t.at(0),pos_t.at(1),pos_t.at(2),pos_t.at(4))){
+        mMotionHandler->stop();
+    }
+
+//    ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
+//    ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
+//    ui->zAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
+//    ui->z_2_AxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
+//    ui->uAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+//    ui->xAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
+//    ui->yAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
+//    ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
+//    ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
+//    ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+
     //axes status update
     bool current =  mMotionHandler->getXAxisState();
     led_label(ui->label_8,  mMotionHandler->getXAxisState());

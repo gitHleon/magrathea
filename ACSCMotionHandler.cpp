@@ -846,7 +846,7 @@ std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
         if(acsc_GetFPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
             qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
         position[4] = position_tmp;
-    } else if(ific_value = 1){
+    } else if(ific_value == 1){
         if(acsc_GetTargetPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
             qWarning("Error get position X axis: %d ",acsc_GetLastError());
         position[0] = position_tmp;
@@ -946,6 +946,12 @@ bool ACSCMotionHandler::validate_target_pos(double x, double y, double z_1,doubl
         qWarning("ERROR!! Target position is NOT valid, aborting motion.");
         return true;
     } else if (y < -300 && z_1 < -40){
+        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
+        return true;
+    } else if (z_1 < -60){
+        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
+        return true;
+    } else if (z_2 < -20){
         qWarning("ERROR!! Target position is NOT valid, aborting motion.");
         return true;
     } else { // conditions are not met, position is valid, carry on...

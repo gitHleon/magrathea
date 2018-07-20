@@ -53,7 +53,7 @@ signals:
     void Log_write(QString TextToWrite);
 
 public slots:
-    double eval_stddev(cv::Mat input_image);
+    double eval_stddev(const cv::Mat &input_image);
     void   find_focus(double &focus_height);
     void   Eval_syst_time();
     void   Eval_syst_scan();
