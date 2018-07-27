@@ -53,7 +53,7 @@ signals:
     void Log_write(QString TextToWrite);
 
 public slots:
-    double eval_stddev(cv::Mat input_image);
+    double eval_stddev(const cv::Mat &input_image);
     void   find_focus(double &focus_height);
     void   Eval_syst_time();
     void   Eval_syst_scan();
@@ -64,7 +64,8 @@ private:
     cv::Mat image;
     MotionHandler *gantry;
     const int measure_points = 6;
-    const int z_pos_index = 2;
+    const unsigned int z_pos_index = 2;
+    const int window_size = 1000;
     double x[6] = {};
     double y[6] = {};
     double EvalVertex_x(double a,double b, double c);

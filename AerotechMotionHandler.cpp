@@ -492,7 +492,7 @@ bool AerotechMotionHandler::endRunU()
 
 //******************************************
 //gantry current position
-std::vector<double> AerotechMotionHandler::whereAmI() {
+std::vector<double> AerotechMotionHandler::whereAmI(int ific_value) {
     std::vector<double> position = {qQNaN(), qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     if (gantryConnected) {
         double x, y, z, u;

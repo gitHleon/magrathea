@@ -49,7 +49,7 @@ public slots:
 
     //******************************************
     // gantry current position
-    virtual std::vector<double> whereAmI();
+    virtual std::vector<double> whereAmI(int ific_value = 0);
     // gantry current status
     virtual bool getXAxisState();
     virtual bool getYAxisState();
@@ -101,7 +101,7 @@ public slots:
 
     //******************************************
     // Safety limits for movement
-    virtual bool validate_target_pos(double x, double y, double z);
+    virtual bool validate_target_pos(double x, double y, double z, double z_2=0);
 
     //******************************************
     // default speeds

@@ -125,20 +125,20 @@ Magrathea::Magrathea(QWidget *parent) :
     //position move
     ui->xAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->xAxisPositionMoveDoubleSpinBox->setValue(0.0);
-    ui->xAxisPositionMoveDoubleSpinBox->setMinimum(0.0);
+    ui->xAxisPositionMoveDoubleSpinBox->setMinimum(-1000.0);
     ui->xAxisPositionMoveDoubleSpinBox->setMaximum(1000.0);
     ui->xAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->xAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->yAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->yAxisPositionMoveDoubleSpinBox->setValue(0.0);
     ui->yAxisPositionMoveDoubleSpinBox->setMinimum(-1000.0);
-    ui->yAxisPositionMoveDoubleSpinBox->setMaximum(0.0);
+    ui->yAxisPositionMoveDoubleSpinBox->setMaximum(1000.0);
     ui->yAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->yAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->zAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->zAxisPositionMoveDoubleSpinBox->setValue(0.0);
     ui->zAxisPositionMoveDoubleSpinBox->setMinimum(-300.0);
-    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(0.0);
+    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(300.0);
     ui->zAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->zAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->z_2_AxisPositionMoveDoubleSpinBox->setFont(font);
@@ -156,31 +156,31 @@ Magrathea::Magrathea(QWidget *parent) :
 
     //speed
     ui->xAxisSpeedDoubleSpinBox->setFont(font);
-    ui->xAxisSpeedDoubleSpinBox->setValue(50.0);
+    ui->xAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->xAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->xAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->xAxisSpeedDoubleSpinBox->setDecimals(1);
     ui->xAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->yAxisSpeedDoubleSpinBox->setFont(font);
-    ui->yAxisSpeedDoubleSpinBox->setValue(50.0);
+    ui->yAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->yAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->yAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->yAxisSpeedDoubleSpinBox->setDecimals(1);
     ui->yAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->zAxisSpeedDoubleSpinBox->setFont(font);
-    ui->zAxisSpeedDoubleSpinBox->setValue(30.0);
+    ui->zAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->zAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->zAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->zAxisSpeedDoubleSpinBox->setDecimals(1);
     ui->zAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->z_2_AxisSpeedDoubleSpinBox->setFont(font);
-    ui->z_2_AxisSpeedDoubleSpinBox->setValue(30.0);
+    ui->z_2_AxisSpeedDoubleSpinBox->setValue(10.0);
     ui->z_2_AxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->z_2_AxisSpeedDoubleSpinBox->setMaximum(50.0);
     ui->z_2_AxisSpeedDoubleSpinBox->setDecimals(1);
     ui->z_2_AxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->uAxisSpeedDoubleSpinBox->setFont(font);
-    ui->uAxisSpeedDoubleSpinBox->setValue(30.0);
+    ui->uAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->uAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->uAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->uAxisSpeedDoubleSpinBox->setDecimals(1);
@@ -247,7 +247,9 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Calib_button,    SIGNAL(clicked(bool)), this, SLOT(Calibration_ButtonClicked()));
     connect(ui->Calib_button_2,  SIGNAL(clicked(bool)), this, SLOT(Calibration_2_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
-    connect(ui->focus_test      ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->focusButton     ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
+    connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
     connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
 
@@ -321,16 +323,34 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
-    ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-    ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-    ui->zAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-    ui->z_2_AxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-    ui->uAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
-    ui->xAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-    ui->yAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-    ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-    ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-    ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+    std::vector <double> pos_t = mMotionHandler->whereAmI();
+
+    ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
+    ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
+    ui->zAxisPositionLine->setText(QString::number(    pos_t[2], 'f', 3));
+    ui->z_2_AxisPositionLine->setText(QString::number( pos_t[4], 'f', 3));
+    ui->uAxisPositionLine->setText(QString::number(    pos_t[3], 'f', 3));
+    ui->xAxisPositionLine2->setText(QString::number(   pos_t[0], 'f', 3));
+    ui->yAxisPositionLine2->setText(QString::number(   pos_t[1], 'f', 3));
+    ui->zAxisPositionLine2->setText(QString::number(   pos_t[2], 'f', 3));
+    ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
+    ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
+
+//    if(mMotionHandler->validate_target_pos(pos_t.at(0),pos_t.at(1),pos_t.at(2),pos_t.at(4))){
+//        mMotionHandler->stop();
+//    }
+
+//    ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
+//    ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
+//    ui->zAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
+//    ui->z_2_AxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
+//    ui->uAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+//    ui->xAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
+//    ui->yAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
+//    ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
+//    ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
+//    ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
+
     //axes status update
     bool current =  mMotionHandler->getXAxisState();
     led_label(ui->label_8,  mMotionHandler->getXAxisState());
@@ -388,14 +408,30 @@ void Magrathea::focusButtonClicked()
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
+    cap.set(CV_CAP_PROP_FPS, 5.0);
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     FocusFinder->Set_camera(cap);
+    FocusFinder->Set_gantry(mMotionHandler);
+    FocusFinder->Set_log(outputLogTextEdit);
     double focus_position = -1.;
+
+    if(sender() == ui->focusButton){
     FocusFinder->find_focus(focus_position);
+    } else if (sender() == ui->std_dev_button){
+        cv::Mat mat_from_camera;
+        bool bSuccess = cap.read(mat_from_camera);
+        if (!bSuccess){ //if not success
+            qInfo("Cannot read a frame from video stream");
+            return;
+        }
+        double value_std_dev = FocusFinder->eval_stddev(mat_from_camera);
+        qInfo(" std dev value : %5.5f",value_std_dev);
+    } else if(sender() == ui->std_dev_many_button){
+        FocusFinder->Eval_syst_scan();
+    }
     qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;
     cap.release();         //Going back to QCameraa
@@ -434,7 +470,7 @@ void Magrathea::Camera_test(){
 
     if (!cap.isOpened())  // if not success, exit program
     {
-        qInfo("Cannot open the video cam");
+        qWarning("Cannot open the video cam");
         _getch();
         return;
     }
@@ -483,7 +519,7 @@ void Magrathea::Camera_test(){
 
     cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
     bool bEnd = false;
-    int img = 100;
+    int img = 10;
     while (!bEnd && img > 0)
     {
         cv::Mat frame;

@@ -817,7 +817,7 @@ bool ACSCMotionHandler::endRunU()
 
 //******************************************
 //gantry current position
-std::vector<double> ACSCMotionHandler::whereAmI() {
+std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
     std::vector<double> position = {-99990.0,-99990.0,-99990.0,-99990.0,-99990.0};
     double position_tmp = -99999.9;
     if(!gantryConnected)
@@ -825,27 +825,48 @@ std::vector<double> ACSCMotionHandler::whereAmI() {
     //try difference with acsc_GetTargetPosition sec 4.16 C library manual
     //try also APOS variable with acsc_ReadReal function (4.4.3)
     //try difference with acsc_GetRPosition sec 4.12 C library manual
+    //try difference with acsc_GetFPosition sec 4.12 C library manual
+    if(ific_value == 0){
+        if(acsc_GetFPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position X axis: %d ",acsc_GetLastError());
+        position[0] = position_tmp;
 
-    if(acsc_GetFPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
-        qWarning("Error get position X axis: %d ",acsc_GetLastError());
-    position[0] = position_tmp;
+        if(acsc_GetFPosition(gantry,Y_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position Y axis: %d ",acsc_GetLastError());
+        position[1] = position_tmp;
 
-    if(acsc_GetFPosition(gantry,Y_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
-        qWarning("Error get position Y axis: %d ",acsc_GetLastError());
-    position[1] = position_tmp;
+        if(acsc_GetFPosition(gantry,Z_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position Z axis: %d ",acsc_GetLastError());
+        position[2] = position_tmp;
 
-    if(acsc_GetFPosition(gantry,Z_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
-        qWarning("Error get position Z axis: %d ",acsc_GetLastError());
-    position[2] = position_tmp;
+        if(acsc_GetFPosition(gantry,U_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        position[3] = position_tmp;
 
-    if(acsc_GetFPosition(gantry,U_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
-    position[3] = position_tmp;
+        if(acsc_GetFPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
+        position[4] = position_tmp;
+    } else if(ific_value == 1){
+        if(acsc_GetTargetPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position X axis: %d ",acsc_GetLastError());
+        position[0] = position_tmp;
 
-    if(acsc_GetFPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
-        qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
-    position[4] = position_tmp;
+        if(acsc_GetTargetPosition(gantry,Y_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position Y axis: %d ",acsc_GetLastError());
+        position[1] = position_tmp;
 
+        if(acsc_GetTargetPosition(gantry,Z_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position Z axis: %d ",acsc_GetLastError());
+        position[2] = position_tmp;
+
+        if(acsc_GetTargetPosition(gantry,U_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        position[3] = position_tmp;
+
+        if(acsc_GetTargetPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
+        position[4] = position_tmp;
+    }
     return position;
 }
 
@@ -925,6 +946,12 @@ bool ACSCMotionHandler::validate_target_pos(double x, double y, double z_1,doubl
         qWarning("ERROR!! Target position is NOT valid, aborting motion.");
         return true;
     } else if (y < -300 && z_1 < -40){
+        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
+        return true;
+    } else if (z_1 < -60){
+        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
+        return true;
+    } else if (z_2 < -20){
         qWarning("ERROR!! Target position is NOT valid, aborting motion.");
         return true;
     } else { // conditions are not met, position is valid, carry on...

@@ -682,7 +682,7 @@ bool MotionHandler::endRunU()
 
 //******************************************
 //gantry current position
-std::vector<double> MotionHandler::whereAmI() {
+std::vector<double> MotionHandler::whereAmI(int ific_value) {
     std::vector<double> position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     if (gantryConnected) {
         position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
@@ -692,7 +692,7 @@ std::vector<double> MotionHandler::whereAmI() {
 
 //******************************************
 // Safety limits for movement
-bool MotionHandler::validate_target_pos(double x, double y, double z)
+bool MotionHandler::validate_target_pos(double x, double y, double z, double z_2)
 {
     qInfo("checking if target position is safe");
     if (true) { // condition is true, position is NOT valid, abort motion.

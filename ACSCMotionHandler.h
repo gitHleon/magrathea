@@ -52,7 +52,7 @@ public slots:
 
     //******************************************
     // gantry current position
-    virtual std::vector<double> whereAmI();
+    virtual std::vector<double> whereAmI(int ific_value = 0);
     // gantry current status
     virtual bool getXAxisState();
     virtual bool getYAxisState();
