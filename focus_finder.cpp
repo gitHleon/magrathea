@@ -78,7 +78,7 @@ void Focus_finder::find_focus(double &focus_height)
     for(int i=0; i<numb_steps;i++){//large scan to find the position of the focus
         gantry->moveZBy(z_step,1.);//1 mm/s
         cap.read(mat_from_outside);
-        Sleeper::msleep(100);
+        Sleeper::msleep(10);
         cap.read(mat_from_outside);
         cv::Mat RoiImage = mat_from_outside(regione_interessante);
         double StdDev_t = eval_stddev(RoiImage);
