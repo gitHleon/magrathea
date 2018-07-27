@@ -125,20 +125,20 @@ Magrathea::Magrathea(QWidget *parent) :
     //position move
     ui->xAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->xAxisPositionMoveDoubleSpinBox->setValue(0.0);
-    ui->xAxisPositionMoveDoubleSpinBox->setMinimum(0.0);
+    ui->xAxisPositionMoveDoubleSpinBox->setMinimum(-1000.0);
     ui->xAxisPositionMoveDoubleSpinBox->setMaximum(1000.0);
     ui->xAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->xAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->yAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->yAxisPositionMoveDoubleSpinBox->setValue(0.0);
     ui->yAxisPositionMoveDoubleSpinBox->setMinimum(-1000.0);
-    ui->yAxisPositionMoveDoubleSpinBox->setMaximum(0.0);
+    ui->yAxisPositionMoveDoubleSpinBox->setMaximum(1000.0);
     ui->yAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->yAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->zAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->zAxisPositionMoveDoubleSpinBox->setValue(0.0);
     ui->zAxisPositionMoveDoubleSpinBox->setMinimum(-300.0);
-    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(0.0);
+    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(300.0);
     ui->zAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->zAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->z_2_AxisPositionMoveDoubleSpinBox->setFont(font);
@@ -156,31 +156,31 @@ Magrathea::Magrathea(QWidget *parent) :
 
     //speed
     ui->xAxisSpeedDoubleSpinBox->setFont(font);
-    ui->xAxisSpeedDoubleSpinBox->setValue(50.0);
+    ui->xAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->xAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->xAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->xAxisSpeedDoubleSpinBox->setDecimals(1);
     ui->xAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->yAxisSpeedDoubleSpinBox->setFont(font);
-    ui->yAxisSpeedDoubleSpinBox->setValue(50.0);
+    ui->yAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->yAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->yAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->yAxisSpeedDoubleSpinBox->setDecimals(1);
     ui->yAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->zAxisSpeedDoubleSpinBox->setFont(font);
-    ui->zAxisSpeedDoubleSpinBox->setValue(30.0);
+    ui->zAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->zAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->zAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->zAxisSpeedDoubleSpinBox->setDecimals(1);
     ui->zAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->z_2_AxisSpeedDoubleSpinBox->setFont(font);
-    ui->z_2_AxisSpeedDoubleSpinBox->setValue(30.0);
+    ui->z_2_AxisSpeedDoubleSpinBox->setValue(10.0);
     ui->z_2_AxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->z_2_AxisSpeedDoubleSpinBox->setMaximum(50.0);
     ui->z_2_AxisSpeedDoubleSpinBox->setDecimals(1);
     ui->z_2_AxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->uAxisSpeedDoubleSpinBox->setFont(font);
-    ui->uAxisSpeedDoubleSpinBox->setValue(30.0);
+    ui->uAxisSpeedDoubleSpinBox->setValue(10.0);
     ui->uAxisSpeedDoubleSpinBox->setMinimum(0.0);
     ui->uAxisSpeedDoubleSpinBox->setMaximum(300.0);
     ui->uAxisSpeedDoubleSpinBox->setDecimals(1);
@@ -336,9 +336,9 @@ void Magrathea::updatePosition(){
     ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
 
-    if(mMotionHandler->validate_target_pos(pos_t.at(0),pos_t.at(1),pos_t.at(2),pos_t.at(4))){
-        mMotionHandler->stop();
-    }
+//    if(mMotionHandler->validate_target_pos(pos_t.at(0),pos_t.at(1),pos_t.at(2),pos_t.at(4))){
+//        mMotionHandler->stop();
+//    }
 
 //    ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
 //    ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));

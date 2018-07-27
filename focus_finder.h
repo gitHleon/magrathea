@@ -64,7 +64,7 @@ private:
     cv::Mat image;
     MotionHandler *gantry;
     const int measure_points = 6;
-    const int z_pos_index = 2;
+    const unsigned int z_pos_index = 2;
     const int window_size = 1000;
     double x[6] = {};
     double y[6] = {};

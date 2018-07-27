@@ -95,12 +95,13 @@ void Focus_finder::find_focus(double &focus_height)
     gantry->moveZTo(Z_MAX,1.);//add safety control
 
     int Iterations = 3;
+    z_step = 0.33 * z_step;
     for(int j=0; j<Iterations;j++){//fine scan to find the position of the focus
         gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.);
         for(int i=0; i<measure_points;i++){
             gantry->moveZBy(z_step,1.);
             cap.read(mat_from_outside);
-            Sleeper::msleep(100);
+            Sleeper::msleep(10);
             cap.read(mat_from_outside);
             z_from_outside = gantry->whereAmI(1).at(z_pos_index);
             double StdDev_t = eval_stddev(mat_from_outside);
@@ -123,51 +124,13 @@ void Focus_finder::find_focus(double &focus_height)
         gantry->moveZTo(Z_MAX,1.);//add safety control
     }
 
-//    while(!Focus_found){
-//        qInfo("Iteration : %i",Iterations);
-//        //add user defined condition to tell software if focus is forward or backward wrt current position
-//        for(int i=0; i<measure_points;i++){
-//            gantry->moveZBy(direction*z_step,1.);
-//            cap.read(mat_from_outside);
-//            Sleeper::msleep(100);
-//            cap.read(mat_from_outside);
-//            z_from_outside = gantry->whereAmI(1).at(z_pos_index);
-//            StdDev_t = eval_stddev(mat_from_outside);
-//            if(StdDev_t > StdDev_MAX){
-//                StdDev_MAX = StdDev_t;
-//                Z_MAX = z_from_outside;
-//            }
-//            qInfo("i : %i ; z_step : %3.4f ; z : %3.4f ; stddev : %5.5f ;; z max : %3.4f ; stddev_MAX: %5.5f",
-//                  i,z_step,z_from_outside,StdDev_t,Z_MAX,StdDev_MAX);
-//            if((0.33 * z_step) <= threshold){
-//                //this has to be the last iteration
-//                x[i] = z_from_outside;
-//                y[i] = StdDev_t;
-//            }
-//        }// for 6
-//        Is_Max = (StdDev_MAX > 45);//adjust this value according to the performance of your camera
-//        if(!Is_Max){
-//            qWarning("Error: No max is found. Try changing search range or step size.");
-//            return;
-//        }
-//        z_step = 0.33 * z_step; //if step start as 0.5 it should reach 0.02 in 3 iterations
-//        Iterations++;
-//        if(z_step <= threshold)
-//            Focus_found = true;
-//        z_temp = Z_MAX;//destination
-//        if(!Focus_found)
-//            z_temp = z_temp - z_step*4; //4 steps correction, only if focus is not found, otherwise move to focus position
-//        z_temp = z_temp - gantry->whereAmI(1).at(z_pos_index); // relative distance from current position
-//        gantry->moveZBy(z_temp,1.);
-//    }//while (!focus not found)
     qInfo("Focus max z : %3.4f ;  stddev_MAX : %5.5f ",Z_MAX,StdDev_MAX);
     double Z_out = 0.;
     perform_fit(Z_out);
     qInfo("Focus fit z : %3.4f",Z_out);
     focus_height = Z_out;//outputvalue
     //z_temp = Z_out - gantry->whereAmI(1).at(z_pos_index); // relative distance from current position
-    gantry->moveZTo(Z_out,1.);//add safety control
-    //    gantry->moveZBy(z_temp,1.);
+    gantry->moveZTo(Z_MAX,1.);//add safety control
 }
 
 void Focus_finder::perform_fit(double &z_output)
@@ -225,7 +188,7 @@ void Focus_finder::Eval_syst_scan(){
         gantry->moveZBy(z_step,1.);//1 mm/s
         if (cap.isOpened()){
             cap.read(mat_from_outside);
-            Sleeper::msleep(100);
+            Sleeper::msleep(10);
             cap.read(mat_from_outside);
         } else {
             qWarning("Error : Not able to open camera.");
