@@ -43,6 +43,16 @@ double Focus_finder::eval_stddev(const cv::Mat &input_image)
     return  stddev_t[0];
 }
 
+cv::Mat Focus_finder::get_component(const cv::Mat &input_mat,const unsigned int &input){
+    cv::Mat bgr[3];   //destination array
+    cv::split(input_mat,bgr);//split source
+    return bgr[input];
+    //Note: OpenCV uses BGR color order
+    //    cv::imshow("blue",bgr[0]);  //blue channel
+    //    cv::imshow("green",bgr[1]); //green channel
+    //    cv::imshow("red",bgr[2]);   //red channel
+}
+
 void Focus_finder::find_focus(double &focus_height)
 {
     //Function that return the focus z coordinate
@@ -80,7 +90,8 @@ void Focus_finder::find_focus(double &focus_height)
         cap.read(mat_from_outside);
         Sleeper::msleep(10);
         cap.read(mat_from_outside);
-        cv::Mat RoiImage = mat_from_outside(regione_interessante);
+        //cv::Mat RoiImage = mat_from_outside(regione_interessante);
+        cv::Mat RoiImage = get_component(mat_from_outside(regione_interessante),2);
         double StdDev_t = eval_stddev(RoiImage);
         z_from_outside = gantry->whereAmI(1).at(z_pos_index);
         qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,z_from_outside,StdDev_t);
@@ -103,8 +114,9 @@ void Focus_finder::find_focus(double &focus_height)
             cap.read(mat_from_outside);
             Sleeper::msleep(10);
             cap.read(mat_from_outside);
+            cv::Mat RoiImage = get_component(mat_from_outside(regione_interessante),2);
             z_from_outside = gantry->whereAmI(1).at(z_pos_index);
-            double StdDev_t = eval_stddev(mat_from_outside);
+            double StdDev_t = eval_stddev(RoiImage);
             if(StdDev_t > StdDev_MAX){
                 StdDev_MAX = StdDev_t;
                 Z_MAX = z_from_outside;

@@ -59,6 +59,10 @@ public slots:
     void   Eval_syst_scan();
     void   Eval_syst_moving();
 
+
+private slots:
+    cv::Mat  get_component(const cv::Mat &input_mat,const unsigned int &input);
+
 private:
     cv::VideoCapture cap;
     cv::Mat image;

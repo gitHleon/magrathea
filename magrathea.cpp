@@ -1195,19 +1195,49 @@ void Magrathea::led_label(QLabel *label, bool value){
 
 void Magrathea::color_test(){
     std::cout<<"here"<<std::endl;
-    std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/001.jpg",//0
-                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/002.jpg",
-                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/004.jpg",
-                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/005.jpg",
-                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/006.jpg",
-                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/007.jpg"//5
-                             };
-    cv::Mat input = cv::imread(Images[ui->spinBox_input->value()],CV_LOAD_IMAGE_COLOR);
+//    std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/001.jpg",//0
+//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/002.jpg",
+//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/004.jpg",
+//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/005.jpg",
+//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/006.jpg",
+//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/007.jpg"//5
+//                             };
+//    cv::Mat input = cv::imread(Images[ui->spinBox_input->value()],CV_LOAD_IMAGE_COLOR);
     //cv::imshow("input",input);
+
+    cv::destroyAllWindows();
+    mCamera->stop(); //closing QCamera
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+
+    if (!cap.isOpened()){
+        //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return;}
+
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+
+    cv::Mat input;
+    bool bSuccess = cap.read(input);
+    if (!bSuccess){ //if not success
+        qInfo("Cannot read a frame from video stream");
+        return;
+    }
+
     cv::Mat bgr[3];   //destination array
     cv::split(input,bgr);//split source
 
     //Note: OpenCV uses BGR color order
+    cv::imshow("blue",bgr[0]);  //blue channel
+    cv::imshow("green",bgr[1]); //green channel
+    cv::imshow("red",bgr[2]);   //red channel
+
+
     cv::imwrite("blue.png",bgr[0]); //blue channel
     cv::imwrite("green.png",bgr[1]); //green channel
     cv::imwrite("red.png",bgr[2]); //red channel
@@ -1219,7 +1249,7 @@ void Magrathea::destroy_all(){
 
 void Magrathea::loop_test(){
 
-    for(int i=25;i<35;i++){
+    for(int i=0;i<35;i++){
         Sleeper::sleep(1);
         std::cout<<"It "<<i<<std::endl;
         ui->spinBox_input->setValue(i);
