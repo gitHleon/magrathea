@@ -283,7 +283,7 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
     //add return of the fid center
 }
 
-void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance){
+void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input){
 
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
@@ -298,7 +298,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         int center_cols = image.cols/2.0;
 
         cv::imshow("f. 0 image",image);
-        const int window_size = 420; //1000
+        const int window_size = 2500; // 420
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
             return;}
@@ -360,26 +360,32 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             detector = cv::xfeatures2d ::StarDetector::create();
             algo_name = "STAR";
         }else{
-            log->append("Error!! DescriptorAlgorithm not set properly!!");
+            qWarning("Error!! DescriptorAlgorithm not set properly!!");
             return;}
         std::vector<cv::KeyPoint> keypoints_F(0);
         std::vector<cv::KeyPoint> keypoints_image(0);
+        keypoints_F.clear();
+        keypoints_image.clear();
         std::vector<cv::DMatch> matches;
         cv::Ptr<cv::DescriptorExtractor> descriptor_extractor;
         std::vector<std::vector< cv::DMatch> > matches_2;
         cv::Mat descriptorImage;
         cv::Mat descriptorFiducial;
-        if(detector->empty())
-            std::cout<<"Detector is empty"<<std::endl;
-
+        //        if(detector->empty()){
+        //            std::cout<<"Detector is empty"<<std::endl;
+        //        }
         if(DescriptorAlgorithm != 4){
             detector->detectAndCompute(image_gray,cv::Mat(),keypoints_image,descriptorImage,false);
             detector->detectAndCompute(image_F_gray,cv::Mat(),keypoints_F,descriptorFiducial,false);
         }else{
-            log->append("Star feature detection");
+            qInfo("Star feature detection");
+            std::cout<<"ok0"<<std::endl;
             detector->detect(image_gray,keypoints_image);
+            std::cout<<"ok00"<<std::endl;
             detector->detect(image_F_gray,keypoints_F);
+            std::cout<<"ok"<<std::endl;
             descriptor_extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
+            std::cout<<"ok2"<<std::endl;
             descriptor_extractor->compute(image_gray,keypoints_image,descriptorImage);
             descriptor_extractor->compute(image_F_gray,keypoints_F,descriptorFiducial);
         }
@@ -400,17 +406,11 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             if(flann_true){//flann is NOT working
                 int FLANN_INDEX_KDTREE = 0;
                 cv::Ptr<cv::flann::IndexParams> index_params;
-                std::cout<<"ok 1"<<std::endl;
                 index_params->setAlgorithm(FLANN_INDEX_KDTREE);
-                std::cout<<"ok 2"<<std::endl;
                 index_params->setInt("tree",5);
-                std::cout<<"ok 3"<<std::endl;
                 cv::Ptr<cv::flann::SearchParams> search_params = new cv::flann::SearchParams(50,0,true);
-                std::cout<<"ok 4"<<std::endl;
                 cv::Ptr<cv::FlannBasedMatcher> matcher_flann = new cv::FlannBasedMatcher(index_params,search_params);
-                std::cout<<"ok 5"<<std::endl;
                 matcher_flann->knnMatch(descriptorFiducial,descriptorImage,matches_2,2);
-                std::cout<<"ok 6"<<std::endl;
             }else{
                 matcher = cv::BFMatcher::create();
                 matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
@@ -507,6 +507,9 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow(algo_name +" Match", result);
         cv::imshow(algo_name +" Match - RoI", RoiImage);
         cv::imshow(algo_name +" Match - original", image);
+        cv::putText(RoiImage,algo_name,cv::Point(30,2500), CV_FONT_HERSHEY_PLAIN,10,cv::Scalar(255,255,255),3);
+        auto s = std::to_string(temp_input);
+        cv::imwrite(algo_name+"_"+s+".jpg",RoiImage);
 
         X_distance = (center_cols - F_center.x)*(1./Calibration); //[um]
         Y_distance = (center_rows - F_center.y)*(1./Calibration); //[um]
@@ -530,6 +533,9 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         //        qInfo("Scale 0      :\t %.2f",p_0);
         //        X_distance = c*Calibration;
         //        Y_distance = f*Calibration;
+        descriptor_extractor.release();
+        matcher.release();
+        detector.release();
         return;
 }
 

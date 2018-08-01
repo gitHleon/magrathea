@@ -67,6 +67,11 @@ private slots:
     void AxisEnableDisableButton();
     void led_label(QLabel *label, bool value);
 
+    //test
+    void color_test();
+    void destroy_all();
+    void loop_test();
+
 private:
     Ui::Magrathea *ui;
 

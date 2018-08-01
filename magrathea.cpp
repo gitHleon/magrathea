@@ -269,17 +269,17 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->freeRunRadioButton, SIGNAL(clicked(bool)), this, SLOT(enableJoystickFreeRun(bool)));
     connect(ui->stepRadioButton,    SIGNAL(clicked(bool)), this, SLOT(enableJoystickStepMotion(bool)));
     //SHORTCUTS
-//    shortcut_PX   = Qshortcut(QKeySequence("Alt+W"),this);
-//    shortcut_NX   = Qshortcut(QKeySequence("Alt+S"),this);
-//    shortcut_PY   = Qshortcut(QKeySequence("Alt+A"),this);
-//    shortcut_NY   = Qshortcut(QKeySequence("Alt+D"),this);
-//    shortcut_PZ   = Qshortcut(QKeySequence("Alt+Q"),this);
-//    shortcut_NZ   = Qshortcut(QKeySequence("Alt+Z"),this);
-//    shortcut_PZ_2 = Qshortcut(QKeySequence("Alt+E"),this);
-//    shortcut_NZ_2 = Qshortcut(QKeySequence("Alt+C"),this);
-//    shortcut_PU   = Qshortcut(QKeySequence("Alt+R"),this);
-//    shortcut_NU   = Qshortcut(QKeySequence("Alt+V"),this);
-//    shortcut_STOP = Qshortcut(QKeySequence("Alt+X"),this);
+    //    shortcut_PX   = Qshortcut(QKeySequence("Alt+W"),this);
+    //    shortcut_NX   = Qshortcut(QKeySequence("Alt+S"),this);
+    //    shortcut_PY   = Qshortcut(QKeySequence("Alt+A"),this);
+    //    shortcut_NY   = Qshortcut(QKeySequence("Alt+D"),this);
+    //    shortcut_PZ   = Qshortcut(QKeySequence("Alt+Q"),this);
+    //    shortcut_NZ   = Qshortcut(QKeySequence("Alt+Z"),this);
+    //    shortcut_PZ_2 = Qshortcut(QKeySequence("Alt+E"),this);
+    //    shortcut_NZ_2 = Qshortcut(QKeySequence("Alt+C"),this);
+    //    shortcut_PU   = Qshortcut(QKeySequence("Alt+R"),this);
+    //    shortcut_NU   = Qshortcut(QKeySequence("Alt+V"),this);
+    //    shortcut_STOP = Qshortcut(QKeySequence("Alt+X"),this);
 
     //home axes
     connect(ui->axesHomeButton,  &QPushButton::clicked, mMotionHandler, &MotionHandler::home);
@@ -309,6 +309,11 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->zAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->z_2_AxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->uAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
+
+    //test
+    connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
+    connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
+    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test()));
 }
 
 //******************************************
@@ -560,6 +565,7 @@ void Magrathea::Fiducial_finder_button_2_Clicked()
 
 
 void Magrathea::FiducialFinderCaller(const int &input){
+    cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
 
     //opening camera with opencv
@@ -589,22 +595,113 @@ void Magrathea::FiducialFinderCaller(const int &input){
     bool from_file = ui->calib_from_file_Box->isChecked();
 
     if(from_file){
-        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",//0  F
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0005.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0023.bmp",//5
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",//10
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_3.bmp"
-                                 };
+//        std::string Images[38] = {"C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/001.jpg",  //F
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/002.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/003.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/004.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/005.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/006.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/007.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/008.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/009.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/010.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/011.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/012.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/013.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/014.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/015.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/016.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/017.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/018.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/019.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/020.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/021.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/022.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/024.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/025.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/026.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/027.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/028.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/029.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/030.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/031.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/032.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/033.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/034.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/035.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/036.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/037.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/038.jpg"
+//                                 };
+        std::string Images[] = {"C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/001.jpg",//  F
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/002.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/003.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/004.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/005.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/006.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/008.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/009.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/010.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/011.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/012.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/013.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/014.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/015.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/016.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/017.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/018.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/019.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/019.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/020.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/021.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/022.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/023.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/024.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/025.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/026.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/027.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/028.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/029.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/030.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/031.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/032.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/033.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/034.jpg",
+                                "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/035.jpg"
+                               };
+//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/005.jpg",//0  F
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/006.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/008.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/009.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/010.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/022.jpg",//5
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/025.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/027.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/030.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/038.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/043.jpg",//10
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/051.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/060.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/072.jpg",
+//                                  "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/075.jpg"
+//                                 };
+//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",//0  F
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0005.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0023.bmp",//5
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",//10
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
+//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_3.bmp"
+//                                 };
 //        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0001.bmp",//0   5dot
 //                                  "C:/Users/Silicio/WORK/Full_Size/W080/0002.bmp",
 //                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008.bmp",
@@ -639,7 +736,7 @@ void Magrathea::FiducialFinderCaller(const int &input){
 //                                 };
         Ffinder->SetImage(Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Set_calibration(1.6); //get calibration from a private variable
+        Ffinder->Set_calibration(3.4); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -658,21 +755,23 @@ void Magrathea::FiducialFinderCaller(const int &input){
 
     Ffinder->Set_log(outputLogTextEdit);
 
-    double distance_x = 888888888.8;
-    double distance_y = 888888888.8;
+    double distance_x = 888888.8;
+    double distance_y = 888888.8;
 
     if(input == 1){
         Ffinder->Find_circles(distance_x,distance_y);
         std::cout<<"1. "<<std::endl;
     } else if (input == 2){
-        std::string Images[4] = {"C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0001_5dot_2.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0006_cross.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0024_4dot_2.bmp"
-                                 };
+        std::string Images[] = {"C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
+                                 "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007_F.jpg",
+                                 "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/032_F.jpg",
+                                 "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007_F_2.jpg",
+                                 "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/005_F_2.jpg",
+                                 "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/005_F_3.jpg"
+                                };
         Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y);
+        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value());
     }
     qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
     delete Ffinder;
@@ -701,6 +800,7 @@ void Magrathea::calibrationCaller(int input){
     //    std::cout<<"st: "<<status<<" identifier: "<<temp_str<<" ; x: "<< temp_coord.x<<" y: "<<temp_coord.y<<std::endl;
     //    return;
     ////////////////////////////////////////
+    cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
     Calibrator * calibrator = new Calibrator(this);
 
@@ -973,25 +1073,25 @@ void Magrathea::stepMotion()
 {
     //joystick
     if (sender() == ui->positiveXButton)
-        mMotionHandler->moveXBy(+1*abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveXBy(+1*std::abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeXButton)
-        mMotionHandler->moveXBy(-1*abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveXBy(-1*std::abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveYButton)
-        mMotionHandler->moveYBy(+1*abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveYBy(+1*std::abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeYButton)
-        mMotionHandler->moveYBy(-1*abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveYBy(-1*std::abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveZButton)
-        mMotionHandler->moveZBy(+1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZBy(+1*std::abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZButton)
-        mMotionHandler->moveZBy(-1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZBy(-1*std::abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveZ_2_Button)
-        mMotionHandler->moveZ_2_By(+1*abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZ_2_By(+1*std::abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZ_2_Button)
-        mMotionHandler->moveZ_2_By(-1*abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZ_2_By(-1*std::abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveUButton)
-        mMotionHandler->moveUBy(+1*abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveUBy(+1*std::abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeUButton)
-        mMotionHandler->moveUBy(-1*abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveUBy(-1*std::abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
 
     //naviagtion panel
     else if  (sender() == ui->xAxisStepMoveButton)
@@ -1092,3 +1192,46 @@ void Magrathea::led_label(QLabel *label, bool value){
         label->setText("OFF");
     }
 }
+
+void Magrathea::color_test(){
+    std::cout<<"here"<<std::endl;
+    std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/001.jpg",//0
+                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/002.jpg",
+                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/004.jpg",
+                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/005.jpg",
+                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/006.jpg",
+                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/007.jpg"//5
+                             };
+    cv::Mat input = cv::imread(Images[ui->spinBox_input->value()],CV_LOAD_IMAGE_COLOR);
+    //cv::imshow("input",input);
+    cv::Mat bgr[3];   //destination array
+    cv::split(input,bgr);//split source
+
+    //Note: OpenCV uses BGR color order
+    cv::imwrite("blue.png",bgr[0]); //blue channel
+    cv::imwrite("green.png",bgr[1]); //green channel
+    cv::imwrite("red.png",bgr[2]); //red channel
+}
+
+void Magrathea::destroy_all(){
+    cv::destroyAllWindows();
+}
+
+void Magrathea::loop_test(){
+
+    for(int i=25;i<35;i++){
+        Sleeper::sleep(1);
+        std::cout<<"It "<<i<<std::endl;
+        ui->spinBox_input->setValue(i);
+        FiducialFinderCaller(2);
+    }
+
+}
+
+
+
+
+
+
+
+
