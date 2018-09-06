@@ -13,10 +13,12 @@ public:
     explicit VerticalAlignmentTool(QWidget *parent = nullptr);
     ~VerticalAlignmentTool();
     void Set_camera(const cv::VideoCapture &m_cap);
+    void Evaluate_vignette();
 
 private:
     cv::VideoCapture cap;
     cv::Mat image;
+    void EvaluateEccentricity(const cv::RotatedRect &box, double &Eccentricity);
 
 };
 
