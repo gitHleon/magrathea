@@ -51,6 +51,7 @@ private slots:
     void FiducialFinderCaller(const int &input);
     void Fiducial_finder_button_1_Clicked();
     void Fiducial_finder_button_2_Clicked();
+    void VignetteButton_clicked();
     void Camera_test();
 
     //gantry

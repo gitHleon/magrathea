@@ -15,6 +15,7 @@
 #include "calibrator.h"
 #include "focus_finder.h"
 #include "Fiducial_finder.h"
+#include "verticalalignmenttool.h"
 #include <conio.h>
 #ifdef VANCOUVER
 #include <AerotechMotionhandler.h>
@@ -252,6 +253,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
     connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
+    connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -552,6 +554,32 @@ void Magrathea::Camera_test(){
     _getch();
     return;
 }
+
+//------------------------------------------
+//------------------------------------------
+void Magrathea::VignetteButton_clicked(){
+    cv::destroyAllWindows();
+    mCamera->stop(); //closing QCamera
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return;}
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 5.0);
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    VerticalAlignmentTool * tool = new VerticalAlignmentTool(this);
+    tool->Set_camera(cap);
+    tool->Evaluate_vignette();
+    delete tool;
+    cap.release();         //Going back to QCameraa
+    mCamera->start();
+    return;
+}
+
 
 //------------------------------------------
 //------------------------------------------

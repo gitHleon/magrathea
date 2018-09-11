@@ -512,7 +512,7 @@
           <rect>
            <x>30</x>
            <y>10</y>
-           <width>435</width>
+           <width>521</width>
            <height>163</height>
           </rect>
          </property>
@@ -634,6 +634,13 @@
            <widget class="QPushButton" name="f_loop_button">
             <property name="text">
              <string>fid finder loop</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="5">
+           <widget class="QPushButton" name="VignetteButton">
+            <property name="text">
+             <string>Vignette</string>
             </property>
            </widget>
           </item>

@@ -17,8 +17,8 @@ public:
 
 private:
     cv::VideoCapture cap;
-    cv::Mat image;
     void EvaluateEccentricity(const cv::RotatedRect &box, double &Eccentricity);
+    void DrawCross(cv::Mat &img_input, const cv::Point &center, const cv::Scalar &color);
 
 };
 
