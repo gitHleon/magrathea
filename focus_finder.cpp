@@ -35,12 +35,45 @@ void Focus_finder::Set_camera(const cv::VideoCapture &m_cap){
     cap = m_cap;
 }
 
+void Focus_finder::Set_color_int(const int &value){
+    color_int = value;
+}
+
+void Focus_finder::Set_use_laplacian(const bool &value){
+    use_laplacian = value;
+}
+
 double Focus_finder::eval_stddev(const cv::Mat &input_image)
 {
     cv::Scalar  mean_t;
     cv::Scalar  stddev_t;
-    cv::meanStdDev(input_image,mean_t,stddev_t);
+    cv::Mat output_img;
+    if(use_laplacian){
+        cv::Laplacian(input_image,output_img,CV_8U,3);
+        //cv::imshow("laplacian",output_img);
+        cv::meanStdDev(output_img,mean_t,stddev_t);
+    }else {
+        cv::meanStdDev(input_image,mean_t,stddev_t);
+    }
     return  stddev_t[0];
+}
+
+cv::Rect Focus_finder::get_rect(const cv::Mat &input_image){
+    int center_rows = input_image.rows/2.0; //Defining the center of the image
+    int center_cols = input_image.cols/2.0;
+    cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size);
+    return regione_interessante;
+
+}
+
+double Focus_finder::eval_stddev_ROI(const cv::Mat &input_image)
+{
+    cv::Mat RoiImage  = ( (color_int == -1) ? input_image(get_rect(input_image)) : get_component(input_image(get_rect(input_image)),color_int) );
+    double z_from_outside = gantry->whereAmI(1).at(z_pos_index);
+    double output = eval_stddev(RoiImage);
+    cv::imshow("Roi",RoiImage);
+    qInfo("Z : %3.4f ; stddev : %5.5f",z_from_outside,output);
+    return output;
 }
 
 cv::Mat Focus_finder::get_component(const cv::Mat &input_mat,const unsigned int &input){
@@ -70,9 +103,7 @@ void Focus_finder::find_focus(double &focus_height)
     qInfo("Auto-focus start");
     cv::Mat mat_from_outside;
     cap.read(mat_from_outside);
-    int center_rows = mat_from_outside.rows/2.0; //Defining the center of the image
-    int center_cols = mat_from_outside.cols/2.0;
-    cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
+    cv::Rect regione_interessante = get_rect(mat_from_outside);
 
     double z_step = 0.5;// mm //to be changed according the units of your gantry and shape of focus-height distribution
     double z_from_outside;
@@ -91,7 +122,7 @@ void Focus_finder::find_focus(double &focus_height)
         Sleeper::msleep(10);
         cap.read(mat_from_outside);
         //cv::Mat RoiImage = mat_from_outside(regione_interessante);
-        cv::Mat RoiImage = get_component(mat_from_outside(regione_interessante),2);
+        cv::Mat RoiImage = ( (color_int == -1) ? mat_from_outside(regione_interessante) : get_component(mat_from_outside(regione_interessante),color_int) );
         double StdDev_t = eval_stddev(RoiImage);
         z_from_outside = gantry->whereAmI(1).at(z_pos_index);
         qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,z_from_outside,StdDev_t);
@@ -100,9 +131,10 @@ void Focus_finder::find_focus(double &focus_height)
             Z_MAX = z_from_outside;
         }
     }
-    if(StdDev_MAX < 30){
-        qInfo("Too far from focus position. Camera needs to be < 3 mm far from focus.");
-    return;}
+    //double StdDev_MAX_temp = StdDev_MAX;
+    //if(StdDev_MAX < 30){
+    //    qInfo("Too far from focus position. Camera needs to be < 3 mm far from focus.");
+    //return;}
     gantry->moveZTo(Z_MAX,1.);//add safety control
 
     int Iterations = 3;
@@ -112,7 +144,7 @@ void Focus_finder::find_focus(double &focus_height)
         for(int i=0; i<measure_points;i++){
             gantry->moveZBy(z_step,1.);
             cap.read(mat_from_outside);
-            Sleeper::msleep(10);
+            Sleeper::msleep(20);
             cap.read(mat_from_outside);
             cv::Mat RoiImage = get_component(mat_from_outside(regione_interessante),2);
             z_from_outside = gantry->whereAmI(1).at(z_pos_index);
@@ -129,20 +161,20 @@ void Focus_finder::find_focus(double &focus_height)
                 y[i] = StdDev_t;
             }
         }// for 6
-        if(StdDev_MAX < 40){
-            qInfo("Autofocus failed.");
-        return;}
         z_step = 0.33 * z_step; //if step start as 0.5 it should reach 0.02 in 3 iterations
         gantry->moveZTo(Z_MAX,1.);//add safety control
+//        if(StdDev_MAX < StdDev_MAX_temp*1.3){
+//            qInfo("Autofocus failed.");
+//        return;}
     }
 
     qInfo("Focus max z : %3.4f ;  stddev_MAX : %5.5f ",Z_MAX,StdDev_MAX);
-    double Z_out = 0.;
-    perform_fit(Z_out);
-    qInfo("Focus fit z : %3.4f",Z_out);
-    focus_height = Z_out;//outputvalue
+    //double Z_out = 0.;
+    //perform_fit(Z_out);
+    //qInfo("Focus fit z : %3.4f",Z_out);
+    //focus_height = Z_out;//outputvalue
     //z_temp = Z_out - gantry->whereAmI(1).at(z_pos_index); // relative distance from current position
-    gantry->moveZTo(Z_MAX,1.);//add safety control
+    //gantry->moveZTo(Z_MAX,1.);//add safety control
 }
 
 void Focus_finder::perform_fit(double &z_output)

@@ -316,6 +316,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
     connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test()));
+    connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
 }
 
 //******************************************
@@ -424,7 +425,8 @@ void Magrathea::focusButtonClicked()
     FocusFinder->Set_gantry(mMotionHandler);
     FocusFinder->Set_log(outputLogTextEdit);
     double focus_position = -1.;
-
+    FocusFinder->Set_color_int(ui->ColorBox->value());
+    FocusFinder->Set_use_laplacian(ui->LaplacianBox->isChecked());
     if(sender() == ui->focusButton){
     FocusFinder->find_focus(focus_position);
     } else if (sender() == ui->std_dev_button){
@@ -434,7 +436,7 @@ void Magrathea::focusButtonClicked()
             qInfo("Cannot read a frame from video stream");
             return;
         }
-        double value_std_dev = FocusFinder->eval_stddev(mat_from_camera);
+        double value_std_dev = FocusFinder->eval_stddev_ROI(mat_from_camera);
         qInfo(" std dev value : %5.5f",value_std_dev);
     } else if(sender() == ui->std_dev_many_button){
         FocusFinder->Eval_syst_scan();
