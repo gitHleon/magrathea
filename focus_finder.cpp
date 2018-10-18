@@ -121,6 +121,12 @@ void Focus_finder::find_focus(double &focus_height)
         cap.read(mat_from_outside);
         Sleeper::msleep(10);
         cap.read(mat_from_outside);
+        Sleeper::msleep(10);
+        cap.read(mat_from_outside);
+        Sleeper::msleep(10);
+        cap.read(mat_from_outside);
+        Sleeper::msleep(10);
+        cap.read(mat_from_outside);
         //cv::Mat RoiImage = mat_from_outside(regione_interessante);
         cv::Mat RoiImage = ( (color_int == -1) ? mat_from_outside(regione_interessante) : get_component(mat_from_outside(regione_interessante),color_int) );
         double StdDev_t = eval_stddev(RoiImage);
@@ -144,7 +150,13 @@ void Focus_finder::find_focus(double &focus_height)
         for(int i=0; i<measure_points;i++){
             gantry->moveZBy(z_step,1.);
             cap.read(mat_from_outside);
-            Sleeper::msleep(20);
+            Sleeper::msleep(10);
+            cap.read(mat_from_outside);
+            Sleeper::msleep(10);
+            cap.read(mat_from_outside);
+            Sleeper::msleep(10);
+            cap.read(mat_from_outside);
+            Sleeper::msleep(10);
             cap.read(mat_from_outside);
             cv::Mat RoiImage = get_component(mat_from_outside(regione_interessante),2);
             z_from_outside = gantry->whereAmI(1).at(z_pos_index);
