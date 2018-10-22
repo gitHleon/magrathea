@@ -298,7 +298,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         int center_cols = image.cols/2.0;
 
         cv::imshow("f. 0 image",image);
-        const int window_size = 2500; // 420
+        const int window_size = 420; //2500; // 420
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
             return;}
@@ -507,9 +507,9 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow(algo_name +" Match", result);
         cv::imshow(algo_name +" Match - RoI", RoiImage);
         cv::imshow(algo_name +" Match - original", image);
-        cv::putText(RoiImage,algo_name,cv::Point(30,2500), CV_FONT_HERSHEY_PLAIN,10,cv::Scalar(255,255,255),3);
+        cv::putText(RoiImage,algo_name,cv::Point(30,window_size-4), CV_FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
         auto s = std::to_string(temp_input);
-        cv::imwrite(algo_name+"_"+s+".jpg",RoiImage);
+        cv::imwrite("EXPORT/"+algo_name+"_"+s+".jpg",RoiImage);
 
         X_distance = (center_cols - F_center.x)*(1./Calibration); //[um]
         Y_distance = (center_rows - F_center.y)*(1./Calibration); //[um]
