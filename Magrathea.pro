@@ -83,6 +83,7 @@ INCLUDEPATH += C:\opencv-build\install\include
        LIBS += C:\opencv-build\bin\libopencv_features2d341.dll
        LIBS += C:\opencv-build\bin\libopencv_xfeatures2d341.dll
        LIBS += C:\opencv-build\bin\libopencv_calib3d341.dll
+       LIBS += C:\opencv-build\bin\libopencv_aruco341.dll
 
 #Vancouver
 win32 : exists(C:/Program Files (x86)/Aerotech/A3200/CLibrary/Include/A3200.h) {

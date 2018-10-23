@@ -255,7 +255,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
     connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
-
+    connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
     connect(ui->enableAxesButton, SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked()));
@@ -1599,8 +1599,13 @@ void Magrathea::loop_test(){
     }
 }
 
-
-
+void Magrathea::Aruco_test(){
+    cv::Mat test_aruco;
+    auto dictionary = cv::aruco::generateCustomDictionary(512,3);
+    cv::aruco::drawMarker(dictionary, ui->ArucospinBox->value() , 200, test_aruco, 1);
+    cv::imshow("aruco",test_aruco);
+    ui->ArucospinBox->setValue(ui->ArucospinBox->value()+1);
+}
 
 
 

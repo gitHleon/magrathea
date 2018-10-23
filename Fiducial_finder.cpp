@@ -207,6 +207,7 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
 }
 
 void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
+    //DEPRECATED
 //to find the 4 dot fiducial
 
     if(image.empty()){
@@ -359,6 +360,32 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         }else if (DescriptorAlgorithm == 4){
             detector = cv::xfeatures2d ::StarDetector::create();
             algo_name = "STAR";
+        }else if (DescriptorAlgorithm == 5){//aruco
+            algo_name = "ARUCO";
+            auto dictionary = cv::aruco::generateCustomDictionary(512,3);
+            std::vector<int> markerIds;
+            std::vector<std::vector<cv::Point2f>> markerCorners, rejectedCandidates;
+            cv::Ptr<cv::aruco::DetectorParameters> parameters;
+            //cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
+            cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds);
+            cv::Mat outputImage = RoiImage.clone();
+            auto s     = std::to_string(temp_input);
+            auto match = std::to_string(markerCorners.size());
+            if(markerCorners.size()!=1){
+                X_distance = 800000+markerCorners.size();
+                Y_distance = 800000+markerCorners.size();
+                cv::putText(outputImage,"fail"+match,cv::Point(30,window_size-4), CV_FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
+            }else{
+                cv::aruco::drawDetectedMarkers(outputImage, markerCorners, markerIds);
+                cv::Point F_center = Square_center(markerCorners.at(0).at(0),markerCorners.at(0).at(1),
+                                                   markerCorners.at(0).at(2),markerCorners.at(0).at(3));
+                X_distance = (center_cols - F_center.x)*(1./Calibration); //[um]
+                Y_distance = (center_rows - F_center.y)*(1./Calibration); //[um]
+                cv::circle(outputImage, F_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
+            }
+            cv::imshow("aruco_image",outputImage);
+            cv::imwrite("EXPORT/"+algo_name+"_"+s+".jpg",outputImage);
+            return;
         }else{
             qWarning("Error!! DescriptorAlgorithm not set properly!!");
             return;}
