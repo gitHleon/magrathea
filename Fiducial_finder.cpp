@@ -304,7 +304,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         int center_cols = image.cols/2.0;
 
         cv::imshow("f. 0 image",image);
-        const int window_size = 420; //2500; // 420
+        const int window_size = 1700; //2500; // 420
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
             return;}

@@ -252,7 +252,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->focusButton     ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
-    connect(ui->Fiducial_finder_button,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
+    connect(ui->Fiducial_finder_button,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_Clicked()));
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     //gantry
@@ -626,10 +626,10 @@ void Magrathea::FiducialFinderCaller(const int &input){
      //   std::cout<<"1. "<<std::endl;
     //} else if (input == 2){
     if (input == 2){
-        std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/";
-        std::string Images[] = {address + "Aruco_M/aruco_M_fiducial_chip_1_1_pos_1.TIF",
-            address + "Atlas_E/atlasE_fiducial_chip_1_1_pos_1.TIF",
-            address + "Atlas_F/Fiducial_chip_1_1_pos_1.TIF",
+        std::string address = "D:/Images/Templates_mytutoyo/";
+        std::string Images[] = {address + "aruco_M_fiducial_chip_1_1_pos_1.TIF",
+            address + "atlasE_fiducial_chip_1_1_pos_1.TIF",
+            address + "Fiducial_chip_1_1_pos_1.TIF",
             "C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
             "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007_F.jpg",
             "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/032_F.jpg",
