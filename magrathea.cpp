@@ -15,7 +15,9 @@
 #include "calibrator.h"
 #include "focus_finder.h"
 #include "Fiducial_finder.h"
+#include "verticalalignmenttool.h"
 #include <conio.h>
+#include <fstream>
 #ifdef VANCOUVER
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
@@ -250,9 +252,9 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->focusButton     ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
-    connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
-    connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
-
+    connect(ui->Fiducial_finder_button,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
+    connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
+    connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
     connect(ui->enableAxesButton, SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked()));
@@ -268,18 +270,6 @@ Magrathea::Magrathea(QWidget *parent) :
     //joystick
     connect(ui->freeRunRadioButton, SIGNAL(clicked(bool)), this, SLOT(enableJoystickFreeRun(bool)));
     connect(ui->stepRadioButton,    SIGNAL(clicked(bool)), this, SLOT(enableJoystickStepMotion(bool)));
-    //SHORTCUTS
-//    shortcut_PX   = Qshortcut(QKeySequence("Alt+W"),this);
-//    shortcut_NX   = Qshortcut(QKeySequence("Alt+S"),this);
-//    shortcut_PY   = Qshortcut(QKeySequence("Alt+A"),this);
-//    shortcut_NY   = Qshortcut(QKeySequence("Alt+D"),this);
-//    shortcut_PZ   = Qshortcut(QKeySequence("Alt+Q"),this);
-//    shortcut_NZ   = Qshortcut(QKeySequence("Alt+Z"),this);
-//    shortcut_PZ_2 = Qshortcut(QKeySequence("Alt+E"),this);
-//    shortcut_NZ_2 = Qshortcut(QKeySequence("Alt+C"),this);
-//    shortcut_PU   = Qshortcut(QKeySequence("Alt+R"),this);
-//    shortcut_NU   = Qshortcut(QKeySequence("Alt+V"),this);
-//    shortcut_STOP = Qshortcut(QKeySequence("Alt+X"),this);
 
     //home axes
     connect(ui->axesHomeButton,  &QPushButton::clicked, mMotionHandler, &MotionHandler::home);
@@ -309,6 +299,12 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->zAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->z_2_AxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
     connect(ui->uAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
+
+    //test
+    connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
+    connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
+    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test()));
+    connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
 }
 
 //******************************************
@@ -335,21 +331,6 @@ void Magrathea::updatePosition(){
     ui->zAxisPositionLine2->setText(QString::number(   pos_t[2], 'f', 3));
     ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
-
-//    if(mMotionHandler->validate_target_pos(pos_t.at(0),pos_t.at(1),pos_t.at(2),pos_t.at(4))){
-//        mMotionHandler->stop();
-//    }
-
-//    ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-//    ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-//    ui->zAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-//    ui->z_2_AxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-//    ui->uAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
-//    ui->xAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-//    ui->yAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-//    ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-//    ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-//    ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
 
     //axes status update
     bool current =  mMotionHandler->getXAxisState();
@@ -403,6 +384,7 @@ void Magrathea::focusButtonClicked()
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
+    //veryfing that the setting of the camera is optimal
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
@@ -417,7 +399,8 @@ void Magrathea::focusButtonClicked()
     FocusFinder->Set_gantry(mMotionHandler);
     FocusFinder->Set_log(outputLogTextEdit);
     double focus_position = -1.;
-
+    FocusFinder->Set_color_int(ui->ColorBox->value());
+    FocusFinder->Set_use_laplacian(ui->LaplacianBox->isChecked());
     if(sender() == ui->focusButton){
     FocusFinder->find_focus(focus_position);
     } else if (sender() == ui->std_dev_button){
@@ -427,7 +410,7 @@ void Magrathea::focusButtonClicked()
             qInfo("Cannot read a frame from video stream");
             return;
         }
-        double value_std_dev = FocusFinder->eval_stddev(mat_from_camera);
+        double value_std_dev = FocusFinder->eval_stddev_ROI(mat_from_camera);
         qInfo(" std dev value : %5.5f",value_std_dev);
     } else if(sender() == ui->std_dev_many_button){
         FocusFinder->Eval_syst_scan();
@@ -443,7 +426,7 @@ void Magrathea::focusButtonClicked()
 //capture picture
 void Magrathea::captureButtonClicked()
 {
-    auto filename = QFileDialog::getSaveFileName(this, "capture", "/ ", "image (*.jpg;*.jpeg)");
+    auto filename = QFileDialog::getSaveFileName(this, "capture", "/ ","image (*.jpg;*.jpeg)");
     if (filename.isEmpty()) {
         return;
     }
@@ -464,8 +447,6 @@ void Magrathea::captureButtonClicked()
 //------------------------------------------
 //https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-open
 void Magrathea::Camera_test(){
-    //CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
-
     cv::VideoCapture cap(0); // open the video camera no. 0
 
     if (!cap.isOpened())  // if not success, exit program
@@ -550,16 +531,39 @@ void Magrathea::Camera_test(){
 
 //------------------------------------------
 //------------------------------------------
+void Magrathea::VignetteButton_clicked(){
+    cv::destroyAllWindows();
+    mCamera->stop(); //closing QCamera
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return;}
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 5.0);
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    VerticalAlignmentTool * tool = new VerticalAlignmentTool(this);
+    tool->Set_camera(cap);
+    tool->Evaluate_vignette();
+    delete tool;
+    cap.release();         //Going back to QCameraa
+    mCamera->start();
+    return;
+}
 
 
-void Magrathea::Fiducial_finder_button_1_Clicked()
-{    FiducialFinderCaller(1); }
+//------------------------------------------
+//------------------------------------------
 
-void Magrathea::Fiducial_finder_button_2_Clicked()
+void Magrathea::Fiducial_finder_button_Clicked()
 {    FiducialFinderCaller(2); }
 
 
 void Magrathea::FiducialFinderCaller(const int &input){
+    cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
 
     //opening camera with opencv
@@ -584,62 +588,18 @@ void Magrathea::FiducialFinderCaller(const int &input){
 
     FiducialFinder * Ffinder = new FiducialFinder(this);
 
-    //adding: find square - find 5 dot fid - find F from francesco
-    //then implement a mix of F from francesco and squre and 5 dot fid
     bool from_file = ui->calib_from_file_Box->isChecked();
-
+    std::string tmp_filename = "";
     if(from_file){
-        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0003.bmp",//0  F
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0004.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0005.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0020_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0023.bmp",//5
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0035_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0040_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050.bmp",//10
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0050_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
-                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_3.bmp"
-                                 };
-//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0001.bmp",//0   5dot
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0002.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_1.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0008_3.bmp",//5
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0013.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0013_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018_2.bmp",//9
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0018_3.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0021.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0026.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027_5.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0027.bmp"
-//                                 };
-//        std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/W080/0015.bmp",//0   5dot
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0015_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0015_3.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0039.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0046.bmp",//4
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0007.bmp",//5
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0009.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0010.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0014_3.bmp",//9
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0016.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0024_3.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0038.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0052_2.bmp",
-//                                  "C:/Users/Silicio/WORK/Full_Size/W080/0058_2.bmp"
-//                                 };
-        Ffinder->SetImage(Images[ui->spinBox_input->value()]
+      //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Aruco_M/";
+      std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/Aruco_M/";
+        std::string Images[] = {"chip_1_10_pos_1.TIF",//  F
+                                "chip_1_10_pos_2.TIF",
+                               };
+        tmp_filename = Images[ui->spinBox_input->value()];
+        Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Set_calibration(1.6); //get calibration from a private variable
+        Ffinder->Set_calibration(1); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -652,29 +612,39 @@ void Magrathea::FiducialFinderCaller(const int &input){
     if(!from_file && mCalibration < 0.){
         qInfo("Calibration not set!! value is : %5.3f",mCalibration);
         return;
-    } else{
+    }else{
         qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
     }
 
     Ffinder->Set_log(outputLogTextEdit);
 
-    double distance_x = 888888888.8;
-    double distance_y = 888888888.8;
+    double distance_x = 888888.8;
+    double distance_y = 888888.8;
 
-    if(input == 1){
-        Ffinder->Find_circles(distance_x,distance_y);
-        std::cout<<"1. "<<std::endl;
-    } else if (input == 2){
-        std::string Images[4] = {"C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0001_5dot_2.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0006_cross.bmp",
-                                 "C:/Users/Silicio/WORK/Full_Size/W080/0024_4dot_2.bmp"
-                                 };
+    //if(input == 1){
+    //    Ffinder->Find_circles(distance_x,distance_y);
+     //   std::cout<<"1. "<<std::endl;
+    //} else if (input == 2){
+    if (input == 2){
+        std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/";
+        std::string Images[] = {address + "Aruco_M/aruco_M_fiducial_chip_1_1_pos_1.TIF",
+            address + "Atlas_E/atlasE_fiducial_chip_1_1_pos_1.TIF",
+            address + "Atlas_F/Fiducial_chip_1_1_pos_1.TIF",
+            "C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
+            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007_F.jpg",
+            "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/032_F.jpg",
+            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007_F_2.jpg",
+            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/005_F_2.jpg",
+            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/005_F_3.jpg"
+                               };
         Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y);
+        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value());
     }
     qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
+    std::ofstream ofs ("output.txt", std::ofstream::app);
+    ofs << ui->spinBox_input->value()<<" "<< tmp_filename<<" "<<distance_x<<" "<<distance_y<<std::endl;
+    ofs.close();
     delete Ffinder;
     mCamera->start();
     return;
@@ -691,7 +661,7 @@ void Magrathea::Calibration_2_ButtonClicked()
 {    calibrationCaller(1); }
 
 void Magrathea::calibrationCaller(int input){
-    //Eventually add conmmand to move the gantry to the place where the
+    //Eventually add command to move the gantry to the place where the
     //calibration area is.
     /////////////////////////////////////////
     //    cv::Point2f temp_coord;
@@ -701,6 +671,7 @@ void Magrathea::calibrationCaller(int input){
     //    std::cout<<"st: "<<status<<" identifier: "<<temp_str<<" ; x: "<< temp_coord.x<<" y: "<<temp_coord.y<<std::endl;
     //    return;
     ////////////////////////////////////////
+    cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
     Calibrator * calibrator = new Calibrator(this);
 
@@ -973,25 +944,25 @@ void Magrathea::stepMotion()
 {
     //joystick
     if (sender() == ui->positiveXButton)
-        mMotionHandler->moveXBy(+1*abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveXBy(+1*std::abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeXButton)
-        mMotionHandler->moveXBy(-1*abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveXBy(-1*std::abs(ui->xAxisStepDoubleSpinBox->value()), ui->xAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveYButton)
-        mMotionHandler->moveYBy(+1*abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveYBy(+1*std::abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeYButton)
-        mMotionHandler->moveYBy(-1*abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveYBy(-1*std::abs(ui->yAxisStepDoubleSpinBox->value()), ui->yAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveZButton)
-        mMotionHandler->moveZBy(+1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZBy(+1*std::abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZButton)
-        mMotionHandler->moveZBy(-1*abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZBy(-1*std::abs(ui->zAxisStepDoubleSpinBox->value()), ui->zAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveZ_2_Button)
-        mMotionHandler->moveZ_2_By(+1*abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZ_2_By(+1*std::abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeZ_2_Button)
-        mMotionHandler->moveZ_2_By(-1*abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZ_2_By(-1*std::abs(ui->z_2_AxisStepDoubleSpinBox->value()), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->positiveUButton)
-        mMotionHandler->moveUBy(+1*abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveUBy(+1*std::abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->negativeUButton)
-        mMotionHandler->moveUBy(-1*abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveUBy(-1*std::abs(ui->uAxisStepDoubleSpinBox->value()), ui->uAxisSpeedDoubleSpinBox->value());
 
     //naviagtion panel
     else if  (sender() == ui->xAxisStepMoveButton)
@@ -1092,3 +1063,72 @@ void Magrathea::led_label(QLabel *label, bool value){
         label->setText("OFF");
     }
 }
+
+void Magrathea::color_test(){
+    std::cout<<"here"<<std::endl;
+
+    cv::destroyAllWindows();
+    mCamera->stop(); //closing QCamera
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+
+    if (!cap.isOpened()){
+        //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return;}
+
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+
+    cv::Mat input;
+    bool bSuccess = cap.read(input);
+    if (!bSuccess){ //if not success
+        qInfo("Cannot read a frame from video stream");
+        return;
+    }
+
+    cv::Mat bgr[3];   //destination array
+    cv::split(input,bgr);//split source
+
+    //Note: OpenCV uses BGR color order
+    cv::imshow("blue",bgr[0]);  //blue channel
+    cv::imshow("green",bgr[1]); //green channel
+    cv::imshow("red",bgr[2]);   //red channel
+
+
+    cv::imwrite("blue.png",bgr[0]); //blue channel
+    cv::imwrite("green.png",bgr[1]); //green channel
+    cv::imwrite("red.png",bgr[2]); //red channel
+}
+
+void Magrathea::destroy_all(){
+    cv::destroyAllWindows();
+}
+
+void Magrathea::loop_test(){
+    //run fiducial finding algo automatically on a series of pictures
+    for(int i=0;i<1;i++){//set appropriate value of the loop limit
+        Sleeper::msleep(500);
+        std::cout<<"It "<<i<<std::endl;
+        ui->spinBox_input->setValue(i);
+        FiducialFinderCaller(2);
+    }
+}
+
+void Magrathea::Aruco_test(){
+    //visualize the different aruco markers
+    cv::Mat test_aruco;
+    auto dictionary = cv::aruco::generateCustomDictionary(512,3);
+    cv::aruco::drawMarker(dictionary, ui->ArucospinBox->value() , 200, test_aruco, 1);
+    cv::imshow("aruco",test_aruco);
+    ui->ArucospinBox->setValue(ui->ArucospinBox->value()+1);
+}
+
+
+
+
+

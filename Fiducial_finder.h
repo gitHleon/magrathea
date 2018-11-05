@@ -6,7 +6,7 @@
 #include <QTextEdit>
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
-//#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/aruco.hpp>
 
 class FiducialFinder : public QWidget
 {
@@ -27,7 +27,7 @@ public slots:
     void SetImageFiducial(const std::string& filename, int flags);
     bool IsImageEmpty();
     void Find_circles(double &X_distance, double &Y_distance);
-    void Find_F(const int &DescriptorAlgorithm,double &X_distance, double &Y_distance);
+    void Find_F(const int &DescriptorAlgorithm,double &X_distance, double &Y_distance, const int &temp_input);
 
 private:
     double Calibration = -1.1; //[px/um]

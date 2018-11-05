@@ -62,12 +62,14 @@ void FiducialFinder::Set_calibration(double m_calib){
 }
 
 bool FiducialFinder::Is_equal(const double &one, const double &two){
+    //function needed when searching for fiducial not using SURF
     //Tolerance 3um, the precision of the gantry
     double tolerance = 3*Calibration; //[px]
     return ( fabs(one-two) <= tolerance);
 }
 
 bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3){
+    //function needed when searching for fiducial not using SURF
     //http://en.cppreference.com/w/cpp/language/range-for
     //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
     //Distances between points are 22 - 20 um
@@ -90,6 +92,7 @@ bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, c
 }
 
 void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Centers, std::vector<std::vector<int> > &Squares, std::vector<std::vector<int> > &Triangles){
+    //function needed when searching for fiducial not using SURF
     int Iteration = 0;
     Squares.clear();
     Triangles.clear();
@@ -127,6 +130,7 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Cente
 
 bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3, const cv::Point &P_4)
 {
+    //function needed when searching for fiducial not using SURF
     //http://en.cppreference.com/w/cpp/language/range-for
     //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
     //Distances between points are 30 um
@@ -207,7 +211,9 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
 }
 
 void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
-//to find the 4 dot fiducial
+    //function needed when searching for fiducial not using SURF
+    //DEPRECATED
+    //to find the 4 dot fiducial
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
@@ -283,8 +289,8 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
     //add return of the fid center
 }
 
-void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance){
-
+void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input){
+    //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
     if(image.empty()){
@@ -298,7 +304,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         int center_cols = image.cols/2.0;
 
         cv::imshow("f. 0 image",image);
-        const int window_size = 420; //1000
+        const int window_size = 420; //2500; // 420
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
             return;}
@@ -359,27 +365,65 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         }else if (DescriptorAlgorithm == 4){
             detector = cv::xfeatures2d ::StarDetector::create();
             algo_name = "STAR";
+        }else if (DescriptorAlgorithm == 5){//aruco
+            algo_name = "ARUCO";
+            auto dictionary = cv::aruco::generateCustomDictionary(512,3);
+            std::vector<int> markerIds;
+            std::vector<std::vector<cv::Point2f>> markerCorners, rejectedCandidates;
+            cv::Ptr<cv::aruco::DetectorParameters> parameters;
+            //cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
+            cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds);
+            cv::Mat outputImage = RoiImage.clone();
+            auto s     = std::to_string(temp_input);
+            auto match = std::to_string(markerCorners.size());
+            if(markerCorners.size()!=1){
+                X_distance = 800000+markerCorners.size();
+                Y_distance = 800000+markerCorners.size();
+                cv::putText(outputImage,"fail"+match,cv::Point(30,window_size-4), CV_FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
+            }else{
+                cv::aruco::drawDetectedMarkers(outputImage, markerCorners, markerIds);
+                cv::Point F_center = Square_center(markerCorners.at(0).at(0),markerCorners.at(0).at(1),
+                                                   markerCorners.at(0).at(2),markerCorners.at(0).at(3));
+                //std::cout<<"center cols : "<< center_cols<< " ;center rows : "<<center_rows <<std::endl;
+                int ROIcenter_rows = outputImage.rows/2.0; //Defining the center of the image
+                int ROIcenter_cols = outputImage.cols/2.0;
+                //std::cout<<"ROI cols : "<< ROIcenter_cols<< " ;ROI rows : "<<ROIcenter_rows <<std::endl;
+                //std::cout<<"ceneter cols : "<< F_center.x<< " ;center rows : "<<F_center.y <<std::endl;
+                //std::cout<<"Calibration  : "<< Calibration<<std::endl;
+                X_distance = (ROIcenter_cols - F_center.x)*(1./Calibration); //[um]
+                Y_distance = (ROIcenter_rows - F_center.y)*(1./Calibration); //[um]
+                cv::circle(outputImage, F_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
+            }
+            cv::imshow("aruco_image",outputImage);
+            cv::imwrite("EXPORT/"+algo_name+"_"+s+".jpg",outputImage);
+            return;
         }else{
-            log->append("Error!! DescriptorAlgorithm not set properly!!");
+            qWarning("Error!! DescriptorAlgorithm not set properly!!");
             return;}
         std::vector<cv::KeyPoint> keypoints_F(0);
         std::vector<cv::KeyPoint> keypoints_image(0);
+        keypoints_F.clear();
+        keypoints_image.clear();
         std::vector<cv::DMatch> matches;
         cv::Ptr<cv::DescriptorExtractor> descriptor_extractor;
         std::vector<std::vector< cv::DMatch> > matches_2;
         cv::Mat descriptorImage;
         cv::Mat descriptorFiducial;
-        if(detector->empty())
-            std::cout<<"Detector is empty"<<std::endl;
-
+        //        if(detector->empty()){
+        //            std::cout<<"Detector is empty"<<std::endl;
+        //        }
         if(DescriptorAlgorithm != 4){
             detector->detectAndCompute(image_gray,cv::Mat(),keypoints_image,descriptorImage,false);
             detector->detectAndCompute(image_F_gray,cv::Mat(),keypoints_F,descriptorFiducial,false);
         }else{
-            log->append("Star feature detection");
+            qInfo("Star feature detection");
+            std::cout<<"ok0"<<std::endl;
             detector->detect(image_gray,keypoints_image);
+            std::cout<<"ok00"<<std::endl;
             detector->detect(image_F_gray,keypoints_F);
+            std::cout<<"ok"<<std::endl;
             descriptor_extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
+            std::cout<<"ok2"<<std::endl;
             descriptor_extractor->compute(image_gray,keypoints_image,descriptorImage);
             descriptor_extractor->compute(image_F_gray,keypoints_F,descriptorFiducial);
         }
@@ -400,17 +444,11 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             if(flann_true){//flann is NOT working
                 int FLANN_INDEX_KDTREE = 0;
                 cv::Ptr<cv::flann::IndexParams> index_params;
-                std::cout<<"ok 1"<<std::endl;
                 index_params->setAlgorithm(FLANN_INDEX_KDTREE);
-                std::cout<<"ok 2"<<std::endl;
                 index_params->setInt("tree",5);
-                std::cout<<"ok 3"<<std::endl;
                 cv::Ptr<cv::flann::SearchParams> search_params = new cv::flann::SearchParams(50,0,true);
-                std::cout<<"ok 4"<<std::endl;
                 cv::Ptr<cv::FlannBasedMatcher> matcher_flann = new cv::FlannBasedMatcher(index_params,search_params);
-                std::cout<<"ok 5"<<std::endl;
                 matcher_flann->knnMatch(descriptorFiducial,descriptorImage,matches_2,2);
-                std::cout<<"ok 6"<<std::endl;
             }else{
                 matcher = cv::BFMatcher::create();
                 matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
@@ -462,7 +500,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::Mat H = cv::estimateAffinePartial2D(obj, scene,cv::noArray(),cv::RANSAC,5.0);
         ///////////////////////////////////////////////////////////////////////////////////////
         //WARNING!!! It works but output H is inconsitent with what said by manual of function estimateAffinePartial2D.
-        //understand meaning of matrix elements
+        //need to understand meaning of matrix elements
         ///////////////////////////////////////////////////////////////////////////////////////
         std::cout<<"H.rows: "<<H.rows <<" ;H.cols "<<H.cols<<std::endl;
         //cv::Scalar value_t = image_gray.at<uchar>(row,col);
@@ -507,9 +545,15 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow(algo_name +" Match", result);
         cv::imshow(algo_name +" Match - RoI", RoiImage);
         cv::imshow(algo_name +" Match - original", image);
+        cv::putText(RoiImage,algo_name,cv::Point(30,window_size-4), CV_FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
+        auto s = std::to_string(temp_input);
+        cv::imwrite("EXPORT/"+algo_name+"_"+s+".jpg",RoiImage);
 
-        X_distance = (center_cols - F_center.x)*(1./Calibration); //[um]
-        Y_distance = (center_rows - F_center.y)*(1./Calibration); //[um]
+        int ROIcenter_rows = RoiImage.rows/2.0; //Defining the center of the image
+        int ROIcenter_cols = RoiImage.cols/2.0;
+
+        X_distance = (ROIcenter_cols - F_center.x)*(1./Calibration); //[um]
+        Y_distance = (ROIcenter_rows - F_center.y)*(1./Calibration); //[um]
 
         //        cv::Scalar value_t = H.at<uchar>(0,0);
         //        double a = value_t.val[0];
@@ -530,6 +574,9 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         //        qInfo("Scale 0      :\t %.2f",p_0);
         //        X_distance = c*Calibration;
         //        Y_distance = f*Calibration;
+        descriptor_extractor.release();
+        matcher.release();
+        detector.release();
         return;
 }
 

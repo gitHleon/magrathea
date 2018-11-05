@@ -46,7 +46,8 @@ public:
     void Set_camera(const cv::VideoCapture &m_cap);
     void Set_log(QTextEdit *m_log);
     void Set_gantry(MotionHandler *m_gantry);
-
+    void   Set_color_int(const int &value);
+    void   Set_use_laplacian(const bool &value);
 
 signals:
     void Log_append(QString TextToWrite);
@@ -54,10 +55,16 @@ signals:
 
 public slots:
     double eval_stddev(const cv::Mat &input_image);
+    double eval_stddev_ROI(const cv::Mat &input_image);
     void   find_focus(double &focus_height);
     void   Eval_syst_time();
     void   Eval_syst_scan();
     void   Eval_syst_moving();
+
+
+private slots:
+    cv::Mat  get_component(const cv::Mat &input_mat,const unsigned int &input);
+    cv::Rect get_rect(const cv::Mat &input_image);
 
 private:
     cv::VideoCapture cap;
@@ -66,6 +73,8 @@ private:
     const int measure_points = 6;
     const unsigned int z_pos_index = 2;
     const int window_size = 1000;
+    int color_int = -1;
+    bool use_laplacian = false;
     double x[6] = {};
     double y[6] = {};
     double EvalVertex_x(double a,double b, double c);
