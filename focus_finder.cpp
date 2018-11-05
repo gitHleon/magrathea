@@ -68,10 +68,11 @@ cv::Rect Focus_finder::get_rect(const cv::Mat &input_image){
 
 double Focus_finder::eval_stddev_ROI(const cv::Mat &input_image)
 {
+    //evaluate standard deviation of the RoI of the image
     cv::Mat RoiImage  = ( (color_int == -1) ? input_image(get_rect(input_image)) : get_component(input_image(get_rect(input_image)),color_int) );
     double z_from_outside = gantry->whereAmI(1).at(z_pos_index);
     double output = eval_stddev(RoiImage);
-    cv::imshow("Roi",RoiImage);
+    //cv::imshow("Roi",RoiImage);
     qInfo("Z : %3.4f ; stddev : %5.5f",z_from_outside,output);
     return output;
 }
@@ -181,16 +182,19 @@ void Focus_finder::find_focus(double &focus_height)
     }
 
     qInfo("Focus max z : %3.4f ;  stddev_MAX : %5.5f ",Z_MAX,StdDev_MAX);
+    //evaluation of the focus height ising the fit of a parabola
     //double Z_out = 0.;
     //perform_fit(Z_out);
     //qInfo("Focus fit z : %3.4f",Z_out);
     //focus_height = Z_out;//outputvalue
     //z_temp = Z_out - gantry->whereAmI(1).at(z_pos_index); // relative distance from current position
     //gantry->moveZTo(Z_MAX,1.);//add safety control
+    /////////////////////
 }
 
 void Focus_finder::perform_fit(double &z_output)
 {
+    //Currently not used, here for leagcy in case fit is needed in future
     //WARNING: these array need to be of size == measure_points
     alglib::real_1d_array al_x = "[0,0,0,0,0,0]";
     alglib::real_1d_array al_y = "[0,0,0,0,0,0]";
@@ -220,11 +224,13 @@ void Focus_finder::perform_fit(double &z_output)
 }
 
 double Focus_finder::EvalVertex_x(double a,double b, double c){
+    //evaluating vertex of parabola. needed for finding focus height when using the fit
     //y = ax^2 + bx + c
     return -b/(2*a);
 }
 
 double Focus_finder::EvalVertex_y(double a,double b, double c){
+    //evaluating vertex of parabola. needed for finding focus height when using the fit
     //y = ax^2 + bx + c
     double num =0.;
     num = 4*a*c - b*b;
@@ -234,6 +240,7 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
 }
 
 void Focus_finder::Eval_syst_scan(){
+    //measure the std-dev several times moving the gantry spanning points around the crrent position
     int numb_steps = 20;
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     double z_step = 0.2;// to be changed according the units of your gantry and shape of focus-heught distribution
@@ -261,6 +268,7 @@ void Focus_finder::Eval_syst_scan(){
 }
 
 void Focus_finder::Eval_syst_time(){
+    //measure the std-dev several times without moving the gantry
     double z_temp = gantry->whereAmI().at(z_pos_index);
     log->append("Performing systematic scan in time (2 sec intervals) at position : "
                     +QString::number(z_temp));
@@ -282,6 +290,7 @@ void Focus_finder::Eval_syst_time(){
 }
 
 void::Focus_finder::Eval_syst_moving(){
+    //measure the std-dev several times moving the gantry back and forth from the same position
     int numb_steps = 10;
     cv::Mat mat_from_outside;
     double z_temp = gantry->whereAmI().at(z_pos_index);

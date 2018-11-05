@@ -252,8 +252,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->focusButton     ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
-    connect(ui->Fiducial_finder_button_1,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_1_Clicked()));
-    connect(ui->Fiducial_finder_button_2,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
+    connect(ui->Fiducial_finder_button,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_2_Clicked()));
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     //gantry
@@ -271,18 +270,6 @@ Magrathea::Magrathea(QWidget *parent) :
     //joystick
     connect(ui->freeRunRadioButton, SIGNAL(clicked(bool)), this, SLOT(enableJoystickFreeRun(bool)));
     connect(ui->stepRadioButton,    SIGNAL(clicked(bool)), this, SLOT(enableJoystickStepMotion(bool)));
-    //SHORTCUTS
-    //    shortcut_PX   = Qshortcut(QKeySequence("Alt+W"),this);
-    //    shortcut_NX   = Qshortcut(QKeySequence("Alt+S"),this);
-    //    shortcut_PY   = Qshortcut(QKeySequence("Alt+A"),this);
-    //    shortcut_NY   = Qshortcut(QKeySequence("Alt+D"),this);
-    //    shortcut_PZ   = Qshortcut(QKeySequence("Alt+Q"),this);
-    //    shortcut_NZ   = Qshortcut(QKeySequence("Alt+Z"),this);
-    //    shortcut_PZ_2 = Qshortcut(QKeySequence("Alt+E"),this);
-    //    shortcut_NZ_2 = Qshortcut(QKeySequence("Alt+C"),this);
-    //    shortcut_PU   = Qshortcut(QKeySequence("Alt+R"),this);
-    //    shortcut_NU   = Qshortcut(QKeySequence("Alt+V"),this);
-    //    shortcut_STOP = Qshortcut(QKeySequence("Alt+X"),this);
 
     //home axes
     connect(ui->axesHomeButton,  &QPushButton::clicked, mMotionHandler, &MotionHandler::home);
@@ -345,21 +332,6 @@ void Magrathea::updatePosition(){
     ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
 
-//    if(mMotionHandler->validate_target_pos(pos_t.at(0),pos_t.at(1),pos_t.at(2),pos_t.at(4))){
-//        mMotionHandler->stop();
-//    }
-
-//    ui->xAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-//    ui->yAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-//    ui->zAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-//    ui->z_2_AxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-//    ui->uAxisPositionLine->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
-//    ui->xAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[0], 'f', 3));
-//    ui->yAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[1], 'f', 3));
-//    ui->zAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[2], 'f', 3));
-//    ui->z_2_AxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[4], 'f', 3));
-//    ui->uAxisPositionLine2->setText(QString::number(mMotionHandler->whereAmI()[3], 'f', 3));
-
     //axes status update
     bool current =  mMotionHandler->getXAxisState();
     led_label(ui->label_8,  mMotionHandler->getXAxisState());
@@ -412,6 +384,7 @@ void Magrathea::focusButtonClicked()
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
+    //veryfing that the setting of the camera is optimal
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
@@ -474,8 +447,6 @@ void Magrathea::captureButtonClicked()
 //------------------------------------------
 //https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-open
 void Magrathea::Camera_test(){
-    //CvCapture* capture = cvCaptureFromCAM(CV_CAP_DSHOW);
-
     cv::VideoCapture cap(0); // open the video camera no. 0
 
     if (!cap.isOpened())  // if not success, exit program
@@ -587,11 +558,7 @@ void Magrathea::VignetteButton_clicked(){
 //------------------------------------------
 //------------------------------------------
 
-
-void Magrathea::Fiducial_finder_button_1_Clicked()
-{    FiducialFinderCaller(1); }
-
-void Magrathea::Fiducial_finder_button_2_Clicked()
+void Magrathea::Fiducial_finder_button_Clicked()
 {    FiducialFinderCaller(2); }
 
 
@@ -624,450 +591,11 @@ void Magrathea::FiducialFinderCaller(const int &input){
     bool from_file = ui->calib_from_file_Box->isChecked();
     std::string tmp_filename = "";
     if(from_file){
-        std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Aruco_M/";
-        //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/Aruco_M/";
-        std::string Images[] = {
-"chip_1_10_pos_1.TIF",
-"chip_1_10_pos_2.TIF",
-"chip_1_10_pos_3.TIF",
-"chip_1_10_pos_4.TIF",
-"chip_1_10_pos_5.TIF",
-"chip_1_10_pos_6.TIF",
-"chip_1_10_pos_7.TIF",
-"chip_1_10_pos_8.TIF",
-"chip_1_11_pos_1.TIF",
-"chip_1_11_pos_2.TIF",
-"chip_1_11_pos_3.TIF",
-"chip_1_11_pos_4.TIF",
-"chip_1_11_pos_5.TIF",
-"chip_1_11_pos_6.TIF",
-"chip_1_11_pos_7.TIF",
-"chip_1_11_pos_8.TIF",
-"chip_1_1_pos_1.TIF",
-"chip_1_1_pos_2.TIF",
-"chip_1_1_pos_3.TIF",
-"chip_1_1_pos_4.TIF",
-"chip_1_1_pos_5.TIF",
-"chip_1_1_pos_6.TIF",
-"chip_1_1_pos_7.TIF",
-"chip_1_1_pos_8.TIF",
-"chip_1_2_pos_1.TIF",
-"chip_1_2_pos_2.TIF",
-"chip_1_2_pos_3.TIF",
-"chip_1_2_pos_4.TIF",
-"chip_1_2_pos_5.TIF",
-"chip_1_2_pos_6.TIF",
-"chip_1_2_pos_7.TIF",
-"chip_1_2_pos_8.TIF",
-"chip_1_3_pos_1.TIF",
-"chip_1_3_pos_2.TIF",
-"chip_1_3_pos_3.TIF",
-"chip_1_3_pos_4.TIF",
-"chip_1_3_pos_5.TIF",
-"chip_1_3_pos_6.TIF",
-"chip_1_3_pos_7.TIF",
-"chip_1_3_pos_8.TIF",
-"chip_1_4_pos_1.TIF",
-"chip_1_4_pos_2.TIF",
-"chip_1_4_pos_3.TIF",
-"chip_1_4_pos_4.TIF",
-"chip_1_4_pos_5.TIF",
-"chip_1_4_pos_6.TIF",
-"chip_1_4_pos_7.TIF",
-"chip_1_4_pos_8.TIF",
-"chip_1_5_pos_1.TIF",
-"chip_1_5_pos_2.TIF",
-"chip_1_5_pos_3.TIF",
-"chip_1_5_pos_4.TIF",
-"chip_1_5_pos_5.TIF",
-"chip_1_5_pos_6.TIF",
-"chip_1_5_pos_7.TIF",
-"chip_1_5_pos_8.TIF",
-"chip_1_6_pos_1.TIF",
-"chip_1_6_pos_2.TIF",
-"chip_1_6_pos_3.TIF",
-"chip_1_6_pos_4.TIF",
-"chip_1_6_pos_5.TIF",
-"chip_1_6_pos_6.TIF",
-"chip_1_6_pos_7.TIF",
-"chip_1_6_pos_8.TIF",
-"chip_1_7_pos_1.TIF",
-"chip_1_7_pos_2.TIF",
-"chip_1_7_pos_3.TIF",
-"chip_1_7_pos_4.TIF",
-"chip_1_7_pos_5.TIF",
-"chip_1_7_pos_6.TIF",
-"chip_1_7_pos_7.TIF",
-"chip_1_7_pos_8.TIF",
-"chip_1_8_pos_1.TIF",
-"chip_1_8_pos_2.TIF",
-"chip_1_8_pos_3.TIF",
-"chip_1_8_pos_4.TIF",
-"chip_1_8_pos_5.TIF",
-"chip_1_8_pos_6.TIF",
-"chip_1_8_pos_7.TIF",
-"chip_1_8_pos_8.TIF",
-"chip_1_9_pos_1.TIF",
-"chip_1_9_pos_2.TIF",
-"chip_1_9_pos_3.TIF",
-"chip_1_9_pos_4.TIF",
-"chip_1_9_pos_5.TIF",
-"chip_1_9_pos_6.TIF",
-"chip_1_9_pos_7.TIF",
-"chip_1_9_pos_8.TIF",
-"chip_2_10_pos_1.TIF",
-"chip_2_10_pos_2.TIF",
-"chip_2_10_pos_3.TIF",
-"chip_2_10_pos_4.TIF",
-"chip_2_10_pos_5.TIF",
-"chip_2_10_pos_6.TIF",
-"chip_2_10_pos_7.TIF",
-"chip_2_10_pos_8.TIF",
-"chip_2_11_pos_1.TIF",
-"chip_2_11_pos_2.TIF",
-"chip_2_11_pos_3.TIF",
-"chip_2_11_pos_4.TIF",
-"chip_2_11_pos_5.TIF",
-"chip_2_11_pos_6.TIF",
-"chip_2_11_pos_7.TIF",
-"chip_2_11_pos_8.TIF",
-"chip_2_1_pos_1.TIF",
-"chip_2_1_pos_2.TIF",
-"chip_2_1_pos_3.TIF",
-"chip_2_1_pos_4.TIF",
-"chip_2_1_pos_5.TIF",
-"chip_2_1_pos_6.TIF",
-"chip_2_1_pos_7.TIF",
-"chip_2_1_pos_8.TIF",
-"chip_2_2_pos_1.TIF",
-"chip_2_2_pos_2.TIF",
-"chip_2_2_pos_3.TIF",
-"chip_2_2_pos_4.TIF",
-"chip_2_2_pos_5.TIF",
-"chip_2_2_pos_6.TIF",
-"chip_2_2_pos_7.TIF",
-"chip_2_2_pos_8.TIF",
-"chip_2_3_pos_1.TIF",
-"chip_2_3_pos_2.TIF",
-"chip_2_3_pos_3.TIF",
-"chip_2_3_pos_4.TIF",
-"chip_2_3_pos_5.TIF",
-"chip_2_3_pos_6.TIF",
-"chip_2_3_pos_7.TIF",
-"chip_2_3_pos_8.TIF",
-"chip_2_4_pos_1.TIF",
-"chip_2_4_pos_2.TIF",
-"chip_2_4_pos_3.TIF",
-"chip_2_4_pos_4.TIF",
-"chip_2_4_pos_5.TIF",
-"chip_2_4_pos_6.TIF",
-"chip_2_4_pos_7.TIF",
-"chip_2_4_pos_8.TIF",
-"chip_2_5_pos_1.TIF",
-"chip_2_5_pos_2.TIF",
-"chip_2_5_pos_3.TIF",
-"chip_2_5_pos_4.TIF",
-"chip_2_5_pos_5.TIF",
-"chip_2_5_pos_6.TIF",
-"chip_2_5_pos_7.TIF",
-"chip_2_5_pos_8.TIF",
-"chip_2_6_pos_1.TIF",
-"chip_2_6_pos_2.TIF",
-"chip_2_6_pos_3.TIF",
-"chip_2_6_pos_4.TIF",
-"chip_2_6_pos_5.TIF",
-"chip_2_6_pos_6.TIF",
-"chip_2_6_pos_7.TIF",
-"chip_2_6_pos_8.TIF",
-"chip_2_7_pos_1.TIF",
-"chip_2_7_pos_2.TIF",
-"chip_2_7_pos_3.TIF",
-"chip_2_7_pos_4.TIF",
-"chip_2_7_pos_5.TIF",
-"chip_2_7_pos_6.TIF",
-"chip_2_7_pos_7.TIF",
-"chip_2_7_pos_8.TIF",
-"chip_2_8_pos_1.TIF",
-"chip_2_8_pos_2.TIF",
-"chip_2_8_pos_3.TIF",
-"chip_2_8_pos_4.TIF",
-"chip_2_8_pos_5.TIF",
-"chip_2_8_pos_6.TIF",
-"chip_2_8_pos_7.TIF",
-"chip_2_8_pos_8.TIF",
-"chip_2_9_pos_1.TIF",
-"chip_2_9_pos_2.TIF",
-"chip_2_9_pos_3.TIF",
-"chip_2_9_pos_4.TIF",
-"chip_2_9_pos_5.TIF",
-"chip_2_9_pos_6.TIF",
-"chip_2_9_pos_7.TIF",
-"chip_2_9_pos_8.TIF",
-"chip_3_10_pos_1.TIF",
-"chip_3_10_pos_2.TIF",
-"chip_3_10_pos_3.TIF",
-"chip_3_10_pos_4.TIF",
-"chip_3_10_pos_5.TIF",
-"chip_3_10_pos_6.TIF",
-"chip_3_10_pos_7.TIF",
-"chip_3_10_pos_8.TIF",
-"chip_3_11_pos_1.TIF",
-"chip_3_11_pos_2.TIF",
-"chip_3_11_pos_3.TIF",
-"chip_3_11_pos_4.TIF",
-"chip_3_11_pos_5.TIF",
-"chip_3_11_pos_6.TIF",
-"chip_3_11_pos_7.TIF",
-"chip_3_11_pos_8.TIF",
-"chip_3_1_pos_1.TIF",
-"chip_3_1_pos_2.TIF",
-"chip_3_1_pos_3.TIF",
-"chip_3_1_pos_4.TIF",
-"chip_3_1_pos_5.TIF",
-"chip_3_1_pos_6.TIF",
-"chip_3_1_pos_7.TIF",
-"chip_3_1_pos_8.TIF",
-"chip_3_2_pos_1.TIF",
-"chip_3_2_pos_2.TIF",
-"chip_3_2_pos_3.TIF",
-"chip_3_2_pos_4.TIF",
-"chip_3_2_pos_5.TIF",
-"chip_3_2_pos_6.TIF",
-"chip_3_2_pos_7.TIF",
-"chip_3_2_pos_8.TIF",
-"chip_3_3_pos_1.TIF",
-"chip_3_3_pos_2.TIF",
-"chip_3_3_pos_3.TIF",
-"chip_3_3_pos_4.TIF",
-"chip_3_3_pos_5.TIF",
-"chip_3_3_pos_6.TIF",
-"chip_3_3_pos_7.TIF",
-"chip_3_3_pos_8.TIF",
-"chip_3_4_pos_1.TIF",
-"chip_3_4_pos_2.TIF",
-"chip_3_4_pos_3.TIF",
-"chip_3_4_pos_4.TIF",
-"chip_3_4_pos_5.TIF",
-"chip_3_4_pos_6.TIF",
-"chip_3_4_pos_7.TIF",
-"chip_3_4_pos_8.TIF",
-"chip_3_5_pos_1.TIF",
-"chip_3_5_pos_2.TIF",
-"chip_3_5_pos_3.TIF",
-"chip_3_5_pos_4.TIF",
-"chip_3_5_pos_5.TIF",
-"chip_3_5_pos_6.TIF",
-"chip_3_5_pos_7.TIF",
-"chip_3_5_pos_8.TIF",
-"chip_3_6_pos_1.TIF",
-"chip_3_6_pos_2.TIF",
-"chip_3_6_pos_3.TIF",
-"chip_3_6_pos_4.TIF",
-"chip_3_6_pos_5.TIF",
-"chip_3_6_pos_6.TIF",
-"chip_3_6_pos_7.TIF",
-"chip_3_6_pos_8.TIF",
-"chip_3_7_pos_1.TIF",
-"chip_3_7_pos_2.TIF",
-"chip_3_7_pos_3.TIF",
-"chip_3_7_pos_4.TIF",
-"chip_3_7_pos_5.TIF",
-"chip_3_7_pos_6.TIF",
-"chip_3_7_pos_7.TIF",
-"chip_3_7_pos_8.TIF",
-"chip_3_8_pos_1.TIF",
-"chip_3_8_pos_2.TIF",
-"chip_3_8_pos_3.TIF",
-"chip_3_8_pos_4.TIF",
-"chip_3_8_pos_5.TIF",
-"chip_3_8_pos_6.TIF",
-"chip_3_8_pos_7.TIF",
-"chip_3_8_pos_8.TIF",
-"chip_3_9_pos_1.TIF",
-"chip_3_9_pos_2.TIF",
-"chip_3_9_pos_3.TIF",
-"chip_3_9_pos_4.TIF",
-"chip_3_9_pos_5.TIF",
-"chip_3_9_pos_6.TIF",
-"chip_3_9_pos_7.TIF",
-"chip_3_9_pos_8.TIF",
-"chip_4_10_pos_1.TIF",
-"chip_4_10_pos_2.TIF",
-"chip_4_10_pos_3.TIF",
-"chip_4_10_pos_4.TIF",
-"chip_4_10_pos_5.TIF",
-"chip_4_10_pos_6.TIF",
-"chip_4_10_pos_7.TIF",
-"chip_4_10_pos_8.TIF",
-"chip_4_11_pos_1.TIF",
-"chip_4_11_pos_2.TIF",
-"chip_4_11_pos_3.TIF",
-"chip_4_11_pos_4.TIF",
-"chip_4_11_pos_5.TIF",
-"chip_4_11_pos_6.TIF",
-"chip_4_11_pos_7.TIF",
-"chip_4_11_pos_8.TIF",
-"chip_4_1_pos_1.TIF",
-"chip_4_1_pos_2.TIF",
-"chip_4_1_pos_3.TIF",
-"chip_4_1_pos_4.TIF",
-"chip_4_1_pos_5.TIF",
-"chip_4_1_pos_6.TIF",
-"chip_4_1_pos_7.TIF",
-"chip_4_1_pos_8.TIF",
-"chip_4_2_pos_1.TIF",
-"chip_4_2_pos_2.TIF",
-"chip_4_2_pos_3.TIF",
-"chip_4_2_pos_4.TIF",
-"chip_4_2_pos_5.TIF",
-"chip_4_2_pos_6.TIF",
-"chip_4_2_pos_7.TIF",
-"chip_4_2_pos_8.TIF",
-"chip_4_3_pos_1.TIF",
-"chip_4_3_pos_2.TIF",
-"chip_4_3_pos_3.TIF",
-"chip_4_3_pos_4.TIF",
-"chip_4_3_pos_5.TIF",
-"chip_4_3_pos_6.TIF",
-"chip_4_3_pos_7.TIF",
-"chip_4_3_pos_8.TIF",
-"chip_4_4_pos_1.TIF",
-"chip_4_4_pos_2.TIF",
-"chip_4_4_pos_3.TIF",
-"chip_4_4_pos_4.TIF",
-"chip_4_4_pos_5.TIF",
-"chip_4_4_pos_6.TIF",
-"chip_4_4_pos_7.TIF",
-"chip_4_4_pos_8.TIF",
-"chip_4_5_pos_1.TIF",
-"chip_4_5_pos_2.TIF",
-"chip_4_5_pos_3.TIF",
-"chip_4_5_pos_4.TIF",
-"chip_4_5_pos_5.TIF",
-"chip_4_5_pos_6.TIF",
-"chip_4_5_pos_7.TIF",
-"chip_4_5_pos_8.TIF",
-"chip_4_6_pos_1.TIF",
-"chip_4_6_pos_2.TIF",
-"chip_4_6_pos_3.TIF",
-"chip_4_6_pos_4.TIF",
-"chip_4_6_pos_5.TIF",
-"chip_4_6_pos_6.TIF",
-"chip_4_6_pos_7.TIF",
-"chip_4_6_pos_8.TIF",
-"chip_4_7_pos_1.TIF",
-"chip_4_7_pos_2.TIF",
-"chip_4_7_pos_3.TIF",
-"chip_4_7_pos_4.TIF",
-"chip_4_7_pos_5.TIF",
-"chip_4_7_pos_6.TIF",
-"chip_4_7_pos_7.TIF",
-"chip_4_7_pos_8.TIF",
-"chip_4_8_pos_1.TIF",
-"chip_4_8_pos_2.TIF",
-"chip_4_8_pos_3.TIF",
-"chip_4_8_pos_4.TIF",
-"chip_4_8_pos_5.TIF",
-"chip_4_8_pos_6.TIF",
-"chip_4_8_pos_7.TIF",
-"chip_4_8_pos_8.TIF",
-"chip_4_9_pos_1.TIF",
-"chip_4_9_pos_2.TIF",
-"chip_4_9_pos_3.TIF",
-"chip_4_9_pos_4.TIF",
-"chip_4_9_pos_5.TIF",
-"chip_4_9_pos_6.TIF",
-"chip_4_9_pos_7.TIF",
-"chip_4_9_pos_8.TIF",
-"chip_5_10_pos_1.TIF",
-"chip_5_10_pos_2.TIF",
-"chip_5_10_pos_3.TIF",
-"chip_5_10_pos_4.TIF",
-"chip_5_10_pos_5.TIF",
-"chip_5_10_pos_6.TIF",
-"chip_5_10_pos_7.TIF",
-"chip_5_10_pos_8.TIF",
-"chip_5_11_pos_1.TIF",
-"chip_5_11_pos_2.TIF",
-"chip_5_11_pos_3.TIF",
-"chip_5_11_pos_4.TIF",
-"chip_5_11_pos_5.TIF",
-"chip_5_11_pos_6.TIF",
-"chip_5_11_pos_7.TIF",
-"chip_5_11_pos_8.TIF",
-"chip_5_1_pos_1.TIF",
-"chip_5_1_pos_2.TIF",
-"chip_5_1_pos_3.TIF",
-"chip_5_1_pos_4.TIF",
-"chip_5_1_pos_5.TIF",
-"chip_5_1_pos_6.TIF",
-"chip_5_1_pos_7.TIF",
-"chip_5_1_pos_8.TIF",
-"chip_5_2_pos_1.TIF",
-"chip_5_2_pos_2.TIF",
-"chip_5_2_pos_3.TIF",
-"chip_5_2_pos_4.TIF",
-"chip_5_2_pos_5.TIF",
-"chip_5_2_pos_6.TIF",
-"chip_5_2_pos_7.TIF",
-"chip_5_2_pos_8.TIF",
-"chip_5_3_pos_1.TIF",
-"chip_5_3_pos_2.TIF",
-"chip_5_3_pos_3.TIF",
-"chip_5_3_pos_4.TIF",
-"chip_5_3_pos_5.TIF",
-"chip_5_3_pos_6.TIF",
-"chip_5_3_pos_7.TIF",
-"chip_5_3_pos_8.TIF",
-"chip_5_4_pos_1.TIF",
-"chip_5_4_pos_2.TIF",
-"chip_5_4_pos_3.TIF",
-"chip_5_4_pos_4.TIF",
-"chip_5_4_pos_5.TIF",
-"chip_5_4_pos_6.TIF",
-"chip_5_4_pos_7.TIF",
-"chip_5_4_pos_8.TIF",
-"chip_5_5_pos_1.TIF",
-"chip_5_5_pos_2.TIF",
-"chip_5_5_pos_3.TIF",
-"chip_5_5_pos_4.TIF",
-"chip_5_5_pos_5.TIF",
-"chip_5_5_pos_6.TIF",
-"chip_5_5_pos_7.TIF",
-"chip_5_5_pos_8.TIF",
-"chip_5_6_pos_1.TIF",
-"chip_5_6_pos_2.TIF",
-"chip_5_6_pos_3.TIF",
-"chip_5_6_pos_4.TIF",
-"chip_5_6_pos_5.TIF",
-"chip_5_6_pos_6.TIF",
-"chip_5_6_pos_7.TIF",
-"chip_5_6_pos_8.TIF",
-"chip_5_7_pos_1.TIF",
-"chip_5_7_pos_2.TIF",
-"chip_5_7_pos_3.TIF",
-"chip_5_7_pos_4.TIF",
-"chip_5_7_pos_5.TIF",
-"chip_5_7_pos_6.TIF",
-"chip_5_7_pos_7.TIF",
-"chip_5_7_pos_8.TIF",
-"chip_5_8_pos_1.TIF",
-"chip_5_8_pos_2.TIF",
-"chip_5_8_pos_3.TIF",
-"chip_5_8_pos_4.TIF",
-"chip_5_8_pos_5.TIF",
-"chip_5_8_pos_6.TIF",
-"chip_5_8_pos_7.TIF",
-"chip_5_8_pos_8.TIF",
-"chip_5_9_pos_1.TIF",
-"chip_5_9_pos_2.TIF",
-"chip_5_9_pos_3.TIF",
-"chip_5_9_pos_4.TIF",
-"chip_5_9_pos_5.TIF",
-"chip_5_9_pos_6.TIF",
-"chip_5_9_pos_7.TIF",
-"chip_5_9_pos_8.TIF"
-	};
+      //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Aruco_M/";
+      std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/Aruco_M/";
+        std::string Images[] = {"chip_1_10_pos_1.TIF",//  F
+                                "chip_1_10_pos_2.TIF",
+                               };
         tmp_filename = Images[ui->spinBox_input->value()];
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
@@ -1093,10 +621,11 @@ void Magrathea::FiducialFinderCaller(const int &input){
     double distance_x = 888888.8;
     double distance_y = 888888.8;
 
-    if(input == 1){
-        Ffinder->Find_circles(distance_x,distance_y);
-        std::cout<<"1. "<<std::endl;
-    } else if (input == 2){
+    //if(input == 1){
+    //    Ffinder->Find_circles(distance_x,distance_y);
+     //   std::cout<<"1. "<<std::endl;
+    //} else if (input == 2){
+    if (input == 2){
         std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/";
         std::string Images[] = {address + "Aruco_M/aruco_M_fiducial_chip_1_1_pos_1.TIF",
             address + "Atlas_E/atlasE_fiducial_chip_1_1_pos_1.TIF",
@@ -1114,7 +643,7 @@ void Magrathea::FiducialFinderCaller(const int &input){
     }
     qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
     std::ofstream ofs ("output.txt", std::ofstream::app);
-    ofs << ui->spinBox_input->value()<<" "<< tmp_filename<<" "<<distance_x<<" "<<distance_x<<std::endl;
+    ofs << ui->spinBox_input->value()<<" "<< tmp_filename<<" "<<distance_x<<" "<<distance_y<<std::endl;
     ofs.close();
     delete Ffinder;
     mCamera->start();
@@ -1132,7 +661,7 @@ void Magrathea::Calibration_2_ButtonClicked()
 {    calibrationCaller(1); }
 
 void Magrathea::calibrationCaller(int input){
-    //Eventually add conmmand to move the gantry to the place where the
+    //Eventually add command to move the gantry to the place where the
     //calibration area is.
     /////////////////////////////////////////
     //    cv::Point2f temp_coord;
@@ -1537,15 +1066,6 @@ void Magrathea::led_label(QLabel *label, bool value){
 
 void Magrathea::color_test(){
     std::cout<<"here"<<std::endl;
-//    std::string Images[15] = {"C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/001.jpg",//0
-//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/002.jpg",
-//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/004.jpg",
-//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/005.jpg",
-//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/006.jpg",
-//                              "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/color/007.jpg"//5
-//                             };
-//    cv::Mat input = cv::imread(Images[ui->spinBox_input->value()],CV_LOAD_IMAGE_COLOR);
-    //cv::imshow("input",input);
 
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
@@ -1590,8 +1110,8 @@ void Magrathea::destroy_all(){
 }
 
 void Magrathea::loop_test(){
-
-    for(int i=0;i<440;i++){
+    //run fiducial finding algo automatically on a series of pictures
+    for(int i=0;i<1;i++){//set appropriate value of the loop limit
         Sleeper::msleep(500);
         std::cout<<"It "<<i<<std::endl;
         ui->spinBox_input->setValue(i);
@@ -1600,6 +1120,7 @@ void Magrathea::loop_test(){
 }
 
 void Magrathea::Aruco_test(){
+    //visualize the different aruco markers
     cv::Mat test_aruco;
     auto dictionary = cv::aruco::generateCustomDictionary(512,3);
     cv::aruco::drawMarker(dictionary, ui->ArucospinBox->value() , 200, test_aruco, 1);

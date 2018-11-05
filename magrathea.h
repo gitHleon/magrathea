@@ -49,8 +49,7 @@ private slots:
     void Calibration_ButtonClicked();
     void Calibration_2_ButtonClicked();
     void FiducialFinderCaller(const int &input);
-    void Fiducial_finder_button_1_Clicked();
-    void Fiducial_finder_button_2_Clicked();
+    void Fiducial_finder_button_Clicked();
     void VignetteButton_clicked();
     void Camera_test();
     void Aruco_test();

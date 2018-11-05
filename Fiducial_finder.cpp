@@ -62,12 +62,14 @@ void FiducialFinder::Set_calibration(double m_calib){
 }
 
 bool FiducialFinder::Is_equal(const double &one, const double &two){
+    //function needed when searching for fiducial not using SURF
     //Tolerance 3um, the precision of the gantry
     double tolerance = 3*Calibration; //[px]
     return ( fabs(one-two) <= tolerance);
 }
 
 bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3){
+    //function needed when searching for fiducial not using SURF
     //http://en.cppreference.com/w/cpp/language/range-for
     //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
     //Distances between points are 22 - 20 um
@@ -90,6 +92,7 @@ bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, c
 }
 
 void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Centers, std::vector<std::vector<int> > &Squares, std::vector<std::vector<int> > &Triangles){
+    //function needed when searching for fiducial not using SURF
     int Iteration = 0;
     Squares.clear();
     Triangles.clear();
@@ -127,6 +130,7 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Cente
 
 bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3, const cv::Point &P_4)
 {
+    //function needed when searching for fiducial not using SURF
     //http://en.cppreference.com/w/cpp/language/range-for
     //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
     //Distances between points are 30 um
@@ -207,8 +211,9 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
 }
 
 void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
+    //function needed when searching for fiducial not using SURF
     //DEPRECATED
-//to find the 4 dot fiducial
+    //to find the 4 dot fiducial
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
@@ -285,7 +290,7 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
 }
 
 void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input){
-
+    //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
     if(image.empty()){
@@ -379,8 +384,14 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
                 cv::aruco::drawDetectedMarkers(outputImage, markerCorners, markerIds);
                 cv::Point F_center = Square_center(markerCorners.at(0).at(0),markerCorners.at(0).at(1),
                                                    markerCorners.at(0).at(2),markerCorners.at(0).at(3));
-                X_distance = (center_cols - F_center.x)*(1./Calibration); //[um]
-                Y_distance = (center_rows - F_center.y)*(1./Calibration); //[um]
+                //std::cout<<"center cols : "<< center_cols<< " ;center rows : "<<center_rows <<std::endl;
+                int ROIcenter_rows = outputImage.rows/2.0; //Defining the center of the image
+                int ROIcenter_cols = outputImage.cols/2.0;
+                //std::cout<<"ROI cols : "<< ROIcenter_cols<< " ;ROI rows : "<<ROIcenter_rows <<std::endl;
+                //std::cout<<"ceneter cols : "<< F_center.x<< " ;center rows : "<<F_center.y <<std::endl;
+                //std::cout<<"Calibration  : "<< Calibration<<std::endl;
+                X_distance = (ROIcenter_cols - F_center.x)*(1./Calibration); //[um]
+                Y_distance = (ROIcenter_rows - F_center.y)*(1./Calibration); //[um]
                 cv::circle(outputImage, F_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
             }
             cv::imshow("aruco_image",outputImage);
@@ -489,7 +500,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::Mat H = cv::estimateAffinePartial2D(obj, scene,cv::noArray(),cv::RANSAC,5.0);
         ///////////////////////////////////////////////////////////////////////////////////////
         //WARNING!!! It works but output H is inconsitent with what said by manual of function estimateAffinePartial2D.
-        //understand meaning of matrix elements
+        //need to understand meaning of matrix elements
         ///////////////////////////////////////////////////////////////////////////////////////
         std::cout<<"H.rows: "<<H.rows <<" ;H.cols "<<H.cols<<std::endl;
         //cv::Scalar value_t = image_gray.at<uchar>(row,col);
@@ -538,8 +549,11 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         auto s = std::to_string(temp_input);
         cv::imwrite("EXPORT/"+algo_name+"_"+s+".jpg",RoiImage);
 
-        X_distance = (center_cols - F_center.x)*(1./Calibration); //[um]
-        Y_distance = (center_rows - F_center.y)*(1./Calibration); //[um]
+        int ROIcenter_rows = RoiImage.rows/2.0; //Defining the center of the image
+        int ROIcenter_cols = RoiImage.cols/2.0;
+
+        X_distance = (ROIcenter_cols - F_center.x)*(1./Calibration); //[um]
+        Y_distance = (ROIcenter_rows - F_center.y)*(1./Calibration); //[um]
 
         //        cv::Scalar value_t = H.at<uchar>(0,0);
         //        double a = value_t.val[0];

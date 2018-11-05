@@ -1,4 +1,5 @@
 #include "verticalalignmenttool.h"
+//routine to verify the vertical alignement of the optics. From what used by BNL group:
 //https://github.com/sciollalab/BNL_ThermomechanicalStave/wiki/Calibration-Methods#camera-calibration
 VerticalAlignmentTool::VerticalAlignmentTool(QWidget *parent) : QWidget(parent)
 {}
@@ -21,7 +22,6 @@ void VerticalAlignmentTool::EvaluateEccentricity(const cv::RotatedRect &box, dou
 
 //https://stackoverflow.com/questions/34478402/opencv-how-to-count-objects-in-photo
 //https://stackoverflow.com/questions/37540305/how-to-count-white-object-on-binary-image
-
 
 //steps needed
 //0. std preparation of the image
