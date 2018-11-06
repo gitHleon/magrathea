@@ -648,6 +648,13 @@ void Magrathea::FiducialFinderCaller(const int &input){
     ofs.close();
     delete Ffinder;
     mCamera->start();
+    //Sleeper::sleep(5);
+    //////////////
+    //movng the gantry to get the fiducial at the center of the image
+    //mMotionHandler->moveXBy(distance_x*0.001,1);
+    //mMotionHandler->moveYBy(distance_y*0.001,1);
+    //////////////
+
     return;
 }
 

@@ -61,6 +61,31 @@ void FiducialFinder::Set_calibration(double m_calib){
     Calibration = m_calib;
 }
 
+void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp){
+    int baseline = 0;
+    //int text_font_size = 2;
+    //int text_thikness = 2;
+
+    int window_size = image.rows;
+    std::string um_str = " 50um";
+    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
+    cv::Size text_size = cv::getTextSize(algo_name, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+    QTime now = QTime::currentTime();
+    QString time_now = now.toString("hhmmss");
+    std::string time_now_str = time_now.toLocal8Bit().constData();
+    timestamp = time_now_str;
+    start_x += text_size.width;
+    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+    cv::Size time_size = cv::getTextSize(time_now_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    start_x += time_size.width;
+    cv::putText(image,um_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+    cv::Size um_size = cv::getTextSize(um_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    start_x += um_size.width;
+    std::cout<<"base : "<<baseline<<std::endl;
+    cv::line(image,cv::Point(start_x,window_size-start_y),cv::Point(start_x+(50*Calibration),window_size-start_y),cv::Scalar(255,255,255),text_thikness);
+}
+
+
 bool FiducialFinder::Is_equal(const double &one, const double &two){
     //function needed when searching for fiducial not using SURF
     //Tolerance 3um, the precision of the gantry
@@ -542,29 +567,10 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow(algo_name +" Match - RoI", RoiImage);
         cv::imshow(algo_name +" Match - original", image);
         //putting labels on output image
-        std::string output_label = "";
+        std::string time_now_str = "";
         int start_x = 15;
         int start_y = 5;
-        int baseline = 0;
-        int text_font_size = 2;
-        int text_thikness = 2;
-        std::string um_str = " 50um";
-        cv::putText(RoiImage,algo_name,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
-        cv::Size text_size = cv::getTextSize(algo_name, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
-        QTime now = QTime::currentTime();
-        QString time_now = now.toString("hhmmss");
-        std::string time_now_str = time_now.toLocal8Bit().constData();
-        start_x += text_size.width;
-        cv::putText(RoiImage,time_now_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-        cv::Size time_size = cv::getTextSize(time_now_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
-        start_x += time_size.width;
-        cv::putText(RoiImage,um_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-        cv::Size um_size = cv::getTextSize(um_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
-        start_x += um_size.width;
-        std::cout<<"base : "<<baseline<<std::endl;
-        cv::line(RoiImage,cv::Point(start_x,window_size-start_y),cv::Point(start_x+(50*Calibration),window_size-start_y),cv::Scalar(255,255,255),text_thikness);
-
-
+        addInfo(RoiImage,algo_name,start_x,start_y,2,2,time_now_str);
         auto s = std::to_string(temp_input);
         cv::imwrite("EXPORT/"+algo_name+"_"+s+"_"+time_now_str+".jpg",RoiImage);
 
