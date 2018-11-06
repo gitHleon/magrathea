@@ -626,8 +626,8 @@ void Magrathea::FiducialFinderCaller(const int &input){
      //   std::cout<<"1. "<<std::endl;
     //} else if (input == 2){
     if (input == 2){
-        //std::string address = "D:/Images/Templates_mytutoyo/";
-        std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
+        std::string address = "D:/Images/Templates_mytutoyo/";
+        //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
         std::string Images[] = {address + "aruco_M_fiducial_chip_1_1_pos_1.TIF",
             address + "atlasE_fiducial_chip_1_1_pos_1.TIF",
             address + "Fiducial_chip_1_1_pos_1.TIF",
