@@ -46,8 +46,8 @@ public:
     void Set_camera(const cv::VideoCapture &m_cap);
     void Set_log(QTextEdit *m_log);
     void Set_gantry(MotionHandler *m_gantry);
-    void   Set_color_int(const int &value);
-    void   Set_use_laplacian(const bool &value);
+    void Set_color_int(const int &value);
+    void Set_use_laplacian(const bool &value);
 
 signals:
     void Log_append(QString TextToWrite);

@@ -304,7 +304,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         int center_cols = image.cols/2.0;
 
         cv::imshow("f. 0 image",image);
-        const int window_size = 1700; //2500; // 420
+        const int window_size = 420; //2500; // 420
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
             return;}
@@ -417,13 +417,9 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             detector->detectAndCompute(image_F_gray,cv::Mat(),keypoints_F,descriptorFiducial,false);
         }else{
             qInfo("Star feature detection");
-            std::cout<<"ok0"<<std::endl;
             detector->detect(image_gray,keypoints_image);
-            std::cout<<"ok00"<<std::endl;
             detector->detect(image_F_gray,keypoints_F);
-            std::cout<<"ok"<<std::endl;
             descriptor_extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
-            std::cout<<"ok2"<<std::endl;
             descriptor_extractor->compute(image_gray,keypoints_image,descriptorImage);
             descriptor_extractor->compute(image_F_gray,keypoints_F,descriptorFiducial);
         }
@@ -545,9 +541,32 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow(algo_name +" Match", result);
         cv::imshow(algo_name +" Match - RoI", RoiImage);
         cv::imshow(algo_name +" Match - original", image);
-        cv::putText(RoiImage,algo_name,cv::Point(30,window_size-4), CV_FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
+        //putting labels on output image
+        std::string output_label = "";
+        int start_x = 15;
+        int start_y = 5;
+        int baseline = 0;
+        int text_font_size = 2;
+        int text_thikness = 2;
+        std::string um_str = " 50um";
+        cv::putText(RoiImage,algo_name,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
+        cv::Size text_size = cv::getTextSize(algo_name, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+        QTime now = QTime::currentTime();
+        QString time_now = now.toString("hhmmss");
+        std::string time_now_str = time_now.toLocal8Bit().constData();
+        start_x += text_size.width;
+        cv::putText(RoiImage,time_now_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+        cv::Size time_size = cv::getTextSize(time_now_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+        start_x += time_size.width;
+        cv::putText(RoiImage,um_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+        cv::Size um_size = cv::getTextSize(um_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+        start_x += um_size.width;
+        std::cout<<"base : "<<baseline<<std::endl;
+        cv::line(RoiImage,cv::Point(start_x,window_size-start_y),cv::Point(start_x+(50*Calibration),window_size-start_y),cv::Scalar(255,255,255),text_thikness);
+
+
         auto s = std::to_string(temp_input);
-        cv::imwrite("EXPORT/"+algo_name+"_"+s+".jpg",RoiImage);
+        cv::imwrite("EXPORT/"+algo_name+"_"+s+"_"+time_now_str+".jpg",RoiImage);
 
         int ROIcenter_rows = RoiImage.rows/2.0; //Defining the center of the image
         int ROIcenter_cols = RoiImage.cols/2.0;

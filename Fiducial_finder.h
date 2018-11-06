@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QWidget>
+#include <QTime>
 #include <QTextEdit>
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
