@@ -608,3 +608,21 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

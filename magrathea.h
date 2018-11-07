@@ -72,6 +72,7 @@ private slots:
     void color_test();
     void destroy_all();
     void loop_test();
+    void createTemplate_F();
 
 private:
     Ui::Magrathea *ui;

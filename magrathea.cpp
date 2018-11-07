@@ -255,6 +255,9 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Fiducial_finder_button,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_Clicked()));
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
+    connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
+
+
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
     connect(ui->enableAxesButton, SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked()));
@@ -1136,7 +1139,37 @@ void Magrathea::Aruco_test(){
     ui->ArucospinBox->setValue(ui->ArucospinBox->value()+1);
 }
 
+void Magrathea::createTemplate_F(){
+    //function to create imges of the ATLAS F and ATLAS E fiducials
+    //Need to run only once to create the images. The user save them and put in the appropriate folder for the code to reach them.
+    //the factor can be adjusted to have more r less pixels in the image.
+    int factor = 3;
 
+    //F fiducial
+    cv::Mat fiducial = cv::Mat(cv::Size(200*factor,220*factor),CV_8UC1,cv::Scalar(255));
+    cv::Mat ARoi = fiducial(cv::Rect(50*factor, 50*factor, 100*factor, 120*factor));
+    ARoi.setTo(cv::Scalar(0));
+    cv::Mat BRoi = fiducial(cv::Rect(70*factor, 70*factor, 80*factor, 28*factor));
+    BRoi.setTo(cv::Scalar(255));
+    cv::Mat CRoi = fiducial(cv::Rect(130*factor, 98*factor, 20*factor, 20*factor));
+    CRoi.setTo(cv::Scalar(255));
+    cv::Mat DRoi = fiducial(cv::Rect(70*factor, 118*factor, 80*factor, 52*factor));
+    DRoi.setTo(cv::Scalar(255));
+    cv::imshow("fiducial F",fiducial);
+
+    //E fiducial
+    cv::Mat fiducial_2 = cv::Mat(cv::Size(155*factor,185*factor),CV_8UC1,cv::Scalar(255));
+    cv::Mat aRoi = fiducial_2(cv::Rect(50*factor, 50*factor, 25*factor, 25*factor));
+    aRoi.setTo(cv::Scalar(0));
+    cv::Mat bRoi = fiducial_2(cv::Rect(80*factor, 50*factor, 25*factor, 25*factor));
+    bRoi.setTo(cv::Scalar(0));
+    cv::Mat cRoi = fiducial_2(cv::Rect(50*factor, 110*factor, 25*factor, 25*factor));
+    cRoi.setTo(cv::Scalar(0));
+    cv::Mat dRoi = fiducial_2(cv::Rect(80*factor, 110*factor, 25*factor, 25*factor));
+    dRoi.setTo(cv::Scalar(0));
+    cv::circle(fiducial_2, cv::Point(77*factor,92*factor), 12.5*factor, cv::Scalar(0), -1);
+    cv::imshow("fiducial E",fiducial_2);
+}
 
 
 
