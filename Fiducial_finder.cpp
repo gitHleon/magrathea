@@ -341,13 +341,18 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 
         cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
         cv::Mat image_F_gray = image_fiducial.clone(); // Selecting ROI from the input image
+        //        cv::Mat image_gray;
+        //        cv::Mat image_F_gray;
 
         cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
         cv::cvtColor(image_F_gray,image_F_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
 
         for(int i=0;i<1;i++){
-            cv::medianBlur(image_gray,image_gray,5);
-            cv::medianBlur(image_F_gray,image_F_gray,5);
+            //https://docs.opencv.org/3.4/d3/d8f/samples_2cpp_2tutorial_code_2ImgProc_2Smoothing_2Smoothing_8cpp-example.html#a12
+            //cv::bilateralFilter(image_gray,image_gray,9,18,5);
+            //cv::bilateralFilter(image_F_gray,image_F_gray,9,18,5);
+            cv::medianBlur(image_gray,image_gray,9);
+            cv::medianBlur(image_F_gray,image_F_gray,9);
         }
 
         cv::imshow("f. 1 blur",image_gray);
@@ -420,7 +425,11 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
                 cv::circle(outputImage, F_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
             }
             cv::imshow("aruco_image",outputImage);
-            cv::imwrite("EXPORT/"+algo_name+"_"+s+".jpg",outputImage);
+            std::string time_now_str = "";
+            int start_x = 15;
+            int start_y = 5;
+            addInfo(outputImage,algo_name,start_x,start_y,2,2,time_now_str);
+            cv::imwrite("EXPORT/"+algo_name+"_"+s+"_"+time_now_str+".jpg",outputImage);
             return;
         }else{
             qWarning("Error!! DescriptorAlgorithm not set properly!!");
@@ -573,6 +582,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         addInfo(RoiImage,algo_name,start_x,start_y,2,2,time_now_str);
         auto s = std::to_string(temp_input);
         cv::imwrite("EXPORT/"+algo_name+"_"+s+"_"+time_now_str+".jpg",RoiImage);
+        cv::imwrite("EXPORT/"+algo_name+"_match_"+s+"_"+time_now_str+".jpg",result);
 
         int ROIcenter_rows = RoiImage.rows/2.0; //Defining the center of the image
         int ROIcenter_cols = RoiImage.cols/2.0;

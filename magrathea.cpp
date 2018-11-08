@@ -602,7 +602,7 @@ void Magrathea::FiducialFinderCaller(const int &input){
         tmp_filename = Images[ui->spinBox_input->value()];
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Set_calibration(1); //get calibration from a private variable
+        Ffinder->Set_calibration(4.5); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -632,14 +632,13 @@ void Magrathea::FiducialFinderCaller(const int &input){
         std::string address = "D:/Images/Templates_mytutoyo/";
         //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
         std::string Images[] = {address + "aruco_M_fiducial_chip_1_1_pos_1.TIF",
-            address + "atlasE_fiducial_chip_1_1_pos_1.TIF",
-            address + "Fiducial_chip_1_1_pos_1.TIF",
-            "C:/Users/Silicio/WORK/Full_Size/W080/0004_f_fid_2.bmp",
-            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007_F.jpg",
-            "C:/Users/Silicio/WORK/Full_Size/SCT_gantry_7.3/032_F.jpg",
-            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_7.3/007_F_2.jpg",
-            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/005_F_2.jpg",
-            "C:/Users/Silicio/WORK/Full_Size/R0_W80_gantry_5.5/005_F_3.jpg"
+                                address + "atlasE_fiducial_chip_1_1_pos_1.TIF",
+                                address + "Fiducial_chip_1_1_pos_1.TIF",
+                                address + "fiducialE.png",
+                                address + "fiducialF.png",
+                                address + "e_fid.jpg",
+                                address + "f_fid.jpg",
+                                address + "ar_m_fid.jpg"
                                };
         Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
                 ,CV_LOAD_IMAGE_COLOR);
@@ -651,16 +650,13 @@ void Magrathea::FiducialFinderCaller(const int &input){
     ofs.close();
     delete Ffinder;
     mCamera->start();
-    //Sleeper::sleep(5);
     //////////////
     //movng the gantry to get the fiducial at the center of the image
     //mMotionHandler->moveXBy(distance_x*0.001,1);
     //mMotionHandler->moveYBy(distance_y*0.001,1);
     //////////////
-
     return;
 }
-
 
 //------------------------------------------
 //calibrate
