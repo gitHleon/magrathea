@@ -73,6 +73,7 @@ private slots:
     void destroy_all();
     void loop_test();
     void createTemplate_F();
+    void capture_fid_and_move();
 
 private:
     Ui::Magrathea *ui;

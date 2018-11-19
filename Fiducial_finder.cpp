@@ -335,6 +335,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             return;}
 
         cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
+        cv::Mat output_mat = image.clone();
         cv::Mat RoiImage = image(regione_interessante);
         cv::imshow("f. 0.1 image ROI",RoiImage);
         cv::imshow("f. 0.1.f image ROI",image_fiducial);
@@ -579,7 +580,9 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         int start_x = 15;
         int start_y = 5;
         addInfo(RoiImage,algo_name,start_x,start_y,2,2,time_now_str);
-        auto s = std::to_string(temp_input);
+        std::string s = std::to_string(temp_input);
+
+        cv::imwrite("EXPORT/"+s+"_"+time_now_str+".jpg",output_mat);
         cv::imwrite("EXPORT/"+algo_name+"_"+s+"_"+time_now_str+".jpg",RoiImage);
         cv::imwrite("EXPORT/"+algo_name+"_match_"+s+"_"+time_now_str+".jpg",result);
 

@@ -581,7 +581,6 @@ void Magrathea::FiducialFinderCaller(const int &input){
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 4.0);
@@ -595,7 +594,7 @@ void Magrathea::FiducialFinderCaller(const int &input){
     std::string tmp_filename = "";
     if(from_file){
       //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Atlas_G/";
-      std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Aruco_G/";
+      std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/Atlas_F/";
         std::string Images[] = {
 "chip_1_10_pos_1.TIF",
 "chip_5_9_pos_8.TIF"
@@ -626,10 +625,7 @@ void Magrathea::FiducialFinderCaller(const int &input){
     double distance_x = 888888.8;
     double distance_y = 888888.8;
 
-    //if(input == 1){
     //    Ffinder->Find_circles(distance_x,distance_y);
-     //   std::cout<<"1. "<<std::endl;
-    //} else if (input == 2){
     if (input == 2){
         //std::string address = "D:/Images/Templates_mytutoyo/";
         std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
@@ -669,6 +665,20 @@ void Magrathea::FiducialFinderCaller(const int &input){
     //mMotionHandler->moveYBy(distance_y*0.001,1);
     //////////////
     return;
+}
+
+//------------------------------------------
+//Move and capture
+
+void Magrathea::capture_fid_and_move(){
+
+    //capture fiducial
+    FiducialFinderCaller(2);
+
+    mMotionHandler->moveXBy(ui->x_fid_move_SpinBox->value(),1);
+    mMotionHandler->moveYBy(ui->y_fid_move_SpinBox->value(),1);
+    ui->spinBox_input->setValue(ui->spinBox_input->value()+1);
+
 }
 
 //------------------------------------------
@@ -748,7 +758,7 @@ void Magrathea::calibrationCaller(int input){
     bool is_px_over_micron = (input == 0);
     calibrator->Calibration_strips(calibration_value,calibration_value_err, is_px_over_micron);
     QString unit = (is_px_over_micron ? " px/um : Value set!" : " um/px : Value NOT set");
-    QString output = "C: "+QString::number(calibration_value)+ " +- "+QString::number(calibration_value_err)+ unit;
+    QString output = "C: "+QString::number(calibration_value,'g',2)+ " +- "+QString::number(calibration_value_err,'g',2)+ unit;
     ui->Calib_value_lineEdit->setText(output);
     if(is_px_over_micron)
         mCalibration = calibration_value;
@@ -1118,7 +1128,6 @@ void Magrathea::color_test(){
     cv::imshow("blue",bgr[0]);  //blue channel
     cv::imshow("green",bgr[1]); //green channel
     cv::imshow("red",bgr[2]);   //red channel
-
 
     cv::imwrite("blue.png",bgr[0]); //blue channel
     cv::imwrite("green.png",bgr[1]); //green channel
