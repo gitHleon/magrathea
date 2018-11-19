@@ -588,7 +588,7 @@
           <item row="3" column="3">
            <widget class="QSpinBox" name="spinBox_input_F">
             <property name="maximum">
-             <number>10</number>
+             <number>11111</number>
             </property>
            </widget>
           </item>
@@ -698,7 +698,7 @@
           <item row="5" column="1">
            <widget class="QSpinBox" name="ArucospinBox">
             <property name="maximum">
-             <number>513</number>
+             <number>999999</number>
             </property>
            </widget>
           </item>

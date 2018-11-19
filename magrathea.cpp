@@ -594,15 +594,17 @@ void Magrathea::FiducialFinderCaller(const int &input){
     bool from_file = ui->calib_from_file_Box->isChecked();
     std::string tmp_filename = "";
     if(from_file){
-      //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Aruco_M/";
-      std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/Atlas_F/";
-        std::string Images[] = {"chip_1_10_pos_1.TIF",//  F
-                                "chip_1_10_pos_2.TIF"
-                               };
+      //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Atlas_G/";
+      std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Aruco_G/";
+        std::string Images[] = {
+"chip_1_10_pos_1.TIF",
+"chip_5_9_pos_8.TIF"
+};
+
         tmp_filename = Images[ui->spinBox_input->value()];
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Set_calibration(4.5); //get calibration from a private variable
+        Ffinder->Set_calibration(1); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -629,24 +631,35 @@ void Magrathea::FiducialFinderCaller(const int &input){
      //   std::cout<<"1. "<<std::endl;
     //} else if (input == 2){
     if (input == 2){
-        std::string address = "D:/Images/Templates_mytutoyo/";
-        //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
-        std::string Images[] = {address + "aruco_M_fiducial_chip_1_1_pos_1.TIF",
-                                address + "atlasE_fiducial_chip_1_1_pos_1.TIF",
-                                address + "Fiducial_chip_1_1_pos_1.TIF",
-                                address + "fiducialE.png",
-                                address + "fiducialF.png",
-                                address + "e_fid.jpg",
-                                address + "f_fid.jpg",
-                                address + "ar_m_fid.jpg"
-                               };
+        //std::string address = "D:/Images/Templates_mytutoyo/";
+        std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
+        std::string Images[] = {
+            address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
+            address + "Fiducial_chip_1_1_pos_1.TIF",
+            address + "atlas_g_chip_1_1_pos_1.TIF",
+            address + "atlas_h_chip_1_1_pos_1.TIF",
+            address + "aruco_f_chip_1_1_pos_1.TIF",
+            address + "aruco_l_chip_1_1_pos_1.TIF", //5
+            address + "aruco_f_chip_1_1_pos_1.TIF",
+            address + "aruco_h_chip_1_1_pos_1.TIF",
+            address + "aruco_o_chip_1_1_pos_2.TIF",
+            address + "aruco_g_chip_1_1_pos_1.TIF",
+            address + "aruco_M_chip_1_1_pos_1.TIF", //10
+            address + "fiducialE.png",
+            address + "fiducialF.png",
+            address + "e_perfect_4_5.png",
+            address + "f_perfect_4_5.png",
+            address + "e_fid.jpg",                           //15
+            address + "f_fid.jpg",
+            address + "ar_m_fid.jpg"
+        };
         Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
                 ,CV_LOAD_IMAGE_COLOR);
         Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value());
     }
     qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
     std::ofstream ofs ("output.txt", std::ofstream::app);
-    ofs << ui->spinBox_input->value()<<" "<< tmp_filename<<" "<<distance_x<<" "<<distance_y<<std::endl;
+    ofs << ui->spinBox_input->value()<<" "<<tmp_filename<<" "<<distance_x<<" "<<distance_y<<std::endl;
     ofs.close();
     delete Ffinder;
     mCamera->start();
@@ -1118,7 +1131,7 @@ void Magrathea::destroy_all(){
 
 void Magrathea::loop_test(){
     //run fiducial finding algo automatically on a series of pictures
-    for(int i=0;i<1;i++){//set appropriate value of the loop limit
+    for(int i=0;i<440;i++){//set appropriate value of the loop limit
         Sleeper::msleep(500);
         std::cout<<"It "<<i<<std::endl;
         ui->spinBox_input->setValue(i);
@@ -1129,7 +1142,7 @@ void Magrathea::loop_test(){
 void Magrathea::Aruco_test(){
     //visualize the different aruco markers
     cv::Mat test_aruco;
-    auto dictionary = cv::aruco::generateCustomDictionary(512,3);
+    auto dictionary = cv::aruco::generateCustomDictionary(522,3);
     cv::aruco::drawMarker(dictionary, ui->ArucospinBox->value() , 200, test_aruco, 1);
     cv::imshow("aruco",test_aruco);
     ui->ArucospinBox->setValue(ui->ArucospinBox->value()+1);
@@ -1139,8 +1152,8 @@ void Magrathea::createTemplate_F(){
     //function to create imges of the ATLAS F and ATLAS E fiducials
     //Need to run only once to create the images. The user save them and put in the appropriate folder for the code to reach them.
     //the factor can be adjusted to have more r less pixels in the image.
-    int factor = 3;
-
+    double factor = mCalibration;
+    std::cout<<"factor : "<<factor<<std::endl;
     //F fiducial
     cv::Mat fiducial = cv::Mat(cv::Size(200*factor,220*factor),CV_8UC1,cv::Scalar(255));
     cv::Mat ARoi = fiducial(cv::Rect(50*factor, 50*factor, 100*factor, 120*factor));

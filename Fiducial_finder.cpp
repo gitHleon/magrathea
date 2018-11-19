@@ -363,7 +363,6 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow("f. 1.1 blur+thr",image_gray);
         cv::imshow("f. 1.1.f blur+thr",image_F_gray);
 
-        //performing well even without closing
         cv::Mat StructElement = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(5,5));
         cv::morphologyEx(image_F_gray,image_F_gray,cv::MORPH_CLOSE,StructElement);
         cv::morphologyEx(image_gray,image_gray,cv::MORPH_CLOSE,StructElement);
@@ -499,12 +498,6 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             }
         }
 
-        const unsigned int min_matches = 4;//add max number of matches?
-        std::cout<<" SortedMatches.size()  "<<SortedMatches.size()<<std::endl;
-        if(SortedMatches.size() < min_matches){
-            log->append("Error!! Not reached minimum number of matches.");
-            return;}
-
         //debug
         cv::Mat test_1;
         cv::Mat test_2;
@@ -514,6 +507,12 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow("3. keypoints F",test_2);
         cv::Mat result;
         cv::drawMatches(image_F_gray, keypoints_F, image_gray, keypoints_image, SortedMatches, result);
+
+        const unsigned int min_matches = 4;//add max number of matches?
+        std::cout<<" SortedMatches.size()  "<<SortedMatches.size()<<std::endl;
+        if(SortedMatches.size() < min_matches){
+            log->append("Error!! Not reached minimum number of matches.");
+            return;}
 
         //-- Localize the object
         std::vector<cv::Point2f> obj;
