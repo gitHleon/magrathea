@@ -314,7 +314,7 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
     //add return of the fid center
 }
 
-void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input){
+void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2){
     //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
@@ -405,6 +405,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds);
             cv::Mat outputImage = RoiImage.clone();
             auto s     = std::to_string(temp_input);
+            auto chip  = std::to_string(temp_input_2);
             auto match = std::to_string(markerCorners.size());
             if(markerCorners.size()!=1){
                 X_distance = 800000+markerCorners.size();
@@ -579,18 +580,18 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         std::string time_now_str = "";
         int start_x = 15;
         int start_y = 5;
-        addInfo(RoiImage,algo_name,start_x,start_y,2,2,time_now_str);
-        std::string s = std::to_string(temp_input);
-
-        cv::imwrite("EXPORT/"+s+"_"+time_now_str+".jpg",output_mat);
-        cv::imwrite("EXPORT/"+algo_name+"_"+s+"_"+time_now_str+".jpg",RoiImage);
-        cv::imwrite("EXPORT/"+algo_name+"_match_"+s+"_"+time_now_str+".jpg",result);
+        addInfo(RoiImage,algo_name,start_x,start_y,3,2,time_now_str);
+        std::string s     = std::to_string(temp_input);
+        std::string chip  = std::to_string(temp_input_2);
+        cv::imwrite("EXPORT/"+chip+"_"+s+"_"+time_now_str+".jpg",output_mat);
+        cv::imwrite("EXPORT/"+algo_name+"_"+chip+"_"+s+"_"+time_now_str+".jpg",RoiImage);
+        cv::imwrite("EXPORT/"+algo_name+"_match_"+chip+"_"+s+"_"+time_now_str+".jpg",result);
 
         int ROIcenter_rows = RoiImage.rows/2.0; //Defining the center of the image
         int ROIcenter_cols = RoiImage.cols/2.0;
 
-        X_distance = (ROIcenter_cols - F_center.x)*(1./Calibration); //[um]
-        Y_distance = (ROIcenter_rows - F_center.y)*(1./Calibration); //[um]
+        X_distance = (F_center.x - ROIcenter_cols)*(1./Calibration); //[um]
+        Y_distance = (F_center.y - ROIcenter_rows)*(1./Calibration); //[um]
 
         //        cv::Scalar value_t = H.at<uchar>(0,0);
         //        double a = value_t.val[0];

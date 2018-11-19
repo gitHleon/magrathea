@@ -256,6 +256,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
+    connect(ui->cap_and_move_button,SIGNAL(clicked(bool)),this,SLOT(capture_fid_and_move()));
 
 
     //gantry
@@ -627,8 +628,8 @@ void Magrathea::FiducialFinderCaller(const int &input){
 
     //    Ffinder->Find_circles(distance_x,distance_y);
     if (input == 2){
-        //std::string address = "D:/Images/Templates_mytutoyo/";
-        std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
+        std::string address = "D:/Images/Templates_mytutoyo/";
+        //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
         std::string Images[] = {
             address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
             address + "Fiducial_chip_1_1_pos_1.TIF",
@@ -651,11 +652,16 @@ void Magrathea::FiducialFinderCaller(const int &input){
         };
         Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value());
+        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
     }
     qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
+
+    std::vector <double> pos_t = mMotionHandler->whereAmI(); //get gantry position
     std::ofstream ofs ("output.txt", std::ofstream::app);
-    ofs << ui->spinBox_input->value()<<" "<<tmp_filename<<" "<<distance_x<<" "<<distance_y<<std::endl;
+    ///////////////////////////////////////////////////////////////////
+    //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
+    ///////////////////////////////////////////////////////////////////
+    ofs << ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename<<" "<<distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<std::endl;
     ofs.close();
     delete Ffinder;
     mCamera->start();
@@ -672,13 +678,16 @@ void Magrathea::FiducialFinderCaller(const int &input){
 
 void Magrathea::capture_fid_and_move(){
 
-    //capture fiducial
-    FiducialFinderCaller(2);
-
-    mMotionHandler->moveXBy(ui->x_fid_move_SpinBox->value(),1);
-    mMotionHandler->moveYBy(ui->y_fid_move_SpinBox->value(),1);
-    ui->spinBox_input->setValue(ui->spinBox_input->value()+1);
-
+    ui->spinBox_input->setValue(0);
+    for(int h=0;h<8;h++){
+        //capture fiducial
+        FiducialFinderCaller(2);
+        mMotionHandler->moveXBy(ui->x_fid_move_SpinBox->value(),1);
+        mMotionHandler->moveYBy(ui->y_fid_move_SpinBox->value(),1);
+        ui->spinBox_input->setValue(ui->spinBox_input->value()+1);
+        Sleeper::msleep(700);
+    }
+    ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value()+1);
 }
 
 //------------------------------------------
