@@ -554,13 +554,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="Calib_button_2">
-            <property name="text">
-             <string>Calibrate um/px</string>
-            </property>
-           </widget>
-          </item>
           <item row="3" column="4">
            <widget class="QPushButton" name="color_button">
             <property name="text">

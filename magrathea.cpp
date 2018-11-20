@@ -247,7 +247,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->focusButton,     SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->captureButton,   SIGNAL(clicked(bool)), this, SLOT(captureButtonClicked()));
     connect(ui->Calib_button,    SIGNAL(clicked(bool)), this, SLOT(Calibration_ButtonClicked()));
-    connect(ui->Calib_button_2,  SIGNAL(clicked(bool)), this, SLOT(Calibration_2_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
     connect(ui->focusButton     ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
@@ -563,7 +562,7 @@ void Magrathea::VignetteButton_clicked(){
 //------------------------------------------
 
 void Magrathea::Fiducial_finder_button_Clicked()
-{    FiducialFinderCaller(2); }
+{    FiducialFinderCaller(0); }
 
 
 void Magrathea::FiducialFinderCaller(const int &input){
@@ -627,49 +626,67 @@ void Magrathea::FiducialFinderCaller(const int &input){
     double distance_y = 888888.8;
 
     //    Ffinder->Find_circles(distance_x,distance_y);
-    if (input == 2){
-        std::string address = "D:/Images/Templates_mytutoyo/";
-        //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
-        std::string Images[] = {
-            address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
-            address + "Fiducial_chip_1_1_pos_1.TIF",
-            address + "atlas_g_chip_1_1_pos_1.TIF",
-            address + "atlas_h_chip_1_1_pos_1.TIF",
-            address + "aruco_f_chip_1_1_pos_1.TIF",
-            address + "aruco_l_chip_1_1_pos_1.TIF", //5
-            address + "aruco_f_chip_1_1_pos_1.TIF",
-            address + "aruco_h_chip_1_1_pos_1.TIF",
-            address + "aruco_o_chip_1_1_pos_2.TIF",
-            address + "aruco_g_chip_1_1_pos_1.TIF",
-            address + "aruco_M_chip_1_1_pos_1.TIF", //10
-            address + "fiducialE.png",
-            address + "fiducialF.png",
-            address + "e_perfect_4_5.png",
-            address + "f_perfect_4_5.png",
-            address + "e_fid.jpg",                           //15
-            address + "f_fid.jpg",
-            address + "ar_m_fid.jpg"
-        };
-        Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
-                ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
-    }
+    std::string timestamp = "";
+    std::string address = "D:/Images/Templates_mytutoyo/";
+    //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
+    std::string Images[] = {
+        address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
+        address + "Fiducial_chip_1_1_pos_1.TIF",
+        address + "atlas_g_chip_1_1_pos_1.TIF",
+        address + "atlas_h_chip_1_1_pos_1.TIF",
+        address + "aruco_f_chip_1_1_pos_1.TIF",
+        address + "aruco_l_chip_1_1_pos_1.TIF", //5
+        address + "aruco_f_chip_1_1_pos_1.TIF",
+        address + "aruco_h_chip_1_1_pos_1.TIF",
+        address + "aruco_o_chip_1_1_pos_2.TIF",
+        address + "aruco_g_chip_1_1_pos_1.TIF",
+        address + "aruco_M_chip_1_1_pos_1.TIF", //10
+        address + "fiducialE.png",
+        address + "fiducialF.png",
+        address + "e_perfect_4_5.png",
+        address + "f_perfect_4_5.png",
+        address + "e_fid.jpg",                           //15
+        address + "f_fid.jpg",
+        address + "ar_m_fid.jpg",
+        address + "fid_test_1.jpg",
+        address + "fid_test_2.jpg",
+        address + "fid_test_3.jpg"   //20
+    };
+    Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
+            ,CV_LOAD_IMAGE_COLOR);
+
+    Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
+                    ui->chip_number_spinBox->value(),timestamp);
     qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
 
     std::vector <double> pos_t = mMotionHandler->whereAmI(); //get gantry position
-    std::ofstream ofs ("output.txt", std::ofstream::app);
+    std::string file_name = ((input==0) ? "output_temp.txt" : "output_good.txt");
+    std::ofstream ofs (file_name, std::ofstream::app);
     ///////////////////////////////////////////////////////////////////
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
-    ofs << ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename<<" "<<distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<std::endl;
-    ofs.close();
+    ofs << timestamp<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename<<" "<<
+           distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<" "<<pos_t[2];
     delete Ffinder;
+    cap.release();         //Going back to QCameraa
     mCamera->start();
     //////////////
     //movng the gantry to get the fiducial at the center of the image
-    //mMotionHandler->moveXBy(distance_x*0.001,1);
-    //mMotionHandler->moveYBy(distance_y*0.001,1);
-    //////////////
+    ///////////////////////////////////////////////////////////////////
+    //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
+    ///////////////////////////////////////////////////////////////////
+#if VALENCIA
+    ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<std::endl;
+    if(input == 0){
+        mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
+        mMotionHandler->moveYBy(distance_x*0.001,1);
+    }
+#else
+    ofs << std::endl;
+    mMotionHandler->moveXBy(distance_x*0.001,1);
+    mMotionHandler->moveYBy(distance_y*0.001,1);
+#endif
+    ofs.close();
     return;
 }
 
@@ -681,11 +698,14 @@ void Magrathea::capture_fid_and_move(){
     ui->spinBox_input->setValue(0);
     for(int h=0;h<8;h++){
         //capture fiducial
-        FiducialFinderCaller(2);
-        mMotionHandler->moveXBy(ui->x_fid_move_SpinBox->value(),1);
-        mMotionHandler->moveYBy(ui->y_fid_move_SpinBox->value(),1);
+        FiducialFinderCaller(0);
+        Sleeper::msleep(300);
+        FiducialFinderCaller(1);
+        Sleeper::msleep(300);
+        mMotionHandler->moveXBy(ui->x_fid_move_SpinBox->value(),2);
+        mMotionHandler->moveYBy(ui->y_fid_move_SpinBox->value(),2);
         ui->spinBox_input->setValue(ui->spinBox_input->value()+1);
-        Sleeper::msleep(700);
+        Sleeper::msleep(500);
     }
     ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value()+1);
 }
@@ -695,9 +715,6 @@ void Magrathea::capture_fid_and_move(){
 
 void Magrathea::Calibration_ButtonClicked()
 {    calibrationCaller(0); }
-
-void Magrathea::Calibration_2_ButtonClicked()
-{    calibrationCaller(1); }
 
 void Magrathea::calibrationCaller(int input){
     //Eventually add command to move the gantry to the place where the
@@ -764,15 +781,13 @@ void Magrathea::calibrationCaller(int input){
     calibrator->Set_log(outputLogTextEdit);
     double calibration_value     = -100;
     double calibration_value_err = -10;
-    bool is_px_over_micron = (input == 0);
-    calibrator->Calibration_strips(calibration_value,calibration_value_err, is_px_over_micron);
-    QString unit = (is_px_over_micron ? " px/um : Value set!" : " um/px : Value NOT set");
-    QString output = "C: "+QString::number(calibration_value,'g',2)+ " +- "+QString::number(calibration_value_err,'g',2)+ unit;
+    calibrator->Calibration_strips(calibration_value,calibration_value_err, true);
+    QString unit = " px/um";
+    QString output = "C: "+QString::number(calibration_value,'g',3)+ " +- "+QString::number(calibration_value_err,'g',3)+ unit;
     ui->Calib_value_lineEdit->setText(output);
-    if(is_px_over_micron)
-        mCalibration = calibration_value;
+    mCalibration = calibration_value;
     delete calibrator;
-    cap.release();         //Going back to QCameraa
+    cap.release();         //Going back to QCamera
     mCamera->start();
     return;
 }

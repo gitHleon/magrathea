@@ -314,7 +314,7 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
     //add return of the fid center
 }
 
-void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2){
+void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2, std::string &timestamp){
     //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
@@ -592,7 +592,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 
         X_distance = (F_center.x - ROIcenter_cols)*(1./Calibration); //[um]
         Y_distance = (F_center.y - ROIcenter_rows)*(1./Calibration); //[um]
-
+        timestamp = time_now_str;
         //        cv::Scalar value_t = H.at<uchar>(0,0);
         //        double a = value_t.val[0];
         //        value_t = H.at<uchar>(0,1);//image_gray.at<uchar>(row,col)
