@@ -28,7 +28,8 @@ public slots:
     void SetImageFiducial(const std::string& filename, int flags);
     bool IsImageEmpty();
     void Find_circles(double &X_distance, double &Y_distance);
-    void Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2, std::string &timestamp);
+    bool Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2, std::string &timestamp,int dummy_temp = 0);
+    cv::Mat get_component(const cv::Mat &input_mat,const unsigned int &input);
 
 private:
     double Calibration = -1.1; //[px/um]

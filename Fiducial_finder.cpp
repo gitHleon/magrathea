@@ -61,6 +61,13 @@ void FiducialFinder::Set_calibration(double m_calib){
     Calibration = m_calib;
 }
 
+cv::Mat FiducialFinder::get_component(const cv::Mat &input_mat,const unsigned int &input){
+    cv::Mat bgr[3];   //destination array
+    cv::split(input_mat,bgr);//split source
+    return bgr[input];
+    //Note: OpenCV uses BGR color order
+}
+
 void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp){
     int baseline = 0;
     //int text_font_size = 2;
@@ -314,28 +321,28 @@ void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
     //add return of the fid center
 }
 
-void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2, std::string &timestamp){
+bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2, std::string &timestamp, int dummy_temp){
     //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
-        return;}
+        return false;}
     if(image_fiducial.empty()){
         log->append("Error!! Fiducial is empty!!");
-        return;}
+        return false;}
 
         int center_rows = image.rows/2.0; //Defining the center of the image
         int center_cols = image.cols/2.0;
 
         cv::imshow("f. 0 image",image);
         const int window_size = ( (image.cols > 2000 && image.rows > 2000) ? 1500 : 420);
+        const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
-            return;}
+            return false;}
 
         cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
-        cv::Mat output_mat = image.clone();
         cv::Mat RoiImage = image(regione_interessante);
         cv::imshow("f. 0.1 image ROI",RoiImage);
         cv::imshow("f. 0.1.f image ROI",image_fiducial);
@@ -345,36 +352,123 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         //        cv::Mat image_gray;
         //        cv::Mat image_F_gray;
 
-        cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
-        cv::cvtColor(image_F_gray,image_F_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
+        image_gray = get_component(image_gray,1);
+        image_F_gray = get_component(image_F_gray,1);
+        //cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
+        //cv::cvtColor(image_F_gray,image_F_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
+        cv::Mat output_mat = image_gray.clone();
 
+        //////////////////////////////////////////////
+        /// NOISE SUPPRESSION VIA FOURIER TRANSFORM - FAILED
+        //////////////////////////////////////////////
+        cv::Mat image_gray_float;
+        image_gray.convertTo(image_gray_float,CV_32FC1, 1.0 / 255.0);
+        cv::Mat planes[] = {image_gray_float, cv::Mat::zeros(image_gray_float.size(), CV_32F)};
+        cv::Mat complexI;
+        cv::merge(planes, 2, complexI);         // Add another plane with zeros
+
+        std::cout<<"complexI.rows "<<complexI.rows<<
+                   " ;complexI.cols "<<complexI.cols<<std::endl;
+
+        cv::Mat dftOfOriginal;
+        cv::dft(complexI, dftOfOriginal, cv::DFT_COMPLEX_OUTPUT);// Fourier transform
+
+        cv::split(dftOfOriginal, planes);// planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
+        cv::Mat magI = planes[0].clone(); //We need only the real part, not the phase of the transform
+        magI += cv::Scalar::all(1);                    // switch to logarithmic scale
+        cv::log(magI, magI);
+        // rearrange the quadrants of Fourier image  so that the origin is at the image center
+        int cx = magI.cols/2;
+        int cy = magI.rows/2;
+
+        cv::Mat q0(magI, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
+        cv::Mat q1(magI, cv::Rect(cx, 0, cx, cy));  // Top-Right
+        cv::Mat q2(magI, cv::Rect(0, cy, cx, cy));  // Bottom-Left
+        cv::Mat q3(magI, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
+
+        cv::Mat tmp;                           // swap quadrants (Top-Left with Bottom-Right)
+        q0.copyTo(tmp);
+        q3.copyTo(q0);
+        tmp.copyTo(q3);
+
+        q1.copyTo(tmp);                    // swap quadrant (Top-Right with Bottom-Left)
+        q2.copyTo(q1);
+        tmp.copyTo(q2);
+
+        cv::normalize(magI, magI, 0, 1, CV_MINMAX); // Transform the matrix with float values into a
+                                                    // viewable image form (float between values 0 and 1).
+        cv::imshow("3. spectrum magnitude", magI);
+
+        cv::Mat mask = cv::Mat(cv::Size(magI.rows,magI.cols),CV_32F,cv::Scalar(1));
+        cv::imshow("a.1 mask", mask);
+        cv::circle(mask, cv::Point(mask.rows/2,mask.cols/2),dummy_temp, cv::Scalar(0), -1);
+        cv::circle(mask, cv::Point(mask.rows/2,mask.cols/2),dummy_temp/2, cv::Scalar(1), -1);
+        cv::imshow("a.2 mask", mask);
+        cv::GaussianBlur(mask,mask,cv::Size(kernel_size,kernel_size),0);
+        cv::imshow("a.3 mask", mask);
+        cv::Mat new_magI = magI.mul(mask);
+        cv::imshow("a.4 new_magI",new_magI);
+        //re-swap quadrants
+        cv::Mat q0_t(mask, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
+        cv::Mat q1_t(mask, cv::Rect(cx, 0, cx, cy));  // Top-Right
+        cv::Mat q2_t(mask, cv::Rect(0, cy, cx, cy));  // Bottom-Left
+        cv::Mat q3_t(mask, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
+
+        cv::Mat tmp_t;                           // swap quadrants (Top-Left with Bottom-Right)
+        q0_t.copyTo(tmp_t);
+        q3_t.copyTo(q0_t);
+        tmp_t.copyTo(q3_t);
+
+        q1_t.copyTo(tmp_t);                    // swap quadrant (Top-Right with Bottom-Left)
+        q2_t.copyTo(q1_t);
+        tmp_t.copyTo(q2_t);
+        cv::imshow("a.5 mask",mask);
+        planes[0] = planes[0].mul(mask);
+        cv::Mat dftFiltered;
+        cv::merge(planes, 2, dftFiltered);
+
+        cv::Mat finalImage;
+        cv::dft(dftFiltered,finalImage, cv::DFT_INVERSE | cv::DFT_REAL_OUTPUT | cv::DFT_SCALE);//| cv::DFT_SCALE
+
+        cv::imshow("a.6 finalImage",finalImage);
+        cv::Mat inverseTransform;
+        finalImage.convertTo(inverseTransform, CV_8U);
+        cv::imshow("a.7 noIdea",inverseTransform);
+        ///////////////////////////////////////////
         for(int i=0;i<1;i++){
             //https://docs.opencv.org/3.4/d3/d8f/samples_2cpp_2tutorial_code_2ImgProc_2Smoothing_2Smoothing_8cpp-example.html#a12
             //cv::bilateralFilter(image_gray,image_gray,9,18,5);
             //cv::bilateralFilter(image_F_gray,image_F_gray,9,18,5);
-            cv::medianBlur(image_gray,image_gray,9);
-            cv::medianBlur(image_F_gray,image_F_gray,9);
+            cv::medianBlur(image_gray,image_gray,kernel_size);
+            cv::medianBlur(image_F_gray,image_F_gray,kernel_size);
         }
 
-        cv::imshow("f. 1 blur",image_gray);
-        cv::imshow("f. 1.f blur",image_F_gray);
+        cv::imshow("1 blur",image_gray);
+        cv::imshow("1.f blur",image_F_gray);
 
         cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
         cv::threshold(image_F_gray,image_F_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
-        cv::imshow("f. 1.1 blur+thr",image_gray);
-        cv::imshow("f. 1.1.f blur+thr",image_F_gray);
+        cv::imshow("1.1 blur+thr",image_gray);
+        cv::imshow("1.1.f blur+thr",image_F_gray);
 
-        cv::Mat StructElement = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(5,5));
+        cv::Mat StructElement = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(kernel_size,kernel_size));
         cv::morphologyEx(image_F_gray,image_F_gray,cv::MORPH_CLOSE,StructElement);
         cv::morphologyEx(image_gray,image_gray,cv::MORPH_CLOSE,StructElement);
-        cv::imshow("f. 1.2 blur+thr+close",image_gray);
-        cv::imshow("f. 1.2.f blur+thr+close",image_F_gray);
+        cv::imshow("1.2 blur+thr+close",image_gray);
+        cv::imshow("1.2.f blur+thr+close",image_F_gray);
 
-        cv::adaptiveThreshold(image_F_gray,image_F_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
-        cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
+//        cv::medianBlur(image_gray,image_gray,kernel_size);
+//        cv::medianBlur(image_F_gray,image_F_gray,kernel_size);
 
-        cv::imshow("f. 2 threshold",image_gray);
-        cv::imshow("f. 2.f threshold",image_F_gray);
+//        cv::imshow("0.2.1 threshold+blur",image_gray);
+//        cv::imshow("0.2.1.f threshold+blur",image_F_gray);
+
+        cv::adaptiveThreshold(image_F_gray,image_F_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+        cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+
+        cv::imshow("2 threshold",image_gray);
+        cv::imshow("2.f threshold",image_F_gray);
+
 
         cv::Ptr <cv::Feature2D> detector;
         //const int DescriptorAlgorithm = ui->algorithm_box->value();//set as input to the function
@@ -431,10 +525,10 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             int start_y = 5;
             addInfo(outputImage,algo_name,start_x,start_y,2,2,time_now_str);
             cv::imwrite("EXPORT/"+algo_name+"_"+s+"_"+time_now_str+".jpg",outputImage);
-            return;
+            return true;
         }else{
             qWarning("Error!! DescriptorAlgorithm not set properly!!");
-            return;}
+            return false;}
         std::vector<cv::KeyPoint> keypoints_F(0);
         std::vector<cv::KeyPoint> keypoints_image(0);
         keypoints_F.clear();
@@ -514,7 +608,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         std::cout<<" SortedMatches.size()  "<<SortedMatches.size()<<std::endl;
         if(SortedMatches.size() < min_matches){
             log->append("Error!! Not reached minimum number of matches.");
-            return;}
+            return false;}
 
         //-- Localize the object
         std::vector<cv::Point2f> obj;
@@ -615,7 +709,7 @@ void FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         descriptor_extractor.release();
         matcher.release();
         detector.release();
-        return;
+        return true;
 }
 
 

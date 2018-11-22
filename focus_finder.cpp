@@ -1,8 +1,6 @@
 #include "focus_finder.h"
-#include "interpolation.h"
 
 #include <opencv2/opencv.hpp>
-#include "stdafx.h"
 #include <QThread>
 #include <math.h>
 #include <QApplication>
@@ -59,9 +57,9 @@ double Focus_finder::eval_stddev(const cv::Mat &input_image)
 }
 
 cv::Rect Focus_finder::get_rect(const cv::Mat &input_image){
-    int center_rows = input_image.rows/2.0; //Defining the center of the image
-    int center_cols = input_image.cols/2.0;
-    cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size);
+    int center_rows = input_image.rows/2; //Defining the center of the image
+    int center_cols = input_image.cols/2;
+    cv::Rect regione_interessante(center_cols-(window_size/2),center_rows-(window_size/2),window_size,window_size);
     return regione_interessante;
 
 }
@@ -192,36 +190,36 @@ void Focus_finder::find_focus(double &focus_height)
     /////////////////////
 }
 
-void Focus_finder::perform_fit(double &z_output)
-{
-    //Currently not used, here for leagcy in case fit is needed in future
-    //WARNING: these array need to be of size == measure_points
-    alglib::real_1d_array al_x = "[0,0,0,0,0,0]";
-    alglib::real_1d_array al_y = "[0,0,0,0,0,0]";
-    for(int i=0;i<measure_points;i++){
-        al_x[i] = x[i];
-        al_y[i] = y[i];
-    }
+//void Focus_finder::perform_fit(double &z_output)
+//{
+//    //Currently not used, here for leagcy in case fit is needed in future
+//    //WARNING: these array need to be of size == measure_points
+//    alglib::real_1d_array al_x = "[0,0,0,0,0,0]";
+//    alglib::real_1d_array al_y = "[0,0,0,0,0,0]";
+//    for(int i=0;i<measure_points;i++){
+//        al_x[i] = x[i];
+//        al_y[i] = y[i];
+//    }
 
-    alglib::ae_int_t m = 3;
-    alglib::ae_int_t info;
-    alglib::barycentricinterpolant p;
-    alglib::polynomialfitreport rep;
+//    alglib::ae_int_t m = 3;
+//    alglib::ae_int_t info;
+//    alglib::barycentricinterpolant p;
+//    alglib::polynomialfitreport rep;
 
-    // NOTE: result is returned as barycentricinterpolant structure.
-    //       if you want to get representation in the power basis,
-    //       you can use barycentricbar2pow() function to convert
-    //       from barycentric to power representation (see docs for
-    //       POLINT subpackage for more info).
-    //
-    alglib::polynomialfit(al_x, al_y, m, info, p, rep);
+//    // NOTE: result is returned as barycentricinterpolant structure.
+//    //       if you want to get representation in the power basis,
+//    //       you can use barycentricbar2pow() function to convert
+//    //       from barycentric to power representation (see docs for
+//    //       POLINT subpackage for more info).
+//    //
+//    alglib::polynomialfit(al_x, al_y, m, info, p, rep);
 
-    alglib::real_1d_array a2;
-    alglib::polynomialbar2pow(p, a2);
-    log->append("Coefficients p_1 = a[0]: "+QString::number(a2[0])+" ;a[1]: "+QString::number(a2[1])+" ; a[2]: "+QString::number(a2[2]));
-    log->append("Vertex : ( "+QString::number(EvalVertex_x(a2[2],a2[1],a2[0]))+" , "+QString::number(EvalVertex_y(a2[2],a2[1],a2[0]))+" )");
-    z_output = EvalVertex_x(a2[2],a2[1],a2[0]);
-}
+//    alglib::real_1d_array a2;
+//    alglib::polynomialbar2pow(p, a2);
+//    log->append("Coefficients p_1 = a[0]: "+QString::number(a2[0])+" ;a[1]: "+QString::number(a2[1])+" ; a[2]: "+QString::number(a2[2]));
+//    log->append("Vertex : ( "+QString::number(EvalVertex_x(a2[2],a2[1],a2[0]))+" , "+QString::number(EvalVertex_y(a2[2],a2[1],a2[0]))+" )");
+//    z_output = EvalVertex_x(a2[2],a2[1],a2[0]);
+//}
 
 double Focus_finder::EvalVertex_x(double a,double b, double c){
     //evaluating vertex of parabola. needed for finding focus height when using the fit
