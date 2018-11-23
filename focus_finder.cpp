@@ -29,6 +29,9 @@ void Focus_finder::Set_log(QTextEdit *m_log){
     log = m_log;
 }
 
+void Focus_finder::Set_ksize(int m_ksize){
+    ksize = m_ksize;
+}
 void Focus_finder::Set_camera(const cv::VideoCapture &m_cap){
     cap = m_cap;
 }
@@ -37,23 +40,24 @@ void Focus_finder::Set_color_int(const int &value){
     color_int = value;
 }
 
-void Focus_finder::Set_use_laplacian(const bool &value){
-    use_laplacian = value;
-}
-
-double Focus_finder::eval_stddev(const cv::Mat &input_image)
+void Focus_finder::eval_stddev(const cv::Mat &input_image,std::vector<double> &output)
 {
+    output.clear();
     cv::Scalar  mean_t;
     cv::Scalar  stddev_t;
     cv::Mat output_img;
-    if(use_laplacian){
-        cv::Laplacian(input_image,output_img,CV_8U,3);
-        //cv::imshow("laplacian",output_img);
-        cv::meanStdDev(output_img,mean_t,stddev_t);
-    }else {
-        cv::meanStdDev(input_image,mean_t,stddev_t);
-    }
-    return  stddev_t[0];
+    cv::Laplacian(input_image,output_img,CV_8U,ksize);
+    //cv::imshow("laplacian",output_img);
+    cv::meanStdDev(output_img,mean_t,stddev_t);
+    output.push_back(stddev_t[0]);// [0]:std dev of laplacian
+    cv::meanStdDev(input_image,mean_t,stddev_t);
+    output.push_back(stddev_t[0]);// [1]:std dev of pixel values
+    cv::Sobel(input_image,output_img,CV_8U,1,1,ksize);
+    cv::meanStdDev(output_img,mean_t,stddev_t);
+    output.push_back(mean_t[0]);// [2]:mean of 1st derivative
+    cv::Canny(input_image,output_img,50,150,ksize);
+    cv::meanStdDev(output_img,mean_t,stddev_t);
+    output.push_back(mean_t[0]);// [3]:mean of found edges
 }
 
 cv::Rect Focus_finder::get_rect(const cv::Mat &input_image){
@@ -61,18 +65,15 @@ cv::Rect Focus_finder::get_rect(const cv::Mat &input_image){
     int center_cols = input_image.cols/2;
     cv::Rect regione_interessante(center_cols-(window_size/2),center_rows-(window_size/2),window_size,window_size);
     return regione_interessante;
-
 }
 
-double Focus_finder::eval_stddev_ROI(const cv::Mat &input_image)
+void Focus_finder::eval_stddev_ROI(const cv::Mat &input_image, std::vector<double> &output)
 {
-    //evaluate standard deviation of the RoI of the image
+    //evaluates standard deviation and other quantities of the RoI of the image
     cv::Mat RoiImage  = ( (color_int == -1) ? input_image(get_rect(input_image)) : get_component(input_image(get_rect(input_image)),color_int) );
-    double z_from_outside = gantry->whereAmI(1).at(z_pos_index);
-    double output = eval_stddev(RoiImage);
+    eval_stddev(RoiImage,output);
     //cv::imshow("Roi",RoiImage);
-    qInfo("Z : %3.4f ; stddev : %5.5f",z_from_outside,output);
-    return output;
+    return;
 }
 
 cv::Mat Focus_finder::get_component(const cv::Mat &input_mat,const unsigned int &input){
@@ -80,15 +81,11 @@ cv::Mat Focus_finder::get_component(const cv::Mat &input_mat,const unsigned int 
     cv::split(input_mat,bgr);//split source
     return bgr[input];
     //Note: OpenCV uses BGR color order
-    //    cv::imshow("blue",bgr[0]);  //blue channel
-    //    cv::imshow("green",bgr[1]); //green channel
-    //    cv::imshow("red",bgr[2]);   //red channel
 }
 
 void Focus_finder::find_focus(double &focus_height)
 {
     //Function that return the focus z coordinate
-    //https://en.wikipedia.org/wiki/Parabola
     //https://rechneronline.de/function-graphs/
     //http://doc.qt.io/qt-4.8/signalsandslots.html
     if (!cap.isOpened()){
@@ -102,8 +99,6 @@ void Focus_finder::find_focus(double &focus_height)
     qInfo("Auto-focus start");
     cv::Mat mat_from_outside;
     cap.read(mat_from_outside);
-    cv::Rect regione_interessante = get_rect(mat_from_outside);
-
     double z_step = 0.5;// mm //to be changed according the units of your gantry and shape of focus-height distribution
     double z_from_outside;
 
@@ -114,32 +109,26 @@ void Focus_finder::find_focus(double &focus_height)
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     qInfo("Performing scan around the position : %5.5f",z_temp);
     gantry->moveZBy(-z_step*numb_steps*0.6,1.);
-
     for(int i=0; i<numb_steps;i++){//large scan to find the position of the focus
         gantry->moveZBy(z_step,1.);//1 mm/s
+        Sleeper::msleep(20);
         cap.read(mat_from_outside);
-        Sleeper::msleep(10);
+        Sleeper::msleep(20);
         cap.read(mat_from_outside);
-        Sleeper::msleep(10);
-        cap.read(mat_from_outside);
-        Sleeper::msleep(10);
-        cap.read(mat_from_outside);
-        Sleeper::msleep(10);
-        cap.read(mat_from_outside);
-        //cv::Mat RoiImage = mat_from_outside(regione_interessante);
-        cv::Mat RoiImage = ( (color_int == -1) ? mat_from_outside(regione_interessante) : get_component(mat_from_outside(regione_interessante),color_int) );
-        double StdDev_t = eval_stddev(RoiImage);
+        std::vector<double> figures_of_merit;
+        eval_stddev_ROI(mat_from_outside,figures_of_merit);
+        if(figures_of_merit.size() == 0){
+            qInfo("ERROR in evaluation of figures of merit.");
+            return;
+        }
         z_from_outside = gantry->whereAmI(1).at(z_pos_index);
-        qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,z_from_outside,StdDev_t);
-        if(StdDev_t > StdDev_MAX){
-            StdDev_MAX = StdDev_t;
+        qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,z_from_outside,figures_of_merit[0]);
+        if(figures_of_merit[0] > StdDev_MAX){
+            StdDev_MAX = figures_of_merit[0];
             Z_MAX = z_from_outside;
         }
     }
-    //double StdDev_MAX_temp = StdDev_MAX;
-    //if(StdDev_MAX < 30){
-    //    qInfo("Too far from focus position. Camera needs to be < 3 mm far from focus.");
-    //return;}
+
     gantry->moveZTo(Z_MAX,1.);//add safety control
 
     int Iterations = 3;
@@ -148,18 +137,14 @@ void Focus_finder::find_focus(double &focus_height)
         gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.);
         for(int i=0; i<measure_points;i++){
             gantry->moveZBy(z_step,1.);
+            Sleeper::msleep(20);
             cap.read(mat_from_outside);
-            Sleeper::msleep(10);
+            Sleeper::msleep(20);
             cap.read(mat_from_outside);
-            Sleeper::msleep(10);
-            cap.read(mat_from_outside);
-            Sleeper::msleep(10);
-            cap.read(mat_from_outside);
-            Sleeper::msleep(10);
-            cap.read(mat_from_outside);
-            cv::Mat RoiImage = get_component(mat_from_outside(regione_interessante),2);
             z_from_outside = gantry->whereAmI(1).at(z_pos_index);
-            double StdDev_t = eval_stddev(RoiImage);
+            std::vector<double> figures_of_merit;
+            eval_stddev_ROI(mat_from_outside,figures_of_merit);
+            double StdDev_t = figures_of_merit[0];
             if(StdDev_t > StdDev_MAX){
                 StdDev_MAX = StdDev_t;
                 Z_MAX = z_from_outside;
@@ -174,12 +159,11 @@ void Focus_finder::find_focus(double &focus_height)
         }// for 6
         z_step = 0.33 * z_step; //if step start as 0.5 it should reach 0.02 in 3 iterations
         gantry->moveZTo(Z_MAX,1.);//add safety control
-//        if(StdDev_MAX < StdDev_MAX_temp*1.3){
-//            qInfo("Autofocus failed.");
-//        return;}
+        focus_height = Z_MAX;
     }
 
     qInfo("Focus max z : %3.4f ;  stddev_MAX : %5.5f ",Z_MAX,StdDev_MAX);
+    /////////////////////
     //evaluation of the focus height ising the fit of a parabola
     //double Z_out = 0.;
     //perform_fit(Z_out);
@@ -238,7 +222,7 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
 }
 
 void Focus_finder::Eval_syst_scan(){
-    //measure the std-dev several times moving the gantry spanning points around the crrent position
+    //measure the std-dev several times moving the gantry spanning points around the current position
     int numb_steps = 20;
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     double z_step = 0.2;// to be changed according the units of your gantry and shape of focus-heught distribution
@@ -248,20 +232,21 @@ void Focus_finder::Eval_syst_scan(){
     for(int i=0; i<numb_steps;i++){
         gantry->moveZBy(z_step,1.);//1 mm/s
         if (cap.isOpened()){
+            Sleeper::msleep(20);
             cap.read(mat_from_outside);
-            Sleeper::msleep(10);
+            Sleeper::msleep(20);
             cap.read(mat_from_outside);
         } else {
             qWarning("Error : Not able to open camera.");
             return;
         }
-        int center_rows = mat_from_outside.rows/2.0; //Defining the center of the image
-        int center_cols = mat_from_outside.cols/2.0;
-        cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
-        cv::Mat RoiImage = mat_from_outside(regione_interessante);
-        double StdDev_t = eval_stddev(RoiImage);
-        cv::imshow("image ROI",RoiImage);
-        qInfo("i : %i ; z : %5.5f ; Std. dev. : %5.5f",i,gantry->whereAmI(1).at(z_pos_index),StdDev_t);
+        std::vector<double> figures_of_merit;
+        eval_stddev_ROI(mat_from_outside,figures_of_merit);
+        std::string file_name = "focus.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs << i<<" "<<gantry->whereAmI(1).at(z_pos_index) <<" "<<
+               figures_of_merit[0]<<" "<<figures_of_merit[1]<<" "<<figures_of_merit[2]<<" "<<figures_of_merit[3]<<std::endl;
+        ofs.close();
     }
 }
 
@@ -274,51 +259,20 @@ void Focus_finder::Eval_syst_time(){
     for(int i=0; i<7;i++){
         Sleeper::sleep(2);
         if (cap.isOpened()){
-            cap >> mat_from_outside;
+            Sleeper::msleep(20);
+            cap.read(mat_from_outside);
+            Sleeper::msleep(20);
+            cap.read(mat_from_outside);
         } else {
             log->append("Error : Not able to open camera.");
             return;
         }
-
-        double StdDev_t = eval_stddev(mat_from_outside);
-        log->append("i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
-                    " ; std dev : "+QString::number(StdDev_t));
-    }
-}
-
-void::Focus_finder::Eval_syst_moving(){
-    //measure the std-dev several times moving the gantry back and forth from the same position
-    int numb_steps = 10;
-    cv::Mat mat_from_outside;
-    double z_temp = gantry->whereAmI().at(z_pos_index);
-    log->append("Performing systematic fwd-bkwd stability scan at position : "
-                    +QString::number(z_temp));
-    double z_step = 1.5; // to be changed according the units of your gantry and shape of focus-height distribution
-    for(int i=0; i<numb_steps;i++){
-        gantry->moveZBy(-z_step,1.);
-        Sleeper::sleep(1);
-        if (cap.isOpened()){
-            cap >> mat_from_outside;
-        } else {
-            log->append("Error : Not able to open camera.");
-            return;
-        }
-        double StdDev_t = eval_stddev(mat_from_outside);
-        log->append("<< i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
-                    " ; std dev : "+QString::number(StdDev_t));
-        gantry->moveZBy(z_step,1.);
-        Sleeper::sleep(1);
-        if (cap.isOpened()){
-            cap >> mat_from_outside;
-        } else {
-            log->append("Error : Not able to open camera.");
-            return;
-        }
-        StdDev_t = eval_stddev(mat_from_outside);
-        log->append(">>>> i : "+QString::number(i)+
-                    " ; z : "+QString::number(gantry->whereAmI().at(z_pos_index))+
-                    " ; std dev : "+QString::number(StdDev_t));
+        std::vector<double> figures_of_merit;
+        eval_stddev_ROI(mat_from_outside,figures_of_merit);
+        std::string file_name = "focus.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs << i<<" "<<gantry->whereAmI(1).at(z_pos_index) <<" "<<
+               figures_of_merit[0]<<" "<<figures_of_merit[1]<<" "<<figures_of_merit[2]<<" "<<figures_of_merit[3]<<std::endl;
+        ofs.close();
     }
 }

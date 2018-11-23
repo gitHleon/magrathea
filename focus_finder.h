@@ -25,6 +25,7 @@
 #include <ACSCMotionHandler.h>
 #endif
 #include <QTextEdit>
+#include <vector>
 
 #ifndef SLEEPER_CLASS
 #define SLEEPER_CLASS
@@ -45,21 +46,20 @@ public:
     ~Focus_finder();
     void Set_camera(const cv::VideoCapture &m_cap);
     void Set_log(QTextEdit *m_log);
+    void Set_ksize(int ksize);
     void Set_gantry(MotionHandler *m_gantry);
     void Set_color_int(const int &value);
-    void Set_use_laplacian(const bool &value);
 
 signals:
     void Log_append(QString TextToWrite);
     void Log_write(QString TextToWrite);
 
 public slots:
-    double eval_stddev(const cv::Mat &input_image);
-    double eval_stddev_ROI(const cv::Mat &input_image);
+    void   eval_stddev(const cv::Mat &input_image, std::vector<double> &output);
+    void   eval_stddev_ROI(const cv::Mat &input_image, std::vector<double> &output);
     void   find_focus(double &focus_height);
     void   Eval_syst_time();
     void   Eval_syst_scan();
-    void   Eval_syst_moving();
 
 
 private slots:
@@ -72,14 +72,14 @@ private:
     MotionHandler *gantry;
     const int measure_points = 6;
     const unsigned int z_pos_index = 2;
-    const int window_size = 1000;
+    const int window_size = 1500;
     int color_int = -1;
-    bool use_laplacian = false;
+    int ksize = 5;
     double x[6] = {};
     double y[6] = {};
     double EvalVertex_x(double a,double b, double c);
     double EvalVertex_y(double a,double b, double c);
-    void perform_fit(double &z_output);
+    //void perform_fit(double &z_output);
     QTextEdit *log;
 
 };

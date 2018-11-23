@@ -388,7 +388,6 @@ void Magrathea::focusButtonClicked()
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     //veryfing that the setting of the camera is optimal
-    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
@@ -403,7 +402,8 @@ void Magrathea::focusButtonClicked()
     FocusFinder->Set_log(outputLogTextEdit);
     double focus_position = -1.;
     FocusFinder->Set_color_int(ui->ColorBox->value());
-    FocusFinder->Set_use_laplacian(ui->LaplacianBox->isChecked());
+    const int kernel_size = ( (dWidth > 2000 && dHeight > 2000) ? 11 : 5);
+    FocusFinder->Set_ksize(kernel_size);
     if(sender() == ui->focusButton){
     FocusFinder->find_focus(focus_position);
     } else if (sender() == ui->std_dev_button){
@@ -413,8 +413,10 @@ void Magrathea::focusButtonClicked()
             qInfo("Cannot read a frame from video stream");
             return;
         }
-        double value_std_dev = FocusFinder->eval_stddev_ROI(mat_from_camera);
-        qInfo(" std dev value : %5.5f",value_std_dev);
+        std::vector<double> figures_of_merit;
+        FocusFinder->eval_stddev_ROI(mat_from_camera,figures_of_merit);
+        if(figures_of_merit.size() != 0)
+            qInfo(" Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
     } else if(sender() == ui->std_dev_many_button){
         FocusFinder->Eval_syst_scan();
     }
