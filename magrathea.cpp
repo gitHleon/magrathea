@@ -256,6 +256,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
     connect(ui->cap_and_move_button,SIGNAL(clicked(bool)),this,SLOT(capture_fid_and_move()));
+    connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
 
 
     //gantry
@@ -372,6 +373,49 @@ void Magrathea::enableCameraBoxClicked(bool clicked)
 
 //------------------------------------------
 //focus
+
+void Magrathea::FocusAlgoTest_Func(){
+  Focus_finder * FocusFinder = new Focus_finder(this);
+  cv::Mat mat_mat;
+  std::string file_name = "";
+  std::string address = "D:/Gantry/cernbox/Gantry_2018/Focus_test_mitutoyo/";
+  std::string Images[] ={ 
+      "0.1_pos.tif",
+      "0.09_pos.tif",
+      "0.08_pos.tif",
+      "0.07_pos.tif",
+      "0.06_pos.tif",
+      "0.05_pos.tif",
+      "0.04_pos.tif",
+      "0.03_pos.tif",
+      "0.02_pos.tif",
+      "0.01_pos.tif",
+      "Focused.tif",
+      "0.01_neg.tif",
+      "0.02_neg.tif",
+      "0.03_neg.tif",
+      "0.04_neg.tif",
+      "0.05_neg.tif",
+      "0.06_neg.tif",
+      "0.07_neg.tif",
+      "0.08_neg.tif",
+      "0.09_neg.tif",
+      "0.1_neg.tif"
+  };
+  for(int i=0;i<21;i++){
+    file_name = address + Images[i];
+    mat_mat = cv::imread( file_name, CV_LOAD_IMAGE_COLOR);
+    cv::Rect region(0,0,mat_mat.cols,mat_mat.rows-30);
+    cv::Mat RoI = mat_mat(region);
+    std::vector<double> figures_of_merit;
+    cv::imshow("roi",RoI);
+    FocusFinder->eval_stddev(RoI,figures_of_merit);
+    if(figures_of_merit.size() != 0)
+      qInfo(" filename: %s ; Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
+  }
+  delete FocusFinder;
+}
+
 void Magrathea::focusButtonClicked()
 {
     qInfo(" > camera focus ... ");
@@ -400,12 +444,12 @@ void Magrathea::focusButtonClicked()
     FocusFinder->Set_camera(cap);
     FocusFinder->Set_gantry(mMotionHandler);
     FocusFinder->Set_log(outputLogTextEdit);
-    double focus_position = -1.;
     FocusFinder->Set_color_int(ui->ColorBox->value());
     const int kernel_size = ( (dWidth > 2000 && dHeight > 2000) ? 11 : 5);
     FocusFinder->Set_ksize(kernel_size);
+    double focus_position = -1.;
     if(sender() == ui->focusButton){
-    FocusFinder->find_focus(focus_position);
+        FocusFinder->find_focus(focus_position);
     } else if (sender() == ui->std_dev_button){
         cv::Mat mat_from_camera;
         bool bSuccess = cap.read(mat_from_camera);

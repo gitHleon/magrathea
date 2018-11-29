@@ -766,6 +766,13 @@
             </property>
            </widget>
           </item>
+          <item row="5" column="6">
+           <widget class="QPushButton" name="focusalgotest_pushButton">
+            <property name="text">
+             <string>Focus algo test</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </widget>

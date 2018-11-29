@@ -52,6 +52,7 @@ private slots:
     void VignetteButton_clicked();
     void Camera_test();
     void Aruco_test();
+    void FocusAlgoTest_Func();
 
     //gantry
     void connectGantryBoxClicked(bool checked);
