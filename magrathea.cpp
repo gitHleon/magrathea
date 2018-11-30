@@ -322,7 +322,7 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
-    std::vector <double> pos_t = mMotionHandler->whereAmI();
+    std::vector <double> pos_t = mMotionHandler->whereAmI(1);
 
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
     ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
@@ -782,7 +782,7 @@ void Magrathea::FiducialFinderCaller(const int &input){
     if(success)
         qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
 
-    std::vector <double> pos_t = mMotionHandler->whereAmI(); //get gantry position
+    std::vector <double> pos_t = mMotionHandler->whereAmI(1); //get gantry position //check the value of input
     std::string file_name = ((input==0) ? "output_temp.txt" : "output_good.txt");
     std::ofstream ofs (file_name, std::ofstream::app);
     ///////////////////////////////////////////////////////////////////
