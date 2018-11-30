@@ -45,7 +45,7 @@ cv::Mat  Focus_finder::get_frame_from_camera(){
     QElapsedTimer timer;
     timer.start();
     //Sleeper::msleep(250);
-    for(int i=0;i<10;i++)
+    for(int i=0;i<8;i++)
         cap.read(output);
     std::cout<<"The slow operation took "<< timer.elapsed() <<" milliseconds"<<std::endl;
     return output;
@@ -84,23 +84,25 @@ void Focus_finder::eval_stddev(const cv::Mat &input_image,std::vector<double> &o
     //
     //cv::GaussianBlur(output_img,output_img,cv::Size(ksize,ksize),ksize/2);
     //
-    cv::Laplacian(input_image,output_img,CV_8U,ksize);
-    cv::imshow("Laplacian",output_img);
-    output_img = output_img.mul(output_img);
-    stddev_t = cv::sum(output_img);
-    output.push_back(stddev_t[0]);// [0]:JVvalue (squaresum of all pixel value in an image) of laplacian
+    cv::Laplacian(input_image,output_img,CV_64F,ksize);
+    //cv::imshow("Laplacian",output_img);
+    //output_img = output_img.mul(output_img);
+    cv::meanStdDev(output_img,mean_t,stddev_t);
+    output.push_back(stddev_t[0]*stddev_t[0]);// [0]:Variance of Laplacian of pixel values
+    //stddev_t = cv::sum(output_img);
+    //output.push_back(stddev_t[0]);// [0]:JVvalue (squaresum of all pixel value in an image) of laplacian
 
     cv::meanStdDev(input_image,mean_t,stddev_t);
     output.push_back(stddev_t[0]);// [1]:std dev of pixel values
 
-    cv::Sobel(input_image,output_img,CV_8U,1,1,ksize);
-    cv::imshow("1st derivative",output_img);
+    cv::Sobel(input_image,output_img,CV_64F,1,1,ksize);
+    //cv::imshow("1st derivative",output_img);
     output_img = output_img.mul(output_img);
     stddev_t = cv::sum(output_img);
     output.push_back(stddev_t[0]);// [2]:JVvalue of 1st derivative
 
-    cv::Canny(input_image,output_img,50,150,7);
-    cv::imshow("Canny edge",output_img);
+    cv::Canny(input_image,output_img,45000,45050,7);
+    //cv::imshow("Canny edge",output_img);
     output_img = output_img.mul(output_img);
     stddev_t = cv::sum(output_img);
     output.push_back(stddev_t[0]);// [3]:JVvalue of found edges
@@ -131,7 +133,7 @@ void Focus_finder::eval_stddev_ROI(const cv::Mat &input_image, std::vector<doubl
 
 void Focus_finder::find_focus(double &focus_height)
 {
-    const int figure_index = 1;
+    const int figure_index = 0;
     //Function that return the focus z coordinate
     //https://rechneronline.de/function-graphs/
     //http://doc.qt.io/qt-4.8/signalsandslots.html
@@ -145,7 +147,7 @@ void Focus_finder::find_focus(double &focus_height)
     }
     qInfo("Auto-focus start");
     cv::Mat mat_from_outside;
-    double z_step = 0.5;// mm //to be changed according the units of your gantry and shape of focus-height distribution
+    double z_step = 0.05;// mm //to be changed according the units of your gantry and shape of focus-height distribution
     double z_from_outside;
 
     double StdDev_MAX = 1.1;
@@ -154,7 +156,7 @@ void Focus_finder::find_focus(double &focus_height)
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     qInfo("Performing scan around the position : %5.5f",z_temp);
 
-    int Iterations = 3;
+    int Iterations = 2;
     for(int j=0; j<Iterations;j++){//fine scan to find the position of the focus
         gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.);
         for(int i=0; i<measure_points;i++){
@@ -175,11 +177,11 @@ void Focus_finder::find_focus(double &focus_height)
             }
             qInfo("i : %i ; z_step : %3.4f ; z : %3.4f ; stddev : %5.5f ; z max : %3.4f ; stddev_MAX: %5.5f",
                   i,z_step,z_from_outside,StdDev_t,Z_MAX,StdDev_MAX);
-//            if(Iterations==(j-1)){
-//                //this has to be the last iteration
-//                x[i] = z_from_outside;
-//                y[i] = StdDev_t;
-//            }
+            //            if(Iterations==(j-1)){
+            //                //this has to be the last iteration
+            //                x[i] = z_from_outside;
+            //                y[i] = StdDev_t;
+            //            }
         }// for 6
         z_step = 0.33 * z_step;
         gantry->moveZTo(Z_MAX,1.);//add safety control

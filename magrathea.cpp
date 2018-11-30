@@ -258,7 +258,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->cap_and_move_button,SIGNAL(clicked(bool)),this,SLOT(capture_fid_and_move()));
     connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
 
-
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
     connect(ui->enableAxesButton, SIGNAL(clicked(bool)), this, SLOT(enableAxesClicked()));
@@ -378,41 +377,117 @@ void Magrathea::FocusAlgoTest_Func(){
   Focus_finder * FocusFinder = new Focus_finder(this);
   cv::Mat mat_mat;
   std::string file_name = "";
-  std::string address = "D:/Gantry/cernbox/Gantry_2018/Focus_test_mitutoyo/";
-  std::string Images[] ={ 
-      "0.1_pos.tif",
-      "0.09_pos.tif",
-      "0.08_pos.tif",
-      "0.07_pos.tif",
-      "0.06_pos.tif",
-      "0.05_pos.tif",
-      "0.04_pos.tif",
-      "0.03_pos.tif",
-      "0.02_pos.tif",
-      "0.01_pos.tif",
-      "Focused.tif",
-      "0.01_neg.tif",
-      "0.02_neg.tif",
-      "0.03_neg.tif",
-      "0.04_neg.tif",
-      "0.05_neg.tif",
-      "0.06_neg.tif",
-      "0.07_neg.tif",
-      "0.08_neg.tif",
-      "0.09_neg.tif",
-      "0.1_neg.tif"
+  std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test/";
+  //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test_mitutoyo/";
+  std::string Images[] ={
+    "Focus_171052_0",
+    "Focus_171055_1",
+    "Focus_171058_2",
+    "Focus_171101_3",
+    "Focus_171103_4",
+    "Focus_171106_5",
+    "Focus_171109_6",
+    "Focus_171112_7",
+    "Focus_171114_8",
+    "Focus_171117_9",
+    "Focus_171120_10",
+    "Focus_171123_11",
+    "Focus_171126_12",
+    "Focus_171128_13",
+    "Focus_171131_14",
+    "Focus_171134_15",
+    "Focus_171137_16",
+    "Focus_171139_17",
+    "Focus_171142_18",
+    "Focus_171145_19",
+    "Focus_171148_20",
+    "Focus_171150_21",
+    "Focus_171153_22",
+    "Focus_171156_23",
+    "Focus_171159_24",
+    "Focus_171201_25",
+    "Focus_171204_26",
+    "Focus_171207_27",
+    "Focus_171210_28",
+    "Focus_171212_29"
+//          "0.1_pos",
+//          "0.09_pos",
+//          "0.08_pos",
+//          "0.07_pos",
+//          "0.06_pos",
+//          "0.05_pos",
+//          "0.04_pos",
+//          "0.03_pos",
+//          "0.02_pos",
+//          "0.01_pos",
+//          "Focused",
+//          "0.01_neg",
+//          "0.02_neg",
+//          "0.03_neg",
+//          "0.04_neg",
+//          "0.05_neg",
+//          "0.06_neg",
+//          "0.07_neg",
+//          "0.08_neg",
+//          "0.09_neg",
+//          "0.1_neg"
   };
-  for(int i=0;i<21;i++){
-    file_name = address + Images[i];
+  std::vector<double> std_dev_value;
+  for(int i=0;i<30;i++){
+    file_name = address + Images[i] + ".jpg";
     mat_mat = cv::imread( file_name, CV_LOAD_IMAGE_COLOR);
     cv::Rect region(0,0,mat_mat.cols,mat_mat.rows-30);
     cv::Mat RoI = mat_mat(region);
     std::vector<double> figures_of_merit;
     cv::imshow("roi",RoI);
     FocusFinder->eval_stddev(RoI,figures_of_merit);
-    if(figures_of_merit.size() != 0)
-      qInfo(" filename: %s ; Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
+    if(figures_of_merit.size() != 0){
+        //qInfo(" filename: %s ; Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
+        qInfo("%s  %5.1f  %5.5f  %5.1f  %5.1f",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
+        std_dev_value.push_back(figures_of_merit[1]);
+    }
+    ///draw histogram
+    /// Establish the number of bins
+    cv::Mat mat_mat_g = cv::imread( file_name, CV_LOAD_IMAGE_GRAYSCALE);
+    int histSize = 256;
+
+    /// Set the ranges ( for B,G,R) )
+    float range[] = { 0, 256 } ;
+    const float* histRange = { range };
+
+    bool uniform = true; bool accumulate = false;
+
+    cv::Mat g_hist;
+
+    /// Compute the histograms:
+    calcHist( &mat_mat_g, 1, nullptr, cv::Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
+    // Draw the histograms for B, G and R
+    int hist_w = 512; int hist_h = 400;
+    int bin_w = cvRound( (double) hist_w/histSize );
+    cv::Mat histImage( hist_h, hist_w, CV_8UC1, cv::Scalar(0) );
+    normalize(g_hist, g_hist, 0, histImage.rows, CV_MINMAX, -1, cv::Mat() );
+
+    /// Draw for each channel
+    for( int i = 1; i < histSize; i++ )
+    {
+        line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(g_hist.at<float>(i-1)) ) ,
+              cv::Point( bin_w*(i), hist_h - cvRound(g_hist.at<float>(i)) ),
+              cv::Scalar(255), 2, 8, 0  );
+    }
+
+    /// Display
+    cv::namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+    cv::imshow("calcHist Demo", histImage );
+    //cv::imwrite("EXPORT/"+Images[i]+"_hist.jpg",histImage);
   }
+
+  double numerator   = 0.0;
+  double denominator = 0.0;
+  for(unsigned int j=0;j< std_dev_value.size();j++){
+      numerator   += j*std_dev_value[j];
+      denominator += std_dev_value[j];
+  }
+  qInfo("%5.1f",numerator/denominator);
   delete FocusFinder;
 }
 
