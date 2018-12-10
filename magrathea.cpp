@@ -377,74 +377,110 @@ void Magrathea::FocusAlgoTest_Func(){
   Focus_finder * FocusFinder = new Focus_finder(this);
   cv::Mat mat_mat;
   std::string file_name = "";
-  std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test/";
-  //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test_mitutoyo/";
+  //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test/";
+  std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test_mitutoyo/";
+  //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test/20181204/OpticSCT/OpticSCT/";
   std::string Images[] ={
-    "Focus_171052_0",
-    "Focus_171055_1",
-    "Focus_171058_2",
-    "Focus_171101_3",
-    "Focus_171103_4",
-    "Focus_171106_5",
-    "Focus_171109_6",
-    "Focus_171112_7",
-    "Focus_171114_8",
-    "Focus_171117_9",
-    "Focus_171120_10",
-    "Focus_171123_11",
-    "Focus_171126_12",
-    "Focus_171128_13",
-    "Focus_171131_14",
-    "Focus_171134_15",
-    "Focus_171137_16",
-    "Focus_171139_17",
-    "Focus_171142_18",
-    "Focus_171145_19",
-    "Focus_171148_20",
-    "Focus_171150_21",
-    "Focus_171153_22",
-    "Focus_171156_23",
-    "Focus_171159_24",
-    "Focus_171201_25",
-    "Focus_171204_26",
-    "Focus_171207_27",
-    "Focus_171210_28",
-    "Focus_171212_29"
-//          "0.1_pos",
-//          "0.09_pos",
-//          "0.08_pos",
-//          "0.07_pos",
-//          "0.06_pos",
-//          "0.05_pos",
-//          "0.04_pos",
-//          "0.03_pos",
-//          "0.02_pos",
-//          "0.01_pos",
-//          "Focused",
-//          "0.01_neg",
-//          "0.02_neg",
-//          "0.03_neg",
-//          "0.04_neg",
-//          "0.05_neg",
-//          "0.06_neg",
-//          "0.07_neg",
-//          "0.08_neg",
-//          "0.09_neg",
-//          "0.1_neg"
+//    "Focus_171052_0",
+//    "Focus_171055_1",
+//    "Focus_171058_2",
+//    "Focus_171101_3",
+//    "Focus_171103_4",
+//    "Focus_171106_5",
+//    "Focus_171109_6",
+//    "Focus_171112_7",
+//    "Focus_171114_8",
+//    "Focus_171117_9",
+//    "Focus_171120_10",
+//    "Focus_171123_11",
+//    "Focus_171126_12",
+//    "Focus_171128_13",
+//    "Focus_171131_14",
+//    "Focus_171134_15",
+//    "Focus_171137_16",
+//    "Focus_171139_17",
+//    "Focus_171142_18",
+//    "Focus_171145_19",
+//    "Focus_171148_20",
+//    "Focus_171150_21",
+//    "Focus_171153_22",
+//    "Focus_171156_23",
+//    "Focus_171159_24",
+//    "Focus_171201_25",
+//    "Focus_171204_26",
+//    "Focus_171207_27",
+//    "Focus_171210_28",
+//    "Focus_171212_29"
+          "0.1_pos",
+          "0.09_pos",
+          "0.08_pos",
+          "0.07_pos",
+          "0.06_pos",
+          "0.05_pos",
+          "0.04_pos",
+          "0.03_pos",
+          "0.02_pos",
+          "0.01_pos",
+          "Focused",
+          "0.01_neg",
+          "0.02_neg",
+          "0.03_neg",
+          "0.04_neg",
+          "0.05_neg",
+          "0.06_neg",
+          "0.07_neg",
+          "0.08_neg",
+          "0.09_neg",
+          "0.1_neg"
+//      "010_pos",
+//      "009_pos",
+//      "008_pos",
+//      "007_pos",
+//      "006_pos",
+//      "005_pos",
+//      "004_pos",
+//      "003_pos",
+//      "002_pos",
+//      "001_pos",
+//      "Focused",
+//      "001_neg",
+//      "002_neg",
+//      "003_neg",
+//      "004_neg",
+//      "005_neg",
+//      "006_neg",
+//      "007_neg",
+//      "008_neg",
+//      "009_neg",
+//      "010_neg"
   };
   std::vector<double> std_dev_value;
-  for(int i=0;i<30;i++){
-    file_name = address + Images[i] + ".jpg";
+  for(int i=0;i<21;i++){
+    file_name = address + Images[i] + ".tif";
     mat_mat = cv::imread( file_name, CV_LOAD_IMAGE_COLOR);
+    const int kernel_size = ( (mat_mat.rows > 1000 && mat_mat.cols > 1000) ? 11 : 5);
+    FocusFinder->Set_ksize(kernel_size);
+    FocusFinder->Set_color_int(ui->ColorBox->value());
     cv::Rect region(0,0,mat_mat.cols,mat_mat.rows-30);
     cv::Mat RoI = mat_mat(region);
     std::vector<double> figures_of_merit;
-    cv::imshow("roi",RoI);
+    //cv::imshow("roi",RoI);
+//    cv::Mat bgr[3];   //destination array
+//    cv::split(RoI,bgr);//split source
+    //Note: OpenCV uses BGR color order
+//    cv::imshow("blue",bgr[0]);  //blue channel
+//    cv::imshow("green",bgr[1]); //green channel
+//    cv::imshow("red",bgr[2]);   //red channel
     FocusFinder->eval_stddev(RoI,figures_of_merit);
     if(figures_of_merit.size() != 0){
         //qInfo(" filename: %s ; Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
         qInfo("%s  %5.1f  %5.5f  %5.1f  %5.1f",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
-        std_dev_value.push_back(figures_of_merit[1]);
+        std_dev_value.push_back(figures_of_merit[0]);
+        std::string file_name = "focus_m.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs << i <<" "<<Images[i]<<" "<<  figures_of_merit[0]<<" "<<figures_of_merit[1]<<" "<<figures_of_merit[2]<<" "<<figures_of_merit[3]<<std::endl;
+        ofs.close();
+
     }
     ///draw histogram
     /// Establish the number of bins
@@ -686,7 +722,7 @@ void Magrathea::Fiducial_finder_button_Clicked()
 {    FiducialFinderCaller(0); }
 
 
-void Magrathea::FiducialFinderCaller(const int &input){
+void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point){
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
 
@@ -813,6 +849,9 @@ void Magrathea::FiducialFinderCaller(const int &input){
     mMotionHandler->moveXBy(distance_x*0.001,1);
     mMotionHandler->moveYBy(distance_y*0.001,1);
 #endif
+    F_point.clear();
+    F_point.push_back(-distance_y*0.001);
+    F_point.push_back(distance_x*0.001);
     ofs.close();
     return;
 }
@@ -1339,6 +1378,95 @@ void Magrathea::createTemplate_F(){
     cv::circle(fiducial_2, cv::Point(77*factor,92*factor), 12.5*factor, cv::Scalar(0), -1);
     cv::imshow("fiducial E",fiducial_2);
 }
+
+void Magrathea::calibration_plate_measure(){
+
+    cv::destroyAllWindows();
+
+    std::vector< std::vector<double> > points;
+    std::vector< std::vector<double> > PRF_points;
+    std::vector<double> temp_v;
+
+    temp_v.push_back(ui->point1_x_box->value());
+    temp_v.push_back(ui->point1_y_box->value());
+    temp_v.push_back(ui->point1_z_box->value());
+    points.push_back(temp_v);
+    temp_v.clear();
+
+    temp_v.push_back(ui->point2_x_box->value());
+    temp_v.push_back(ui->point2_y_box->value());
+    temp_v.push_back(ui->point2_z_box->value());
+    points.push_back(temp_v);
+    temp_v.clear();
+
+    temp_v.push_back(ui->point3_x_box->value());
+    temp_v.push_back(ui->point3_y_box->value());
+    temp_v.push_back(ui->point3_z_box->value());
+    points.push_back(temp_v);
+    temp_v.clear();
+    PRF_points.clear();
+    double angle = 0.;
+
+    for(int i=0;i<3;i++){
+        temp_v.clear();
+        mMotionHandler->moveTo(points[i][0],points[i][1],points[i][2],5.);
+        focusButtonClicked(); //add error check
+        FiducialFinderCaller(1,temp_v);
+        std::string file_name = "focus.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs <<"PRF "<<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)
+           <<std::endl;
+        ofs.close();
+        temp_v.push_back(mMotionHandler->whereAmI(1).at(2));
+        PRF_points.push_back(temp_v);
+    }
+
+    angle = atan((PRF_points[1][1]-PRF_points[0][1])/(PRF_points[1][0]-PRF_points[0][0]));
+
+    mMotionHandler->moveTo(points[0][0],points[0][1],points[0][2],5.);
+
+    double step_x = 15.;
+    double step_y = -12.;
+
+    for(int i=0;i<10;i++){//y
+        for(int j=0;j<10;j++){//x
+            temp_v.clear();
+            double target_x = PRF_points[0][0] + step_x*j*cos(angle) + step_y*i*sin(angle);
+            double target_y = PRF_points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
+            mMotionHandler->moveXTo(target_x,1.);
+            mMotionHandler->moveYTo(target_y,1.);
+            focusButtonClicked(); //add error check
+            FiducialFinderCaller(1,temp_v);
+            std::string file_name = "calibration_plate.txt";
+            std::ofstream ofs (file_name, std::ofstream::app);
+            ofs <<"PRF "<<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)
+               <<std::endl;
+            ofs.close();
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

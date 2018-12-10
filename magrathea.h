@@ -47,7 +47,7 @@ private slots:
     void captureButtonClicked();
     void calibrationCaller(int input);
     void Calibration_ButtonClicked();
-    void FiducialFinderCaller(const int &input);
+    void FiducialFinderCaller(const int &input,std::vector <double> & F_point);
     void Fiducial_finder_button_Clicked();
     void VignetteButton_clicked();
     void Camera_test();
@@ -74,6 +74,7 @@ private slots:
     void loop_test();
     void createTemplate_F();
     void capture_fid_and_move();
+    void calibration_plate_measure();
 
 private:
     Ui::Magrathea *ui;
