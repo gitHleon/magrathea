@@ -244,7 +244,6 @@ Magrathea::Magrathea(QWidget *parent) :
 
     //camera
     connect(ui->enableCameraBox, SIGNAL(toggled(bool)), this, SLOT(enableCameraBoxClicked(bool)));
-    connect(ui->focusButton,     SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->captureButton,   SIGNAL(clicked(bool)), this, SLOT(captureButtonClicked()));
     connect(ui->Calib_button,    SIGNAL(clicked(bool)), this, SLOT(Calibration_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
@@ -322,7 +321,7 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
-    std::vector <double> pos_t = mMotionHandler->whereAmI(1);
+    std::vector <double> pos_t = mMotionHandler->whereAmI(0);
 
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
     ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
@@ -530,7 +529,8 @@ void Magrathea::FocusAlgoTest_Func(){
 void Magrathea::focusButtonClicked()
 {
     qInfo(" > camera focus ... ");
-
+    QElapsedTimer timer;
+    timer.start();
     Focus_finder * FocusFinder = new Focus_finder(this);
     mCamera->stop(); //closing QCamera
 
@@ -547,7 +547,8 @@ void Magrathea::focusButtonClicked()
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 5.0);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
+    cap.set(CV_CAP_PROP_GAIN, 4.0);
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
@@ -577,8 +578,10 @@ void Magrathea::focusButtonClicked()
     }
     qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;
+    std::cout<<">>> The FOCUS operation took "<< timer.elapsed() <<" milliseconds"<<std::endl;
     cap.release();         //Going back to QCameraa
     mCamera->start();
+
     return;
 }
 
@@ -652,6 +655,7 @@ void Magrathea::Camera_test(){
     qInfo("cap.get(CV_CAP_PROP_SATURATION);    : %5.5f",cap.get(CV_CAP_PROP_SATURATION));
     qInfo("cap.get(CV_CAP_PROP_HUE);           : %5.5f",cap.get(CV_CAP_PROP_HUE));
     qInfo("cap.get(CV_CAP_PROP_GAIN);          : %5.5f",cap.get(CV_CAP_PROP_GAIN));
+    qInfo("cap.get(CV_CAP_PROP_GAMMA);         : %5.5f",cap.get(CV_CAP_PROP_GAMMA));
     qInfo("cap.get(CV_CAP_PROP_EXPOSURE);      : %5.5f",cap.get(CV_CAP_PROP_EXPOSURE));
     qInfo("cap.get(CV_CAP_PROP_CONVERT_RGB);   : %5.5f",cap.get(CV_CAP_PROP_CONVERT_RGB));
     qInfo("cap.get(CV_CAP_PROP_RECTIFICATION); : %5.5f",cap.get(CV_CAP_PROP_RECTIFICATION));
@@ -785,8 +789,8 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
     //    Ffinder->Find_circles(distance_x,distance_y);
     std::string timestamp = "";
-    //std::string address = "D:/Images/Templates_mytutoyo/";
-    std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
+    std::string address = "D:/Images/Templates_mytutoyo/";
+    //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
     std::string Images[] = {
         address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
         address + "Fiducial_chip_1_1_pos_1.TIF",
@@ -808,7 +812,9 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         address + "ar_m_fid.jpg",
         address + "fid_test_1.jpg",
         address + "fid_test_2.jpg",
-        address + "fid_test_3.jpg"   //20
+        address + "fid_test_3.jpg", //20
+        address + "placa_fid_73_F.jpg",
+        address + "placa_fid_F.jpg"
     };
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
             ,CV_LOAD_IMAGE_COLOR);
@@ -840,10 +846,10 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     }
 #if VALENCIA
     ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<std::endl;
-    if(input == 0){
-        mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
-        mMotionHandler->moveYBy(distance_x*0.001,1);
-    }
+//    if(input == 0){
+//        mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
+//        mMotionHandler->moveYBy(distance_x*0.001,1);
+//    }
 #else
     ofs << std::endl;
     mMotionHandler->moveXBy(distance_x*0.001,1);
@@ -915,7 +921,7 @@ void Magrathea::calibrationCaller(int input){
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 4.0);
-
+    cap.set(CV_CAP_PROP_GAIN, 363.0);
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
@@ -1192,7 +1198,7 @@ void Magrathea::stepMotion()
     else if  (sender() == ui->zAxisStepMoveButton)
         mMotionHandler->moveZBy(ui->zAxisStepDoubleSpinBox->value(), ui->zAxisSpeedDoubleSpinBox->value());
     else if  (sender() == ui->z_2_AxisStepMoveButton)
-        mMotionHandler->moveZBy(ui->z_2_AxisStepDoubleSpinBox->value(), ui->z_2_AxisSpeedDoubleSpinBox->value());
+        mMotionHandler->moveZ_2_By(ui->z_2_AxisStepDoubleSpinBox->value(), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if  (sender() == ui->uAxisStepMoveButton)
         mMotionHandler->moveUBy(ui->uAxisStepDoubleSpinBox->value(), ui->uAxisSpeedDoubleSpinBox->value());
     return;

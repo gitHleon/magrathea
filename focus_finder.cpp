@@ -45,7 +45,7 @@ cv::Mat  Focus_finder::get_frame_from_camera(){
     QElapsedTimer timer;
     timer.start();
     //Sleeper::msleep(250);
-    for(int i=0;i<8;i++)
+    for(int i=0;i<2;i++)
         cap.read(output);
     std::cout<<"The slow operation took "<< timer.elapsed() <<" milliseconds"<<std::endl;
     return output;
@@ -145,22 +145,28 @@ void Focus_finder::find_focus(double &focus_height)
         QMessageBox::critical(nullptr, tr("Error"), tr("Gantry not connected!! Can not perform autofocus."));
         return;
     }
-    qInfo("Auto-focus start");
+    qInfo("----------------  Auto-focus start -----------------");
     cv::Mat mat_from_outside;
     double z_step = 0.05;// mm //to be changed according the units of your gantry and shape of focus-height distribution
     double z_from_outside;
 
     double StdDev_MAX = 1.1;
-    double Z_MAX     = 1.;
+    double Z_MAX      = 1.;
 
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     qInfo("Performing scan around the position : %5.5f",z_temp);
 
     int Iterations = 3;
     for(int j=0; j<Iterations;j++){//fine scan to find the position of the focus
-        gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.);
+        if(z_pos_index==2)
+            gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.);
+        else if(z_pos_index ==4)
+            gantry->moveZ_2_By(-z_step*ceil(measure_points*0.6),1.);
         for(int i=0; i<measure_points;i++){
-            gantry->moveZBy(z_step,1.);
+            if(z_pos_index==2)
+                gantry->moveZBy(z_step,1.);
+            else if(z_pos_index ==4)
+                gantry->moveZ_2_By(z_step,1.);
             mat_from_outside = get_frame_from_camera();
             std::vector<double> figures_of_merit;
             eval_stddev_ROI(mat_from_outside,figures_of_merit);//gets RoI and proper color component
@@ -168,7 +174,7 @@ void Focus_finder::find_focus(double &focus_height)
             z_from_outside = gantry->whereAmI(1).at(z_pos_index);
             std::string file_name = "focus.txt";
             std::ofstream ofs (file_name, std::ofstream::app);
-            ofs <<">> "<< j<<" "<< i<<" "<<gantry->whereAmI(1).at(z_pos_index) <<" "<<
+            ofs <<"><> "<< j<<" "<< i<<" "<<gantry->whereAmI(1).at(z_pos_index) <<" "<<
                    figures_of_merit[0]<<" "<<figures_of_merit[1]<<" "<<figures_of_merit[2]<<" "<<figures_of_merit[3]<<std::endl;
             ofs.close();
             if(StdDev_t > StdDev_MAX){
@@ -253,10 +259,16 @@ void Focus_finder::Eval_syst_scan(){
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     double z_step = 0.01;// to be changed according the units of your gantry and shape of focus-heught distribution
     qInfo("Performing systematic scan near the focus position : %5.5f",z_temp);
-    gantry->moveZBy(-z_step*numb_steps*0.6,1.);
+    if(z_pos_index==2)
+        gantry->moveZBy(-z_step*numb_steps*0.6,1.);
+    else if(z_pos_index ==4)
+        gantry->moveZ_2_By(-z_step*numb_steps*0.6,1.);
     cv::Mat mat_from_outside;
     for(int i=0; i<numb_steps;i++){
-        gantry->moveZBy(z_step,1.);//1 mm/s
+        if(z_pos_index==2)
+            gantry->moveZBy(z_step,1.);
+        else if(z_pos_index ==4)
+            gantry->moveZ_2_By(z_step,1.);
         if (cap.isOpened()){
         mat_from_outside = get_frame_from_camera();
         } else {
@@ -274,9 +286,12 @@ void Focus_finder::Eval_syst_scan(){
         int start_x = 15;
         int start_y = 5;
         std::string s     = std::to_string(i);
-        figures_of_merit.push_back(gantry->whereAmI(1).at(z_pos_index));
+        std::vector <double> stuff;
+        stuff.clear();
+        stuff.push_back(figures_of_merit[0]);
+        stuff.push_back(gantry->whereAmI(1).at(z_pos_index));
         cv::Mat RoiImage  = ( (color_int == -1) ? mat_from_outside(get_rect(mat_from_outside)) : get_component(mat_from_outside(get_rect(mat_from_outside)),color_int) );
-        addInfo(RoiImage,"F ",start_x,start_y,2,2,time_now_str,figures_of_merit);
+        addInfo(RoiImage,"F ",start_x,start_y,2,2,time_now_str,stuff);
         cv::imwrite("EXPORT/Focus_"+time_now_str+"_"+s+".jpg",RoiImage);
     }
 }
