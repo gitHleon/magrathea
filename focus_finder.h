@@ -73,8 +73,8 @@ private:
     cv::VideoCapture cap;
     cv::Mat image;
     MotionHandler *gantry;
-    const int measure_points = 7;
-    const unsigned int z_pos_index = 4;
+    const int measure_points = 5;
+    const unsigned int z_pos_index = 2;
     const int window_size = 2000;
     int color_int = -1;
     int ksize = 5;

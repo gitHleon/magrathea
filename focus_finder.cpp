@@ -156,7 +156,7 @@ void Focus_finder::find_focus(double &focus_height)
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     qInfo("Performing scan around the position : %5.5f",z_temp);
 
-    int Iterations = 4;
+    int Iterations = 3;
     for(int j=0; j<Iterations;j++){//fine scan to find the position of the focus
         if(z_pos_index==2)
             gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.);

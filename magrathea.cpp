@@ -244,7 +244,6 @@ Magrathea::Magrathea(QWidget *parent) :
 
     //camera
     connect(ui->enableCameraBox, SIGNAL(toggled(bool)), this, SLOT(enableCameraBoxClicked(bool)));
-    connect(ui->focusButton,     SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->captureButton,   SIGNAL(clicked(bool)), this, SLOT(captureButtonClicked()));
     connect(ui->Calib_button,    SIGNAL(clicked(bool)), this, SLOT(Calibration_ButtonClicked()));
     connect(ui->pushButton_dummy,SIGNAL(clicked(bool)), this, SLOT(Camera_test()));
@@ -494,7 +493,8 @@ void Magrathea::FocusAlgoTest_Func(){
 void Magrathea::focusButtonClicked()
 {
     qInfo(" > camera focus ... ");
-
+    QElapsedTimer timer;
+    timer.start();
     Focus_finder * FocusFinder = new Focus_finder(this);
     mCamera->stop(); //closing QCamera
 
@@ -542,8 +542,10 @@ void Magrathea::focusButtonClicked()
     }
     qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;
+    std::cout<<">>> The FOCUS operation took "<< timer.elapsed() <<" milliseconds"<<std::endl;
     cap.release();         //Going back to QCameraa
     mCamera->start();
+
     return;
 }
 
