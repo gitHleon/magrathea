@@ -723,10 +723,13 @@ void Magrathea::VignetteButton_clicked(){
 //------------------------------------------
 
 void Magrathea::Fiducial_finder_button_Clicked()
-{    FiducialFinderCaller(0); }
+{   std::vector <double>  F_point;
+    FiducialFinderCaller(0,F_point); }
 
 
-void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point){
+bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point){
+
+    bool debug = false;
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
 
@@ -736,18 +739,20 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     if (!cap.isOpened()){
         //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-        return;}
+        return false;}
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
-    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    if(debug)
+        qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(CV_CAP_PROP_FPS, 4.0);
     dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    if(debug)
+        qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     FiducialFinder * Ffinder = new FiducialFinder(this);
 
@@ -756,30 +761,149 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     if(from_file){
         //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Atlas_G/";
         //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/Atlas_F/";
-        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Gantry_camera_test_fiducials/F_standard_7_3/";
+        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Calibration_plates/";
         std::string Images[] = {
-            "0_0_163525.jpg"
-            //"chip_1_1_pos_1.TIF"
+"EXPORT_0/111337_0_1.jpg",
+"EXPORT_0/111535_0_2.jpg",
+"EXPORT_0/111737_0_3.jpg",
+"EXPORT_0/111924_0_6.jpg",
+"EXPORT_0/112106_0_5.jpg",
+"EXPORT_0/112209_0_4.jpg",
+"EXPORT_0/112526_0_7.jpg",
+"EXPORT_0/112649_0_8.jpg",
+"EXPORT_0/112822_0_9.jpg",
+"EXPORT_1/113339_1_7.jpg",
+"EXPORT_1/113456_1_8.jpg",
+"EXPORT_1/113636_1_9.jpg",
+"EXPORT_1/113802_1_6.jpg",
+"EXPORT_1/113917_1_3.jpg",
+"EXPORT_1/114021_1_2.jpg",
+"EXPORT_1/114143_1_1.jpg",
+"EXPORT_1/114300_1_4.jpg",
+"EXPORT_1/114443_1_5.jpg",
+"EXPORT_10/151901_10_9.jpg",
+"EXPORT_10/151957_10_8.jpg",
+"EXPORT_10/152117_10_7.jpg",
+"EXPORT_10/152234_10_4.jpg",
+"EXPORT_10/152536_10_5.jpg",
+"EXPORT_10/152655_10_6.jpg",
+"EXPORT_10/152752_10_3.jpg",
+"EXPORT_10/152904_10_2.jpg",
+"EXPORT_10/152959_10_1.jpg",
+"EXPORT_10/153013_10_1.jpg",
+"EXPORT_11/153735_11_3.jpg",
+"EXPORT_11/153857_11_2.jpg",
+"EXPORT_11/154015_11_1.jpg",
+"EXPORT_11/154147_11_4.jpg",
+"EXPORT_11/154320_11_5.jpg",
+"EXPORT_11/154439_11_6.jpg",
+"EXPORT_11/154544_11_9.jpg",
+"EXPORT_11/154656_11_8.jpg",
+"EXPORT_11/154812_11_7.jpg",
+"EXPORT_12/155418_12_7.jpg",
+"EXPORT_12/155506_12_8.jpg",
+"EXPORT_12/155551_12_9.jpg",
+"EXPORT_12/155711_12_6.jpg",
+"EXPORT_12/155814_12_5.jpg",
+"EXPORT_12/155900_12_4.jpg",
+"EXPORT_12/160012_12_1.jpg",
+"EXPORT_12/160115_12_2.jpg",
+"EXPORT_12/160158_12_3.jpg",
+"EXPORT_2/114825_2_1.jpg",
+"EXPORT_2/114946_2_2.jpg",
+"EXPORT_2/115051_2_3.jpg",
+"EXPORT_2/115147_2_6.jpg",
+"EXPORT_2/115309_2_5.jpg",
+"EXPORT_2/115422_2_4.jpg",
+"EXPORT_2/115558_2_7.jpg",
+"EXPORT_2/115715_2_8.jpg",
+"EXPORT_2/115826_2_9.jpg",
+"EXPORT_3/120240_3_7.jpg",
+"EXPORT_3/120534_3_8.jpg",
+"EXPORT_3/120653_3_9.jpg",
+"EXPORT_3/120755_3_6.jpg",
+"EXPORT_3/120954_3_5.jpg",
+"EXPORT_3/121130_3_4.jpg",
+"EXPORT_3/121230_3_1.jpg",
+"EXPORT_3/121356_3_2.jpg",
+"EXPORT_3/121532_3_3.jpg",
+"EXPORT_3/121620_3_3.jpg",
+"EXPORT_4/122044_4_1.jpg",
+"EXPORT_4/122202_4_2.jpg",
+"EXPORT_4/122323_4_3.jpg",
+"EXPORT_4/122436_4_6.jpg",
+"EXPORT_4/122600_4_5.jpg",
+"EXPORT_4/122712_4_4.jpg",
+"EXPORT_4/122826_4_7.jpg",
+"EXPORT_4/122941_4_8.jpg",
+"EXPORT_4/123053_4_9.jpg",
+"EXPORT_5/124314_5_7.jpg",
+"EXPORT_5/124419_5_8.jpg",
+"EXPORT_5/124512_5_9.jpg",
+"EXPORT_5/124610_5_6.jpg",
+"EXPORT_5/130629_5_5.jpg",
+"EXPORT_5/130728_5_4.jpg",
+"EXPORT_5/130837_5_1.jpg",
+"EXPORT_5/130934_5_2.jpg",
+"EXPORT_5/131021_5_3.jpg",
+"EXPORT_6/131509_6_9.jpg",
+"EXPORT_6/131726_6_8.jpg",
+"EXPORT_6/131902_6_7.jpg",
+"EXPORT_6/132029_6_4.jpg",
+"EXPORT_6/132135_6_5.jpg",
+"EXPORT_6/132236_6_6.jpg",
+"EXPORT_6/132347_6_3.jpg",
+"EXPORT_6/132527_6_2.jpg",
+"EXPORT_6/132624_6_1.jpg",
+"EXPORT_7/142906_7_3.jpg",
+"EXPORT_7/143025_7_2.jpg",
+"EXPORT_7/143114_7_1.jpg",
+"EXPORT_7/143232_7_4.jpg",
+"EXPORT_7/143347_7_5.jpg",
+"EXPORT_7/143444_7_6.jpg",
+"EXPORT_7/143606_7_9.jpg",
+"EXPORT_7/143719_7_8.jpg",
+"EXPORT_7/143815_7_7.jpg",
+"EXPORT_8/144340_8_9.jpg",
+"EXPORT_8/144434_8_8.jpg",
+"EXPORT_8/144525_8_7.jpg",
+"EXPORT_8/144623_8_4.jpg",
+"EXPORT_8/144731_8_5.jpg",
+"EXPORT_8/144821_8_6.jpg",
+"EXPORT_8/144958_8_3.jpg",
+"EXPORT_8/145057_8_2.jpg",
+"EXPORT_8/145141_8_1.jpg",
+"EXPORT_9/145553_9_3.jpg",
+"EXPORT_9/145733_9_2.jpg",
+"EXPORT_9/145821_9_1.jpg",
+"EXPORT_9/145947_9_4.jpg",
+"EXPORT_9/150044_9_5.jpg",
+"EXPORT_9/150142_9_6.jpg",
+"EXPORT_9/150242_9_9.jpg",
+"EXPORT_9/150336_9_8.jpg",
+"EXPORT_9/150425_9_7.jpg"
         };
 
         tmp_filename = Images[ui->spinBox_input->value()];
+        std::cout<<tmp_filename<<std::endl;
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Set_calibration(1); //get calibration from a private variable
+        Ffinder->Set_calibration(3.43); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
             qInfo("Cannot read a frame from video stream");
-            return;
+            return false;
         }
         Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
         Ffinder->SetImage(mat_from_camera);
     }
     if(!from_file && mCalibration < 0.){
         qInfo("Calibration not set!! value is : %5.3f",mCalibration);
-        return;
+        return false;
     }else{
-        qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
+        if(debug)
+            qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
     }
 
     Ffinder->Set_log(outputLogTextEdit);
@@ -819,9 +943,13 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
             ,CV_LOAD_IMAGE_COLOR);
 
-    bool success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
-                    ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/);
-    if(success)
+    //bool success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
+    //                ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/);
+
+    bool success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),
+                                         ui->chip_number_spinBox->value());
+
+    if(success && debug)
         qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
 
     std::vector <double> pos_t = mMotionHandler->whereAmI(1); //get gantry position //check the value of input
@@ -830,8 +958,8 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
-    ofs << timestamp<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename<<" "<<
-           distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<" "<<pos_t[2];
+    ofs << timestamp<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename;//<<" "<<
+           //distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<" "<<pos_t[2];
     delete Ffinder;
     cap.release();         //Going back to QCameraa
     mCamera->start();
@@ -841,12 +969,14 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
     if(!success){
+        ofs <<" FAIL "<<std::endl;
         ofs.close();
-        return; //If fiducial finding fails, terminates without moving gantry
+        return false; //If fiducial finding fails, terminates without moving gantry
     }
 #if VALENCIA
-    ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<std::endl;
-//    if(input == 0){
+    //ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<std::endl;
+    ofs << " "<<(0.0+(distance_x*0.001))<<" "<<(0.0-(distance_y*0.001))<<std::endl;
+    //    if(input == 0){
 //        mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
 //        mMotionHandler->moveYBy(distance_x*0.001,1);
 //    }
@@ -859,7 +989,7 @@ void Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     F_point.push_back(-distance_y*0.001);
     F_point.push_back(distance_x*0.001);
     ofs.close();
-    return;
+    return true;
 }
 
 //------------------------------------------
@@ -870,9 +1000,9 @@ void Magrathea::capture_fid_and_move(){
     ui->spinBox_input->setValue(0);
     for(int h=0;h<8;h++){
         //capture fiducial
-        FiducialFinderCaller(0);
+        //FiducialFinderCaller(0);
         Sleeper::msleep(300);
-        FiducialFinderCaller(1);
+        //FiducialFinderCaller(1);
         Sleeper::msleep(300);
         mMotionHandler->moveXBy(ui->x_fid_move_SpinBox->value(),2);
         mMotionHandler->moveYBy(ui->y_fid_move_SpinBox->value(),2);
@@ -1336,11 +1466,14 @@ void Magrathea::destroy_all(){
 
 void Magrathea::loop_test(){
     //run fiducial finding algo automatically on a series of pictures
-    for(int i=0;i<440;i++){//set appropriate value of the loop limit
-        Sleeper::msleep(500);
+    for(int i=0;i<119;i++){//set appropriate value of the loop limit
         std::cout<<"It "<<i<<std::endl;
         ui->spinBox_input->setValue(i);
-        FiducialFinderCaller(2);
+        std::cout<<ui->spinBox_input->value()<<std::endl;
+        std::vector <double> F_point;
+        F_point.clear();
+        if(!FiducialFinderCaller(0,F_point))
+            std::cout<<" Fail imag :"<<i<<std::endl;
     }
 }
 

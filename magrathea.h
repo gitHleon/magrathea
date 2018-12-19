@@ -47,7 +47,7 @@ private slots:
     void captureButtonClicked();
     void calibrationCaller(int input);
     void Calibration_ButtonClicked();
-    void FiducialFinderCaller(const int &input,std::vector <double> & F_point);
+    bool FiducialFinderCaller(const int &input,std::vector <double> & F_point);
     void Fiducial_finder_button_Clicked();
     void VignetteButton_clicked();
     void Camera_test();
