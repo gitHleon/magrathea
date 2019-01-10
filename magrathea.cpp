@@ -376,40 +376,9 @@ void Magrathea::FocusAlgoTest_Func(){
   Focus_finder * FocusFinder = new Focus_finder(this);
   cv::Mat mat_mat;
   std::string file_name = "";
-  //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test/";
   std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test_mitutoyo/";
-  //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Focus_test/20181204/OpticSCT/OpticSCT/";
   std::string Images[] ={
-//    "Focus_171052_0",
-//    "Focus_171055_1",
-//    "Focus_171058_2",
-//    "Focus_171101_3",
-//    "Focus_171103_4",
-//    "Focus_171106_5",
-//    "Focus_171109_6",
-//    "Focus_171112_7",
-//    "Focus_171114_8",
-//    "Focus_171117_9",
-//    "Focus_171120_10",
-//    "Focus_171123_11",
-//    "Focus_171126_12",
-//    "Focus_171128_13",
-//    "Focus_171131_14",
-//    "Focus_171134_15",
-//    "Focus_171137_16",
-//    "Focus_171139_17",
-//    "Focus_171142_18",
-//    "Focus_171145_19",
-//    "Focus_171148_20",
-//    "Focus_171150_21",
-//    "Focus_171153_22",
-//    "Focus_171156_23",
-//    "Focus_171159_24",
-//    "Focus_171201_25",
-//    "Focus_171204_26",
-//    "Focus_171207_27",
-//    "Focus_171210_28",
-//    "Focus_171212_29"
+
           "0.1_pos",
           "0.09_pos",
           "0.08_pos",
@@ -431,27 +400,6 @@ void Magrathea::FocusAlgoTest_Func(){
           "0.08_neg",
           "0.09_neg",
           "0.1_neg"
-//      "010_pos",
-//      "009_pos",
-//      "008_pos",
-//      "007_pos",
-//      "006_pos",
-//      "005_pos",
-//      "004_pos",
-//      "003_pos",
-//      "002_pos",
-//      "001_pos",
-//      "Focused",
-//      "001_neg",
-//      "002_neg",
-//      "003_neg",
-//      "004_neg",
-//      "005_neg",
-//      "006_neg",
-//      "007_neg",
-//      "008_neg",
-//      "009_neg",
-//      "010_neg"
   };
   std::vector<double> std_dev_value;
   for(int i=0;i<21;i++){
@@ -463,16 +411,8 @@ void Magrathea::FocusAlgoTest_Func(){
     cv::Rect region(0,0,mat_mat.cols,mat_mat.rows-30);
     cv::Mat RoI = mat_mat(region);
     std::vector<double> figures_of_merit;
-    //cv::imshow("roi",RoI);
-//    cv::Mat bgr[3];   //destination array
-//    cv::split(RoI,bgr);//split source
-    //Note: OpenCV uses BGR color order
-//    cv::imshow("blue",bgr[0]);  //blue channel
-//    cv::imshow("green",bgr[1]); //green channel
-//    cv::imshow("red",bgr[2]);   //red channel
     FocusFinder->eval_stddev(RoI,figures_of_merit);
     if(figures_of_merit.size() != 0){
-        //qInfo(" filename: %s ; Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
         qInfo("%s  %5.1f  %5.5f  %5.1f  %5.1f",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
         std_dev_value.push_back(figures_of_merit[0]);
         std::string file_name = "focus_m.txt";
@@ -717,7 +657,6 @@ void Magrathea::VignetteButton_clicked(){
     mCamera->start();
     return;
 }
-
 
 //------------------------------------------
 //------------------------------------------

@@ -543,7 +543,7 @@
           <item row="1" column="0">
            <widget class="QPushButton" name="pushButton_dummy">
             <property name="text">
-             <string>Dummy</string>
+             <string>Camera test</string>
             </property>
            </widget>
           </item>
