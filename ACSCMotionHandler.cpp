@@ -417,14 +417,17 @@ bool ACSCMotionHandler::moveTo(double positions[4], double speed)
     moveYTo(positions[1],speed);
     moveZTo(positions[2],speed);
     moveZ_2_To(positions[3],speed);
-    qInfo("...");
+    //qInfo("...");
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::moveXTo(double x, double speed) {
     qInfo("moving x axis to %.3f mm at %.3f mm/s speed", x, speed);
-    //change to acsc_ExtToPoint sec 4.15 C library manual
+    //may change to acsc_ExtToPoint sec 4.15 C library manual
+    //validate target position
+    if(!validate_target_pos_x(x))
+        return false;
     if(acsc_SetVelocity(gantry,X_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed X axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,X_axis,x,ACSC_SYNCHRONOUS) != 0) { //move to destination here
@@ -445,6 +448,9 @@ bool ACSCMotionHandler::moveXTo(double x, double speed) {
 
 //------------------------------------------
 bool ACSCMotionHandler::moveYTo(double y, double speed) {
+    //validate target position
+    if(!validate_target_pos_y(y))
+        return false;
     qInfo("moving y axis to %.3f mm at %.3f mm/s speed", y, speed);
     if(acsc_SetVelocity(gantry,Y_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Y axis: %d ",acsc_GetLastError());
@@ -466,6 +472,9 @@ bool ACSCMotionHandler::moveYTo(double y, double speed) {
 
 //------------------------------------------
 bool ACSCMotionHandler::moveZTo(double z, double speed) {
+    //validate target position
+    if(!validate_target_pos_z_1(z))
+        return false;
     qInfo("moving z axis to %.3f mm at %.3f mm/s speed", z, speed);
     if(acsc_SetVelocity(gantry,Z_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z axis: %d ",acsc_GetLastError());
@@ -487,6 +496,9 @@ bool ACSCMotionHandler::moveZTo(double z, double speed) {
 
 //------------------------------------------
 bool ACSCMotionHandler::moveZ_2_To(double z, double speed) {
+    //validate target position
+    if(!validate_target_pos_z_2(z))
+        return false;
     qInfo("moving z 2 axis to %.3f mm at %.3f mm/s speed", z, speed);
     if(acsc_SetVelocity(gantry,Z_2_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z axis: %d ",acsc_GetLastError());
@@ -551,12 +563,16 @@ bool ACSCMotionHandler::moveBy(double positions[4], double speed)
     moveYTo(positions[1],speed);
     moveZTo(positions[2],speed);
     moveZ_2_To(positions[3],speed);
-    qInfo("...");
+    //qInfo("...");
     return true;
 }
 
 //------------------------------------------
 bool ACSCMotionHandler::moveXBy(double x, double speed) {
+    std::vector <double> pos_t = whereAmI(0);
+    //validate target position
+    if(!validate_target_pos_x(x+pos_t[0]))
+        return false;
     qInfo("moving x axis to %.3f mm at %.3f mm/s speed", x, speed);
     if(acsc_SetVelocity(gantry,X_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed X axis: %d ",acsc_GetLastError());
@@ -578,6 +594,10 @@ bool ACSCMotionHandler::moveXBy(double x, double speed) {
 
 //------------------------------------------
 bool ACSCMotionHandler::moveYBy(double y, double speed) {
+    std::vector <double> pos_t = whereAmI(0);
+    //validate target position
+    if(!validate_target_pos_y(y+pos_t[1]))
+        return false;
     qInfo("moving y axis to %.3f mm at %.3f mm/s speed", y, speed);
     if(acsc_SetVelocity(gantry,Y_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Y axis: %d ",acsc_GetLastError());
@@ -599,6 +619,10 @@ bool ACSCMotionHandler::moveYBy(double y, double speed) {
 
 //------------------------------------------
 bool ACSCMotionHandler::moveZBy(double z, double speed) {
+    std::vector <double> pos_t = whereAmI(0);
+    //validate target position
+    if(!validate_target_pos_z_1(z+pos_t[2]))
+        return false;
     qInfo("moving z axis to %.3f mm at %.3f mm/s speed", z, speed);
     if(acsc_SetVelocity(gantry,Z_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z axis: %d ",acsc_GetLastError());
@@ -620,6 +644,10 @@ bool ACSCMotionHandler::moveZBy(double z, double speed) {
 
 //------------------------------------------
 bool ACSCMotionHandler::moveZ_2_By(double z, double speed) {
+    std::vector <double> pos_t = whereAmI(0);
+    //validate target position
+    if(!validate_target_pos_z_2(z+pos_t[4]))
+        return false;
     qInfo("moving z 2 axis to %.3f mm at %.3f mm/s speed", z, speed);
     if(acsc_SetVelocity(gantry,Z_2_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z 2 axis: %d ",acsc_GetLastError());
@@ -939,8 +967,49 @@ bool ACSCMotionHandler::getUAxisState(){
 
 //******************************************
 // Safety limits for movement
+bool ACSCMotionHandler::validate_target_pos_x(double val){
+    if(val < x_min || val > x_max){
+        qWarning("ERROR!! Target X position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool ACSCMotionHandler::validate_target_pos_y(double val){
+    if(val < y_min || val > y_max){
+        qWarning("ERROR!! Target Y position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
+}
+
+bool ACSCMotionHandler::validate_target_pos_z_1(double val){
+    if(val < z_1_min || val > z_1_max){
+        qWarning("ERROR!! Target Z1 position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
+}
+
+bool ACSCMotionHandler::validate_target_pos_z_2(double val){
+    if(val < z_2_min || val > z_2_max){
+        qWarning("ERROR!! Target Z2 position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
+}
+
+
 bool ACSCMotionHandler::validate_target_pos(double x, double y, double z_1,double z_2)
 {
+
     qInfo("checking if target position is safe");
     if (y > 300 && z_2 < -40) { // condition is true, position is NOT valid, abort motion.
         qWarning("ERROR!! Target position is NOT valid, aborting motion.");

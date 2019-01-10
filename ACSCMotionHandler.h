@@ -106,6 +106,10 @@ public slots:
 
     // Safety limits for movement
     virtual bool validate_target_pos(double x, double y, double z_1, double z_2);
+    virtual bool validate_target_pos_x(double val);
+    virtual bool validate_target_pos_y(double val);
+    virtual bool validate_target_pos_z_1(double val);
+    virtual bool validate_target_pos_z_2(double val);
 
 signals:
 
@@ -126,6 +130,15 @@ private:
     double Home_coord[5]          = {0.,0.,0.,0.,0.};
     double default_speed         = 15;
     double default_angular_speed = 10;
+
+    double x_min = -400.0;
+    double x_max =  400.0;
+    double y_min = -400.0;
+    double y_max =  400.0;
+    double z_1_min =  -80.0;
+    double z_1_max =  100.0;
+    double z_2_min =  -80.0;
+    double z_2_max =  100.0;
 
 //    A3200Handle gantry;
 

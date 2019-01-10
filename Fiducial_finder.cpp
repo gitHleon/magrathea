@@ -68,6 +68,93 @@ cv::Mat FiducialFinder::get_component(const cv::Mat &input_mat,const unsigned in
     //Note: OpenCV uses BGR color order
 }
 
+cv::Mat FiducialFinder::change_gamma(const cv::Mat &input_mat, const double &gamma){
+    if(gamma < 0 || gamma > 255){
+        std::cout<<"enance_contrast: Error in gamma range"<<std::endl;
+        return input_mat;
+    }
+    cv::Mat lookUpTable(1, 256, CV_8U);
+    uchar* p = lookUpTable.ptr();
+    for( int i = 0; i < 256; ++i)
+        p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, gamma) * 255.0);
+
+    cv::Mat output = input_mat.clone();
+    cv::LUT(input_mat, lookUpTable, output);
+
+    return output;
+}
+
+cv::Mat FiducialFinder::enance_contrast(const cv::Mat &input_mat, const double &alpha, const double &beta = 0){
+    if(alpha < 0 || alpha > 3){
+        std::cout<<"enance_contrast: Error in alpha range"<<std::endl;
+        return input_mat;
+    }
+    cv::Mat output;
+    cv::Mat betas = cv::Mat::ones(input_mat.rows,input_mat.cols,input_mat.type());
+    betas = betas*beta;
+    output = input_mat.clone();
+    output = output*alpha + betas;
+    return output;
+}
+
+cv::Mat FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max_alpha){
+    if(max_alpha < 0 || max_alpha > 3){
+        std::cout<<"dan_contrast: Error in alpha range"<<std::endl;
+        return input_mat;
+    }
+    cv::Mat output;
+    cv::Scalar  mean_t;
+    cv::Scalar  stddev_t;
+    cv::meanStdDev(input_mat,mean_t,stddev_t);
+    const double steps = 5;
+    int threshold_step = 255/steps;
+    double alpha_steps = max_alpha/(steps-2);
+    bool debug = false;
+
+    std::vector<cv::Mat> matrices;
+    std::vector<cv::Mat> matrices_mod;
+    std::vector<int> threshold_steps;
+    threshold_steps.push_back(0);
+    threshold_steps.push_back(mean_t[0]-1*stddev_t[0]);
+    threshold_steps.push_back(mean_t[0]+1*stddev_t[0]);
+    threshold_steps.push_back(mean_t[0]+2*stddev_t[0]);
+
+    //    for(int i=1;i<(steps-1);i++)
+    //        threshold_steps.push_back(i*threshold_step);
+    threshold_steps.push_back(255);
+
+    matrices.push_back(input_mat);
+    for(int i=1;i<(steps-1);i++){
+        cv::Mat temp_thr;
+        cv::threshold(input_mat,temp_thr,threshold_steps.at(i),255,CV_THRESH_TOZERO);
+        matrices.push_back(temp_thr);
+    }
+    matrices.push_back(cv::Mat::zeros(input_mat.rows,input_mat.cols,input_mat.type()));
+
+    for(int i=0;i<(steps-1);i++){
+        cv::Mat temp_thr;
+        temp_thr = matrices.at(i) - matrices.at(i+1);
+        double square_step = i/(steps-2);
+        std::cout<<" value "<< square_step<<" square "<<pow(square_step,2.)<<std::endl;
+        matrices_mod.push_back(enance_contrast(temp_thr,alpha_steps*pow(square_step,2)));
+        //matrices_mod.push_back(enance_contrast(temp_thr,alpha_steps*sqrt(square_step)));
+    }
+
+    if(debug){
+        cv::imshow("test 1",matrices_mod.at(0));
+        cv::imshow("test 2",matrices_mod.at(1));
+        cv::imshow("test 3",matrices_mod.at(2));
+        cv::imshow("test 4",matrices_mod.at(3));
+    }
+
+    output = matrices_mod.at(0).clone();
+    for(unsigned int i=1;i<matrices_mod.size();i++){
+        output = output + matrices_mod.at(i);
+    }
+    return output;
+}
+
+
 void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp){
     int baseline = 0;
     //int text_font_size = 2;
@@ -95,7 +182,7 @@ void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int st
 bool FiducialFinder::Is_equal(const double &one, const double &two){
     //function needed when searching for fiducial not using SURF
     //Tolerance 3um, the precision of the gantry
-    double tolerance = 3*Calibration; //[px]
+    double tolerance = 10*Calibration; //[px]
     return ( fabs(one-two) <= tolerance);
 }
 
@@ -161,18 +248,27 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Cente
 
 bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3, const cv::Point &P_4)
 {
+    bool debug = false;
     //function needed when searching for fiducial not using SURF
     //http://en.cppreference.com/w/cpp/language/range-for
     //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
-    //Distances between points are 30 um
-    const int threshold_H = 35*Calibration;
-    const int threshold_L = 25*Calibration;
+    //Distances between points are 50 um. threshold is on the diagonal i.e. 50*1.4
+    const int threshold_H = 85*Calibration;
+    const int threshold_L = 55*Calibration;
     cv::Vec2i p_1 = {P_1.x,P_1.y};
     cv::Vec2i p_2 = {P_2.x,P_2.y};
     cv::Vec2i p_3 = {P_3.x,P_3.y};
     cv::Vec2i p_4 = {P_4.x,P_4.y};
     enum Diagonals {NONE, P1P2 , P1P3 , P1P4};
     Diagonals diagonal = NONE;
+    if(debug){
+        std::cout<< "cv::norm(p_1,p_2)" << cv::norm(p_1,p_2)<< std::endl;
+        std::cout<< "cv::norm(p_1,p_3)" << cv::norm(p_1,p_3)<< std::endl;
+        std::cout<< "cv::norm(p_1,p_4)" << cv::norm(p_1,p_4)<< std::endl;
+        std::cout<< "cv::norm(p_2,p_3)" << cv::norm(p_2,p_3)<< std::endl;
+        std::cout<< "cv::norm(p_2,p_4)" << cv::norm(p_2,p_4)<< std::endl;
+        std::cout<< "cv::norm(p_3,p_4)" << cv::norm(p_3,p_4)<< std::endl;
+    }
     //searching for two equal diagonals
     //Diagonal is longer than the sides ;)
     if(cv::norm(p_1,p_2) < cv::norm(p_1,p_3)){
@@ -194,8 +290,8 @@ bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, con
                 Is_equal(cv::norm(p_3,p_2),cv::norm(p_2,p_4)) &&
                 Is_equal(cv::norm(p_2,p_4),cv::norm(p_4,p_1)) &&
                 Is_equal(cv::norm(p_4,p_1),cv::norm(p_1,p_3)) &&
-                (cv::norm(p_1,p_3) < threshold_H) &&
-                (cv::norm(p_1,p_3) > threshold_L))
+                (cv::norm(p_1,p_2) < threshold_H) &&
+                (cv::norm(p_1,p_2) > threshold_L))
                 {
             return true;
         }
@@ -218,8 +314,8 @@ bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, con
                 Is_equal(cv::norm(p_2,p_4),cv::norm(p_4,p_3)) &&
                 Is_equal(cv::norm(p_4,p_3),cv::norm(p_3,p_1)) &&
                 Is_equal(cv::norm(p_3,p_1),cv::norm(p_1,p_2)) &&
-                (cv::norm(p_1,p_3) < threshold_H) &&
-                (cv::norm(p_1,p_3) > threshold_L))
+                (cv::norm(p_1,p_4) < threshold_H) &&
+                (cv::norm(p_1,p_4) > threshold_L))
                 {
             return true;
         }
@@ -241,82 +337,151 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
     return Out;
 }
 
-void FiducialFinder::Find_circles(double &X_distance, double &Y_distance){
+bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &temp_input, const int &temp_input_2){
     //function needed when searching for fiducial not using SURF
-    //DEPRECATED
     //to find the 4 dot fiducial
+    bool debug = false;
+
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
-        return;
-    }
-    //------ put this inside a function to have easy omogenisation and code update
-    const bool debug = false;
-    int center_rows = image.rows/2.0; //Defining the center of the image
-    int center_cols = image.cols/2.0;
-    //cv::Point2i Center_point = {center_cols,center_rows};
-    const int window_size = 420;
-    cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
-    cv::Mat RoiImage = image(regione_interessante);
-    //cv::circle(image, cv::Point(center_cols,center_rows), 3, cv::Scalar(206,78,137), -1, 8, 0 );
-    cv::imshow("0 image",image);
-    cv::imshow("0.1 image ROI",RoiImage);
-    cv::Mat image_gray = RoiImage.clone(); // Selecting ROI from the input image
-    cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY); //in future set the camera to take gray image directly
-    cv::medianBlur(image_gray,image_gray,5);
-    cv::imshow("1 blur",RoiImage);
-    cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,11,2); //CV_THRESH_BINARY
-    cv::imshow("2 threshold",image_gray);
-    //------
+        return false;}
 
-    //Size of dot: diameter = 20 um
-    //double Calibration; //[px/um]
-    int min_radius = 16*0.5*Calibration; //[px]
-    int max_radius = 24*0.5*Calibration; //[px]
-    int minDist = min_radius*2; //[px]
-    int hough_threshold = min_radius*1.5; //[px]
-    std::vector<cv::Vec3f> circles;
-    circles.clear();
+        int center_rows = image.rows/2; //Defining the center of the image
+        int center_cols = image.cols/2;
 
-    if(debug)
-        log->append("Applying Hough Circles with parameters: minDist, hough_threshold, min_radius, max_radius: "
-                    +QString::number(minDist)+" , "+QString::number(hough_threshold)+" , "+QString::number(min_radius)+" , "+QString::number(max_radius));
+        if(debug)
+            cv::imshow("f. 0 image",image);
+        const int window_size = ( (image.cols > 2000 && image.rows > 2000) ? 1500 : 420);
+        const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
+        if(window_size >= image.rows || window_size >= image.cols){
+            log->append("Error!! Window size wrongly set!!");
+            return false;}
 
-    cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius ); //image_gray
+        cv::Rect regione_interessante(center_cols-(window_size/2),center_rows-(window_size/2),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
+        cv::Mat RoiImage = image(regione_interessante);
+        if(debug)
+            cv::imshow("f. 0.1 image ROI",RoiImage);
 
-    std::vector <cv::Point> Centers (circles.size());
-    for( size_t i = 0; i < circles.size(); i++ ){
-        Centers[i].x = std::round(circles[i][0]);
-        Centers[i].y = std::round(circles[i][1]);
-        cv::Point center(std::round(circles[i][0]), std::round(circles[i][1]));
-        int radius = std::round(circles[i][2]);
-        // circle center
-        cv::circle(RoiImage, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
-        // circle outline
-        cv::circle(RoiImage, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
-    }
+        cv::Mat output_mat = RoiImage.clone(); // Selecting ROI from the input image
+        output_mat = get_component(output_mat,1);
 
-    std::vector <std::vector <int> > Squares(0);
-    std::vector <std::vector <int> > Triangles(0);
+        for(int iterations = 0;;iterations++){
+            cv::Mat image_gray = output_mat.clone();
+            if(iterations==1){
+                //image_gray = enance_contrast(image_gray,1.5);
+                image_gray = dan_contrast(image_gray,2);
+            }else if(iterations==2){
+                image_gray = change_gamma(image_gray,3);
+            }else if(iterations==3){
+                image_gray = dan_contrast(image_gray,2);
+                image_gray = change_gamma(image_gray,3);
+            }
 
-    Find_SquareAndTriangles(Centers,Squares,Triangles);
-    std::cout<<"Squares.size() "<<Squares.size()<<std::endl;
-    for( size_t i = 0; i < Squares.size(); i++ ){
-        for( int j = 0; j < 4; j++ )
-            cv::line(RoiImage, Centers.at(Squares[i][j]), Centers.at(Squares[i][(j+1)%4]), cv::Scalar(0,255,0), 2, 8);
-        cv::Point square_center = Square_center(Centers.at(Squares.at(i).at(0)),Centers.at(Squares.at(i).at(1)),
-                                                Centers.at(Squares.at(i).at(2)),Centers.at(Squares.at(i).at(3)));
-        cv::circle(RoiImage, square_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
-        cv::circle(RoiImage, square_center, 40*Calibration, cv::Scalar(255,0,0), 3, 8, 0 );
-        if(Squares.size() == 1){
-            X_distance = (center_cols - square_center.x)*(1./Calibration); //[um]
-            Y_distance = (center_rows - square_center.y)*(1./Calibration); //[um]
-            cv::circle(RoiImage, cv::Point(RoiImage.cols/2.0,RoiImage.rows/2.0), 3, cv::Scalar(206,78,137), -1, 8, 0 );
+            if(debug){
+                cv::imshow("contrast",image_gray);
+                std::cout<<" iteration : "<<iterations<<std::endl;
+            }
+            for(int i=0;i<1;i++){
+                //https://docs.opencv.org/3.4/d3/d8f/samples_2cpp_2tutorial_code_2ImgProc_2Smoothing_2Smoothing_8cpp-example.html#a12
+                cv::medianBlur(image_gray,image_gray,kernel_size);
+            }
+
+            if(debug)
+                cv::imshow("1 blur",image_gray);
+
+            cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+            if(debug)
+                cv::imshow("1.1 blur+thr",image_gray);
+
+            cv::Mat StructElement = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(kernel_size,kernel_size));
+            cv::morphologyEx(image_gray,image_gray,cv::MORPH_CLOSE,StructElement);
+            if(debug)
+                cv::imshow("1.2 blur+thr+close",image_gray);
+
+            cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+
+            if(debug)
+                cv::imshow("2 threshold",image_gray);
+
+            //------
+
+            //Size of dot: diameter = 20 um
+            //double Calibration; //[px/um]
+            int min_radius = 14*0.5*Calibration; //[px]
+            int max_radius = 33*0.5*Calibration; //[px]
+            int minDist = min_radius*4; //[px]
+            int hough_threshold = min_radius*0.9; //[px]
+            if(debug)
+                std::cout<<">> calibration "<<Calibration<<std::endl;
+            std::vector<cv::Vec3f> circles;
+            circles.clear();
+
+            //    for(int iterations = 0;;iterations++){
+            //        if(iterations!=0){
+            //            image_gray = enance_contrast(image_gray,2.);
+            //            if(debug)
+            //                cv::imshow("contrast",image_gray);
+            //        }
+
+        cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius ); //image_gray
+        if(debug)
+            std::cout<<">> circles "<<circles.size()<<std::endl;
+        std::vector <cv::Point> Centers (circles.size());
+        cv::Mat RoiImage_out = RoiImage.clone();
+        for( size_t i = 0; i < circles.size(); i++ ){
+            Centers[i].x = circles[i][0];
+            Centers[i].y = circles[i][1];
+            cv::Point center(circles[i][0], circles[i][1]);
+            int radius = circles[i][2];
+            if(debug)
+                std::cout<<" radius "<<radius<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<<std::endl;
+            // circle center
+            cv::circle(RoiImage_out, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+            // circle outline
+            cv::circle(RoiImage_out, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
         }
+        if(debug)
+            for( size_t i = 0; i < Centers.size(); i++ ){
+                std::cout<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<<std::endl;
+                std::cout<<" norm "<<cv::norm(Centers.at(i)-Centers.at((i+1)%Centers.size())) <<" CXX "<<Centers[(i+1)%4].x<<" CYY "<<Centers[(i+1)%4].y<<std::endl;
+            }
+
+        std::vector <std::vector <int> > Squares(0);
+        std::vector <std::vector <int> > Triangles(0);
+
+        Find_SquareAndTriangles(Centers,Squares,Triangles);
+        if(debug)
+            std::cout<<"Squares.size() "<<Squares.size()<<std::endl;
+        for( size_t i = 0; i < Squares.size(); i++ ){
+            for( int j = 0; j < 4; j++ )
+                cv::line(RoiImage_out, Centers.at(Squares[i][j]), Centers.at(Squares[i][(j+1)%4]), cv::Scalar(0,255,0), 2, 8);
+
+            cv::Point square_center = Square_center(Centers.at(Squares.at(i).at(0)),Centers.at(Squares.at(i).at(1)),
+                                                    Centers.at(Squares.at(i).at(2)),Centers.at(Squares.at(i).at(3)));
+            cv::circle(RoiImage_out, square_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
+            cv::circle(RoiImage_out, square_center, 50*Calibration, cv::Scalar(255,0,0), 3, 8, 0 );
+            if(Squares.size() == 1){
+                X_distance = (center_cols - square_center.x)*(1./Calibration); //[um]
+                Y_distance = (center_rows - square_center.y)*(1./Calibration); //[um]
+                cv::circle(RoiImage_out, cv::Point(RoiImage.cols/2,RoiImage.rows/2), 3, cv::Scalar(206,78,137), -1, 8, 0 );
+            }
+        }
+
+        if(debug)
+            cv::imshow("3 Results",RoiImage);
+        std::string dummy = std::to_string(iterations);
+        std::string s     = std::to_string(temp_input);
+        std::string chip  = std::to_string(temp_input_2);
+        cv::imwrite("EXPORT/Circles_"+chip+"_"+s+"_"+dummy+".jpg",RoiImage_out);
+        if(Squares.size() == 1)
+            return true;
+        if(iterations>2)
+            break;
     }
 
-    cv::imshow("3 Results",RoiImage);
-    return;
+    return false;
+
     //add return of the fid center
 }
 

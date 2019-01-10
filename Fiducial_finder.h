@@ -32,6 +32,9 @@ public slots:
                 const int &temp_input, const int &temp_input_2, std::string &timestamp, int dummy_temp,
                 cv::Mat &transform_out);
     cv::Mat get_component(const cv::Mat &input_mat,const unsigned int &input);
+    cv::Mat enance_contrast(const cv::Mat &input_mat, const double &alpha, const double &beta);
+    cv::Mat dan_contrast(const cv::Mat &input_mat, const double &max_alpha);
+    cv::Mat change_gamma(const cv::Mat &input_mat, const double &gamma);
 
 private:
     double Calibration = -1.1; //[px/um]
