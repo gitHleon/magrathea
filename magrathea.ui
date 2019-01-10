@@ -105,7 +105,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="joystickTab">
         <attribute name="title">
@@ -552,6 +552,9 @@
             <property name="maximum">
              <number>11111</number>
             </property>
+            <property name="value">
+             <number>23</number>
+            </property>
            </widget>
           </item>
           <item row="3" column="4">
@@ -579,13 +582,6 @@
            <widget class="QLineEdit" name="Calib_value_lineEdit">
             <property name="readOnly">
              <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Image</string>
             </property>
            </widget>
           </item>
@@ -661,20 +657,10 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
-           <widget class="QSpinBox" name="chip_number_spinBox"/>
-          </item>
           <item row="4" column="1">
            <widget class="QSpinBox" name="ArucospinBox">
             <property name="maximum">
              <number>999999</number>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_21">
-            <property name="text">
-             <string>Chip</string>
             </property>
            </widget>
           </item>
@@ -712,16 +698,6 @@
             </property>
             <property name="checked">
              <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
-           <widget class="QSpinBox" name="spinBox_input">
-            <property name="maximum">
-             <number>99999</number>
-            </property>
-            <property name="value">
-             <number>0</number>
             </property>
            </widget>
           </item>
@@ -773,6 +749,40 @@
             </property>
            </widget>
           </item>
+          <item row="2" column="5">
+           <widget class="QSpinBox" name="spinBox_input">
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Image</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QSpinBox" name="chip_number_spinBox"/>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_21">
+            <property name="text">
+             <string>Chip</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="6">
+           <widget class="QPushButton" name="Run_calib_plate_button">
+            <property name="text">
+             <string>RUN</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </widget>
@@ -785,16 +795,26 @@
           <rect>
            <x>10</x>
            <y>10</y>
-           <width>561</width>
+           <width>691</width>
            <height>161</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_6">
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="point1_x_box"/>
-          </item>
-          <item row="0" column="2">
-           <widget class="QDoubleSpinBox" name="point1_y_box"/>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="point3_y_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-104.709999999999994</double>
+            </property>
+           </widget>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_23">
@@ -810,6 +830,35 @@
             </property>
            </widget>
           </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="point3_x_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-154.229999999999990</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QDoubleSpinBox" name="point1_z_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-6.450000000000000</double>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_25">
             <property name="text">
@@ -817,26 +866,108 @@
             </property>
            </widget>
           </item>
+          <item row="1" column="3">
+           <widget class="QDoubleSpinBox" name="point2_z_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-6.450000000000000</double>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="point2_x_box"/>
+           <widget class="QDoubleSpinBox" name="point2_x_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-29.649000000000001</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="point1_x_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-450.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>450.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-28.230000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="point1_y_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-103.549999999999997</double>
+            </property>
+           </widget>
           </item>
           <item row="1" column="2">
-           <widget class="QDoubleSpinBox" name="point2_y_box"/>
-          </item>
-          <item row="1" column="3">
-           <widget class="QDoubleSpinBox" name="point2_z_box"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="point3_x_box"/>
-          </item>
-          <item row="2" column="2">
-           <widget class="QDoubleSpinBox" name="point3_y_box"/>
+           <widget class="QDoubleSpinBox" name="point2_y_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-6.425000000000000</double>
+            </property>
+           </widget>
           </item>
           <item row="2" column="3">
-           <widget class="QDoubleSpinBox" name="point3_z_box"/>
+           <widget class="QDoubleSpinBox" name="point3_z_box">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-6.450000000000000</double>
+            </property>
+           </widget>
           </item>
-          <item row="0" column="3">
-           <widget class="QDoubleSpinBox" name="point1_z_box"/>
+          <item row="1" column="4">
+           <widget class="QPushButton" name="Run_calib_plate_button_3">
+            <property name="text">
+             <string>RUN</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

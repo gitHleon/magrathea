@@ -181,16 +181,20 @@ void Focus_finder::find_focus(double &focus_height)
                 StdDev_MAX = StdDev_t;
                 Z_MAX = z_from_outside;
             }
-            qInfo("i : %i ; z_step : %3.4f ; z : %3.4f ; stddev : %5.5f ; z max : %3.4f ; stddev_MAX: %5.5f",
-                  i,z_step,z_from_outside,StdDev_t,Z_MAX,StdDev_MAX);
+            //qInfo("i : %i ; z_step : %3.4f ; z : %3.4f ; stddev : %5.5f ; z max : %3.4f ; stddev_MAX: %5.5f",
+              //    i,z_step,z_from_outside,StdDev_t,Z_MAX,StdDev_MAX);
             //            if(Iterations==(j-1)){
             //                //this has to be the last iteration
             //                x[i] = z_from_outside;
             //                y[i] = StdDev_t;
             //            }
         }// for 6
-        z_step = 0.5 * z_step;
-        gantry->moveZTo(Z_MAX,1.);//add safety control
+        z_step = 0.3 * z_step;
+        if(z_pos_index==2)
+            gantry->moveZTo(Z_MAX,1.);//add safety control
+        else if(z_pos_index ==4)
+            gantry->moveZ_2_To(Z_MAX,1.);
+
         focus_height = Z_MAX;
     }
 
