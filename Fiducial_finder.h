@@ -27,7 +27,7 @@ public slots:
     void SetImage(const std::string& filename, int flags);
     void SetImageFiducial(const std::string& filename, int flags);
     bool IsImageEmpty();
-    void Find_circles(double &X_distance, double &Y_distance);
+    bool Find_circles(double &X_distance, double &Y_distance,const int &temp_input, const int &temp_input_2);
     bool Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance,
                 const int &temp_input, const int &temp_input_2, std::string &timestamp, int dummy_temp,
                 cv::Mat &transform_out);

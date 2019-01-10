@@ -110,6 +110,7 @@ public slots:
     virtual bool validate_target_pos_y(double val);
     virtual bool validate_target_pos_z_1(double val);
     virtual bool validate_target_pos_z_2(double val);
+    virtual bool SetLimitsController();
 
 signals:
 
@@ -131,14 +132,14 @@ private:
     double default_speed         = 15;
     double default_angular_speed = 10;
 
-    double x_min = -400.0;
-    double x_max =  400.0;
-    double y_min = -400.0;
-    double y_max =  400.0;
-    double z_1_min =  -80.0;
-    double z_1_max =  100.0;
-    double z_2_min =  -80.0;
-    double z_2_max =  100.0;
+    double x_min = -200.0;
+    double x_max =  200.0;
+    double y_min = -200.0;
+    double y_max =  200.0;
+    double z_1_min =  -20.0;
+    double z_1_max =  90.0;
+    double z_2_min =  -20.0;
+    double z_2_max =  90.0;
 
 //    A3200Handle gantry;
 

@@ -322,7 +322,7 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
-    std::vector <double> pos_t = mMotionHandler->whereAmI(1);
+    std::vector <double> pos_t = mMotionHandler->whereAmI(0);
 
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
     ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
@@ -355,6 +355,19 @@ void Magrathea::updatePosition(){
     current =  mMotionHandler->getUAxisState();
     led_label(ui->label_16, current);
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
+    //reading fault state for each axis
+
+    int fault_state = 1;
+
+    unsigned int temp1 = (5 >> fault_state) & 1;//Software Right Limit
+    unsigned int temp2 = (6 >> fault_state) & 1;//Software Left  Limit
+    bool axis_fault = (temp1 == 1 || temp2 == 1);
+    ui->label_15->setText((axis_fault ? "Out of Env" : "Good"));
+    if(axis_fault){
+        ui->label_15->setStyleSheet("QLabel { background-color : red; color : black; }");
+    }else{
+        ui->label_15->setStyleSheet("QLabel { background-color : green; color : white; }");
+    }
     return;
 }
 
@@ -757,7 +770,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
             bool bSuccess = cap.read(mat_from_camera);
             if (!bSuccess){ //if not success
                 qInfo("Cannot read a frame from video stream");
-                return;
+                return false;
             }
             Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
             Ffinder->SetImage(mat_from_camera);
@@ -785,7 +798,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
     else {
         qInfo("Fiducial fail");
-        return;
+        return false;
     }
     std::vector <double> pos_t = mMotionHandler->whereAmI(1); //get gantry position
     std::string file_name = ((input==0) ? "output_temp.txt" : "output_good.txt");
@@ -821,7 +834,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     F_point.push_back(-distance_y*0.001);
     F_point.push_back(distance_x*0.001);
 
-    return;
+    return true;
 }
 
 //------------------------------------------
@@ -1298,13 +1311,15 @@ void Magrathea::destroy_all(){
 }
 
 void Magrathea::loop_test(){
+
+    mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically on a series of pictures
-    for(int i=0;i<119;i++){//set appropriate value of the loop limit
-        std::cout<<"It "<<i<<std::endl;
-        ui->spinBox_input->setValue(i);
-        std::vector <double> dummy;
-        FiducialFinderCaller(2,dummy);
-    }
+//    for(int i=0;i<119;i++){//set appropriate value of the loop limit
+//        std::cout<<"It "<<i<<std::endl;
+//        ui->spinBox_input->setValue(i);
+//        std::vector <double> dummy;
+//        FiducialFinderCaller(2,dummy);
+//    }
 }
 
 void Magrathea::Aruco_test(){

@@ -342,6 +342,39 @@ bool ACSCMotionHandler::disableUAxis()
 }
 
 //******************************************
+// Set Limits
+bool ACSCMotionHandler::SetLimitsController()
+{
+//setting limits in the controller, the machine will stop if it gets outside of these boundries
+//See Commmand and Variable Reference Guide for more info
+    std::string temp = "SLLIMIT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&x_min,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&y_min,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&z_1_min,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&z_2_min,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+
+    std::string temp2 = "SRLIMIT";
+    char * tab2 = new char [temp2.length()+1];
+    strcpy (tab2, temp2.c_str());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&x_max,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&y_max,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&z_1_max,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&z_2_max,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+
+    return true;
+}
+
+//******************************************
 // home axes
 
 //------------------------------------------

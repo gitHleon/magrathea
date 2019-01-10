@@ -272,6 +272,13 @@ bool MotionHandler::disableUAxis()
 }
 
 //******************************************
+// Set Limits
+bool MotionHandler::SetLimitsController()
+{
+qInfo("setting limits in the controller, the machine should stop if it gets outside of these boundries");
+    return true;
+}
+//******************************************
 //Get Axis states
 //------------------------------------------
 bool MotionHandler::getXAxisState(){
