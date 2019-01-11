@@ -137,13 +137,13 @@ private:
     double default_speed         = 15;
     double default_angular_speed = 10;
 
-    double x_min = -200.0;
-    double x_max =  200.0;
-    double y_min = -200.0;
-    double y_max =  200.0;
-    double z_1_min =  -20.0;
+    double x_min = -500.0;
+    double x_max =  500.0;
+    double y_min = -500.0;
+    double y_max =  500.0;
+    double z_1_min =  -90.0;
     double z_1_max =  90.0;
-    double z_2_min =  -20.0;
+    double z_2_min =  -70.0;
     double z_2_max =  90.0;
 
 //    A3200Handle gantry;

@@ -1258,13 +1258,6 @@
             <item row="1" column="2">
              <widget class="QDoubleSpinBox" name="xAxisPositionMoveDoubleSpinBox"/>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>TextLabel</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
              <widget class="QPushButton" name="EnableButton_X">
               <property name="text">
@@ -1287,6 +1280,16 @@
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLabel" name="label_9">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -1459,13 +1462,6 @@
             <item row="1" column="2">
              <widget class="QDoubleSpinBox" name="zAxisPositionMoveDoubleSpinBox"/>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_13">
-              <property name="text">
-               <string>TextLabel</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
              <widget class="QPushButton" name="EnableButton_Z">
               <property name="text">
@@ -1488,6 +1484,16 @@
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLabel" name="label_13">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -1657,13 +1663,6 @@
               </property>
              </spacer>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>TextLabel</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
              <widget class="QPushButton" name="EnableButton_Y">
               <property name="text">
@@ -1686,6 +1685,16 @@
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLabel" name="label_11">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -1858,13 +1867,6 @@
             <item row="1" column="2">
              <widget class="QDoubleSpinBox" name="uAxisPositionMoveDoubleSpinBox"/>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_17">
-              <property name="text">
-               <string>TextLabel</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
              <widget class="QPushButton" name="EnableButton_U">
               <property name="text">
@@ -1887,6 +1889,16 @@
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLabel" name="label_17">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -2030,13 +2042,6 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_15">
-              <property name="text">
-               <string>TextLabel</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
              <widget class="QPushButton" name="EnableButton_Z_2">
               <property name="text">
@@ -2053,6 +2058,16 @@
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLabel" name="label_15">
               <property name="text">
                <string>TextLabel</string>
               </property>

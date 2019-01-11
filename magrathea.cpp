@@ -357,10 +357,14 @@ void Magrathea::updatePosition(){
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
     //reading fault state for each axis
 
-    int fault_state = mMotionHandler->GetfaultSateXAxis();
-    unsigned int temp1 = (5 >> fault_state) & 1;//Software Right Limit
-    unsigned int temp2 = (6 >> fault_state) & 1;//Software Left  Limit
-    bool axis_fault = (temp1 == 1 || temp2 == 1);
+    unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
+    unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
+    //GETMASK(index, size) (((1 << (size)) - 1) << (index))
+    //READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
+    unsigned int fault_state = mMotionHandler->GetfaultSateXAxis();
+    unsigned int temp1 = (fault_state & mask1) >> 5;//Software Right Limit
+    unsigned int temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
+    bool axis_fault = (temp1 || temp2 );
     ui->label_9->setText((axis_fault ? "Out of Env" : "Good"));
     if(axis_fault)
         ui->label_9->setStyleSheet("QLabel { background-color : red; color : black; }");
@@ -368,8 +372,8 @@ void Magrathea::updatePosition(){
         ui->label_9->setStyleSheet("QLabel { background-color : green; color : white; }");
 
     fault_state = mMotionHandler->GetfaultSateYAxis();
-    temp1 = (5 >> fault_state) & 1;//Software Right Limit
-    temp2 = (6 >> fault_state) & 1;//Software Left  Limit
+    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
+    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
      axis_fault = (temp1 == 1 || temp2 == 1);
     ui->label_11->setText((axis_fault ? "Out of Env" : "Good"));
     if(axis_fault)
@@ -378,8 +382,8 @@ void Magrathea::updatePosition(){
         ui->label_11->setStyleSheet("QLabel { background-color : green; color : white; }");
 
     fault_state = mMotionHandler->GetfaultSateZ1Axis();
-    temp1 = (5 >> fault_state) & 1;//Software Right Limit
-    temp2 = (6 >> fault_state) & 1;//Software Left  Limit
+    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
+    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
      axis_fault = (temp1 == 1 || temp2 == 1);
     ui->label_13->setText((axis_fault ? "Out of Env" : "Good"));
     if(axis_fault)
@@ -388,14 +392,17 @@ void Magrathea::updatePosition(){
         ui->label_13->setStyleSheet("QLabel { background-color : green; color : white; }");
 
     fault_state = mMotionHandler->GetfaultSateZ2Axis();
-    temp1 = (5 >> fault_state) & 1;//Software Right Limit
-    temp2 = (6 >> fault_state) & 1;//Software Left  Limit
+    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
+    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
      axis_fault = (temp1 == 1 || temp2 == 1);
     ui->label_15->setText((axis_fault ? "Out of Env" : "Good"));
     if(axis_fault)
         ui->label_15->setStyleSheet("QLabel { background-color : red; color : black; }");
     else
         ui->label_15->setStyleSheet("QLabel { background-color : green; color : white; }");
+
+    ui->label_17->setText("Always good");
+    ui->label_17->setStyleSheet("QLabel { background-color : yellow; color : black; }");
 
     return;
 }
@@ -807,8 +814,10 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
 
         cv::Mat output_H;
-        success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
-                                   ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/,output_H);
+        //success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
+        //                           ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/,output_H);
+
+        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
 
         double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
         double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];

@@ -133,7 +133,7 @@ void Focus_finder::eval_stddev_ROI(const cv::Mat &input_image, std::vector<doubl
 
 void Focus_finder::find_focus(double &focus_height)
 {
-    const int figure_index = 0;
+    const int figure_index = 1;
     //Function that return the focus z coordinate
     //https://rechneronline.de/function-graphs/
     //http://doc.qt.io/qt-4.8/signalsandslots.html
@@ -147,7 +147,7 @@ void Focus_finder::find_focus(double &focus_height)
     }
     qInfo("----------------  Auto-focus start -----------------");
     cv::Mat mat_from_outside;
-    double z_step = 0.05;// mm //to be changed according the units of your gantry and shape of focus-height distribution
+    double z_step = 0.02;// mm //to be changed according the units of your gantry and shape of focus-height distribution
     double z_from_outside;
 
     double StdDev_MAX = 1.1;
