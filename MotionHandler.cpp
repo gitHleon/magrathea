@@ -278,6 +278,36 @@ bool MotionHandler::SetLimitsController()
 qInfo("setting limits in the controller, the machine should stop if it gets outside of these boundries");
     return true;
 }
+
+bool MotionHandler::GetLimitsController(std::vector <double> & limits){
+    std::vector <double> output;
+    output.clear();
+    output.push_back(4321.9);
+    limits = output;
+    return true;
+};
+
+
+int  MotionHandler::GetfaultSateXAxis(){
+ qInfo("Info on X axis.");
+ return 1;
+};
+
+int  MotionHandler::GetfaultSateYAxis(){
+ qInfo("Info on Y axis.");
+ return 1;
+};
+
+int  MotionHandler::GetfaultSateZ1Axis(){
+ qInfo("Info on Z1 axis.");
+ return 1;
+};
+
+int  MotionHandler::GetfaultSateZ2Axis(){
+ qInfo("Info on Z2 axis.");
+ return 1;
+};
+
 //******************************************
 //Get Axis states
 //------------------------------------------
@@ -699,6 +729,47 @@ std::vector<double> MotionHandler::whereAmI(int ific_value) {
 
 //******************************************
 // Safety limits for movement
+//******************************************
+// Safety limits for movement
+bool MotionHandler::validate_target_pos_x(double val){
+    if(val < x_min || val > x_max){
+        qWarning("ERROR!! Target X position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool MotionHandler::validate_target_pos_y(double val){
+    if(val < y_min || val > y_max){
+        qWarning("ERROR!! Target Y position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
+}
+
+bool MotionHandler::validate_target_pos_z_1(double val){
+    if(val < z_1_min || val > z_1_max){
+        qWarning("ERROR!! Target Z1 position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
+}
+
+bool MotionHandler::validate_target_pos_z_2(double val){
+    if(val < z_2_min || val > z_2_max){
+        qWarning("ERROR!! Target Z2 position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
+}
+
 bool MotionHandler::validate_target_pos(double x, double y, double z, double z_2)
 {
     qInfo("checking if target position is safe");

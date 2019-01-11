@@ -102,7 +102,16 @@ public slots:
     //******************************************
     // Safety limits for movement
     virtual bool validate_target_pos(double x, double y, double z, double z_2=0);
+    virtual bool validate_target_pos_x(double val);
+    virtual bool validate_target_pos_y(double val);
+    virtual bool validate_target_pos_z_1(double val);
+    virtual bool validate_target_pos_z_2(double val);
     virtual bool SetLimitsController();
+    virtual bool GetLimitsController(std::vector <double> & limits);
+    virtual int  GetfaultSateXAxis();
+    virtual int  GetfaultSateYAxis();
+    virtual int  GetfaultSateZ1Axis();
+    virtual int  GetfaultSateZ2Axis();
     //******************************************
     // default speeds
     // NOTE default unit is mm/s
@@ -116,4 +125,14 @@ public slots:
     virtual void SetSpeedZ(double speed=std::numeric_limits<double>::quiet_NaN());
     virtual void SetSpeedU(double speed=std::numeric_limits<double>::quiet_NaN());
     */
+private :
+    double x_min = -200.0;
+    double x_max =  200.0;
+    double y_min = -200.0;
+    double y_max =  200.0;
+    double z_1_min =  -20.0;
+    double z_1_max =  90.0;
+    double z_2_min =  -20.0;
+    double z_2_max =  90.0;
+
 };

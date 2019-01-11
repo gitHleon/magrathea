@@ -111,6 +111,11 @@ public slots:
     virtual bool validate_target_pos_z_1(double val);
     virtual bool validate_target_pos_z_2(double val);
     virtual bool SetLimitsController();
+    virtual bool GetLimitsController(std::vector <double> & limits);
+    virtual int  GetfaultSateXAxis();
+    virtual int  GetfaultSateYAxis();
+    virtual int  GetfaultSateZ1Axis();
+    virtual int  GetfaultSateZ2Axis();
 
 signals:
 

@@ -357,17 +357,46 @@ void Magrathea::updatePosition(){
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
     //reading fault state for each axis
 
-    int fault_state = 1;
-
+    int fault_state = mMotionHandler->GetfaultSateXAxis();
     unsigned int temp1 = (5 >> fault_state) & 1;//Software Right Limit
     unsigned int temp2 = (6 >> fault_state) & 1;//Software Left  Limit
     bool axis_fault = (temp1 == 1 || temp2 == 1);
+    ui->label_9->setText((axis_fault ? "Out of Env" : "Good"));
+    if(axis_fault)
+        ui->label_9->setStyleSheet("QLabel { background-color : red; color : black; }");
+    else
+        ui->label_9->setStyleSheet("QLabel { background-color : green; color : white; }");
+
+    fault_state = mMotionHandler->GetfaultSateYAxis();
+    temp1 = (5 >> fault_state) & 1;//Software Right Limit
+    temp2 = (6 >> fault_state) & 1;//Software Left  Limit
+     axis_fault = (temp1 == 1 || temp2 == 1);
+    ui->label_11->setText((axis_fault ? "Out of Env" : "Good"));
+    if(axis_fault)
+        ui->label_11->setStyleSheet("QLabel { background-color : red; color : black; }");
+    else
+        ui->label_11->setStyleSheet("QLabel { background-color : green; color : white; }");
+
+    fault_state = mMotionHandler->GetfaultSateZ1Axis();
+    temp1 = (5 >> fault_state) & 1;//Software Right Limit
+    temp2 = (6 >> fault_state) & 1;//Software Left  Limit
+     axis_fault = (temp1 == 1 || temp2 == 1);
+    ui->label_13->setText((axis_fault ? "Out of Env" : "Good"));
+    if(axis_fault)
+        ui->label_13->setStyleSheet("QLabel { background-color : red; color : black; }");
+    else
+        ui->label_13->setStyleSheet("QLabel { background-color : green; color : white; }");
+
+    fault_state = mMotionHandler->GetfaultSateZ2Axis();
+    temp1 = (5 >> fault_state) & 1;//Software Right Limit
+    temp2 = (6 >> fault_state) & 1;//Software Left  Limit
+     axis_fault = (temp1 == 1 || temp2 == 1);
     ui->label_15->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault){
+    if(axis_fault)
         ui->label_15->setStyleSheet("QLabel { background-color : red; color : black; }");
-    }else{
+    else
         ui->label_15->setStyleSheet("QLabel { background-color : green; color : white; }");
-    }
+
     return;
 }
 

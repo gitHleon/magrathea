@@ -351,28 +351,105 @@ bool ACSCMotionHandler::SetLimitsController()
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&x_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        qWarning("Error get position X axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&y_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        qWarning("Error get position Y axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&z_1_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&z_2_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
 
     std::string temp2 = "SRLIMIT";
     char * tab2 = new char [temp2.length()+1];
     strcpy (tab2, temp2.c_str());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&x_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        qWarning("Error get position X axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&y_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        qWarning("Error get position Y axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&z_1_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
+        qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&z_2_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position U axis: %d ",acsc_GetLastError());
-
+        qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
     return true;
 }
+
+bool ACSCMotionHandler::GetLimitsController(std::vector <double> & limits){
+    std::string temp = "SLLIMIT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    std::vector <double> output;
+    output.clear();
+    double output_temp = 0.0;
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position X axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position Y axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+
+    std::string temp2 = "SRLIMIT";
+    char * tab2 = new char [temp2.length()+1];
+    strcpy (tab2, temp2.c_str());
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position X axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position Y axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&output_temp,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
+    output.push_back(output_temp);
+    return true;
+};
+
+int ACSCMotionHandler::GetfaultSateXAxis(){
+    std::string temp = "FAULT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    int fault_state = 1;
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get fault X axis: %d ",acsc_GetLastError());
+    return fault_state;
+};
+
+int ACSCMotionHandler::GetfaultSateYAxis(){
+    std::string temp = "FAULT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    int fault_state = 1;
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get fault Y axis: %d ",acsc_GetLastError());
+    return fault_state;
+};
+
+int ACSCMotionHandler::GetfaultSateZ1Axis(){
+    std::string temp = "FAULT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    int fault_state = 1;
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get fault Z1 axis: %d ",acsc_GetLastError());
+    return fault_state;
+};
+
+int ACSCMotionHandler::GetfaultSateZ2Axis(){
+    std::string temp = "FAULT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    int fault_state = 1;
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get fault Z2 axis: %d ",acsc_GetLastError());
+    return fault_state;
+};
 
 //******************************************
 // home axes
