@@ -352,7 +352,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
 
         if(debug)
             cv::imshow("f. 0 image",image);
-        const int window_size = ( (image.cols > 2000 && image.rows > 2000) ? 1500 : 420);
+        const int window_size = ( (image.cols > 2700 && image.rows > 2700) ? 2700 : 420);
         const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");

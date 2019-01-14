@@ -251,6 +251,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->std_dev_button  ,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->std_dev_many_button,SIGNAL(clicked(bool)), this, SLOT(focusButtonClicked()));
     connect(ui->Fiducial_finder_button,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_Clicked()));
+    connect(ui->Circles_button,SIGNAL(clicked(bool)), this, SLOT(Circles_button_Clicked()));
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
@@ -717,6 +718,10 @@ void Magrathea::Fiducial_finder_button_Clicked()
 {   std::vector <double> dummy;
     FiducialFinderCaller(0,dummy); }
 
+void Magrathea::Circles_button_Clicked()
+{   std::vector <double> dummy;
+    FiducialFinderCaller(2,dummy); }
+
 bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point){
 
     bool debug = false;
@@ -780,56 +785,58 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         address + "placa_fid_F.jpg",
         address + "placa_fid_test3_dotsandcrosses.jpg"
     };
+
+
+
+
+
+    if(input == 0 || input == 1){
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
             ,CV_LOAD_IMAGE_COLOR);
 
     std::string tmp_filename = "";
     bool success = false;
-    bool invalid_match = true;
-    int ii = 0;
-    while(invalid_match){
 
-        if(from_file){
-            //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_defectos/Todas/Atlas_G/";
-            //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/Atlas_F/";
-            std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Gantry_camera_test_fiducials/F_standard_7_3/";
-            std::string Images[] = {
-                "0_0_163525.jpg"
-                //"chip_1_1_pos_1.TIF"
-            };
+    if(from_file){
+        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Gantry_camera_test_fiducials/F_standard_7_3/";
+        std::string Images[] = {
+            "0_0_163525.jpg"
+            //"chip_1_1_pos_1.TIF"
+        };
 
-            tmp_filename = Images[ui->spinBox_input->value()];
-            Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
-                    ,CV_LOAD_IMAGE_COLOR);
-            Ffinder->Set_calibration(1); //get calibration from a private variable
-        }else{
-            bool bSuccess = cap.read(mat_from_camera);
-            if (!bSuccess){ //if not success
-                qInfo("Cannot read a frame from video stream");
-                return false;
-            }
-            Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
-            Ffinder->SetImage(mat_from_camera);
+        tmp_filename = Images[ui->spinBox_input->value()];
+        Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
+                ,CV_LOAD_IMAGE_COLOR);
+        Ffinder->Set_calibration(1); //get calibration from a private variable
+    }else{
+        bool bSuccess = cap.read(mat_from_camera);
+        if (!bSuccess){ //if not success
+            qInfo("Cannot read a frame from video stream");
+            return false;
         }
-        qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
+        Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
+        Ffinder->SetImage(mat_from_camera);
+    }
+    qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
 
-        cv::Mat output_H;
-        //success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
-        //                           ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/,output_H);
-
+    if(input==1 || input == 0){
+        bool invalid_match = true;
+        int ii = 0;
+        while(invalid_match){
+            cv::Mat output_H;
+            success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
+                                      ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/,output_H);
+            double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
+            double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
+            if( ( fabs(H_1_1/H_1_2) < 0.26 ) && (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 1.05 && sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 0.95) )
+                invalid_match = false;
+            ii++;
+            if(ii> 4)
+                invalid_match = false;
+            std::cout<<" ii "<<ii<<" ;invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
+        }//while invalid match
+    } else if(input == 2){
         success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
-
-        double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
-        double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-
-
-        if( ( fabs(H_1_1/H_1_2) < 0.26 ) && (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 1.05 && sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 0.95) )
-            invalid_match = false;
-        ii++;
-        if(ii> 4)
-            invalid_match = false;
-
-        std::cout<<" ii "<<ii<<" ;invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
     }
 
     if(success)
@@ -860,8 +867,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<std::endl;
     ofs.close();
     //    if(input == 0){
-//    mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
-//    mMotionHandler->moveYBy(distance_x*0.001,1);
+    //    mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
+    //    mMotionHandler->moveYBy(distance_x*0.001,1);
     //    }
 #else
     ofs << std::endl;
