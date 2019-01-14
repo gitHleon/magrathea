@@ -408,10 +408,10 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
 
             //Size of dot: diameter = 20 um
             //double Calibration; //[px/um]
-            int min_radius = 14*0.5*Calibration; //[px]
-            int max_radius = 33*0.5*Calibration; //[px]
+            int min_radius = 14*0.5*Calibration; //[px] //14
+            int max_radius = 33*0.5*Calibration; //[px] //33
             int minDist = min_radius*4; //[px]
-            int hough_threshold = min_radius*0.9; //[px]
+            int hough_threshold = min_radius*0.19; //[px] 36
             if(debug)
                 std::cout<<">> calibration "<<Calibration<<std::endl;
             std::vector<cv::Vec3f> circles;
@@ -424,7 +424,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             //                cv::imshow("contrast",image_gray);
             //        }
 
-        cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius ); //image_gray
+        cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius); //image_gray
         if(debug)
             std::cout<<">> circles "<<circles.size()<<std::endl;
         std::vector <cv::Point> Centers (circles.size());
@@ -469,7 +469,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         }
 
         if(debug)
-            cv::imshow("3 Results",RoiImage);
+            cv::imshow("3 Results",RoiImage_out);
         std::string dummy = std::to_string(iterations);
         std::string s     = std::to_string(temp_input);
         std::string chip  = std::to_string(temp_input_2);

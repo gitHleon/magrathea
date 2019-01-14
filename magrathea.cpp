@@ -786,11 +786,6 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         address + "placa_fid_test3_dotsandcrosses.jpg"
     };
 
-
-
-
-
-    if(input == 0 || input == 1){
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
             ,CV_LOAD_IMAGE_COLOR);
 
@@ -852,7 +847,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
     ofs << timestamp<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename;//<<" "<<
-           //distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<" "<<pos_t[2];
+    //distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<" "<<pos_t[2];
     delete Ffinder;
     cap.release();         //Going back to QCameraa
     if(input!=1)
@@ -880,7 +875,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     F_point.push_back(distance_x*0.001);
 
     return true;
-}
+    }
 
 //------------------------------------------
 //Move and capture
