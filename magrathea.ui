@@ -512,15 +512,159 @@
           <rect>
            <x>10</x>
            <y>0</y>
-           <width>639</width>
+           <width>703</width>
            <height>198</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
+          <item row="1" column="4">
+           <widget class="QPushButton" name="std_dev_many_button">
+            <property name="text">
+             <string>std dev many</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="ArucospinBox">
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QPushButton" name="cap_and_move_button">
+            <property name="text">
+             <string>Capture and move</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="4">
+           <widget class="QPushButton" name="color_button">
+            <property name="text">
+             <string>color</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Y move [mm]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="5">
+           <widget class="QSpinBox" name="spinBox_input">
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QPushButton" name="f_loop_button">
+            <property name="text">
+             <string>fid finder loop</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLineEdit" name="Calib_value_lineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Algorithm</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Fiducial</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QPushButton" name="std_dev_button">
+            <property name="text">
+             <string>std dev</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="5">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>filter size</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="Calib_button">
+            <property name="text">
+             <string>Calibrate px/um</string>
+            </property>
+           </widget>
+          </item>
           <item row="4" column="4">
            <widget class="QPushButton" name="VignetteButton">
             <property name="text">
              <string>Vignette</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="4">
+           <widget class="QDoubleSpinBox" name="y_fid_move_SpinBox">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-1.990000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>1.990000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="6">
+           <widget class="QSpinBox" name="filter_spinBox">
+            <property name="maximum">
+             <number>200</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="3">
+           <widget class="QSpinBox" name="algorithm_box">
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>5</number>
+            </property>
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QCheckBox" name="calib_from_file_Box">
+            <property name="text">
+             <string>Calibration from file</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Image</string>
             </property>
            </widget>
           </item>
@@ -540,12 +684,8 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="pushButton_dummy">
-            <property name="text">
-             <string>Camera test</string>
-            </property>
-           </widget>
+          <item row="2" column="3">
+           <widget class="QSpinBox" name="chip_number_spinBox"/>
           </item>
           <item row="3" column="3">
            <widget class="QSpinBox" name="spinBox_input_F">
@@ -557,13 +697,6 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="4">
-           <widget class="QPushButton" name="color_button">
-            <property name="text">
-             <string>color</string>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="0">
            <widget class="QPushButton" name="F_fid_gen_button">
             <property name="text">
@@ -571,52 +704,45 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="2">
-           <widget class="QPushButton" name="f_loop_button">
+          <item row="0" column="6">
+           <widget class="QPushButton" name="DelLogButton">
             <property name="text">
-             <string>fid finder loop</string>
+             <string>Del Log</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="QLineEdit" name="Calib_value_lineEdit">
-            <property name="readOnly">
-             <bool>true</bool>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="pushButton_dummy">
+            <property name="text">
+             <string>Camera test</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="2">
-           <widget class="QLabel" name="label_7">
+          <item row="6" column="1">
+           <widget class="QLabel" name="label_19">
             <property name="text">
-             <string>Fiducial</string>
+             <string>X move [mm]</string>
             </property>
            </widget>
           </item>
-          <item row="4" column="2">
-           <widget class="QLabel" name="label_18">
+          <item row="5" column="6">
+           <widget class="QPushButton" name="focusalgotest_pushButton">
             <property name="text">
-             <string>Algorithm</string>
+             <string>Focus algo test</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QPushButton" name="Fiducial_finder_button">
+          <item row="2" column="1">
+           <widget class="QPushButton" name="Circles_button">
             <property name="text">
-             <string>Fid Finder</string>
+             <string>Circles finder</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="4">
-           <widget class="QPushButton" name="std_dev_button">
+          <item row="4" column="0">
+           <widget class="QPushButton" name="ArucoButton">
             <property name="text">
-             <string>std dev</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QPushButton" name="cap_and_move_button">
-            <property name="text">
-             <string>Capture and move</string>
+             <string>Aruco button</string>
             </property>
            </widget>
           </item>
@@ -633,141 +759,12 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
-           <widget class="QPushButton" name="ArucoButton">
+          <item row="3" column="1">
+           <widget class="QPushButton" name="Fiducial_finder_button">
             <property name="text">
-             <string>Aruco button</string>
+             <string>Fid Finder</string>
             </property>
            </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="spinBox_dummy"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="Calib_button">
-            <property name="text">
-             <string>Calibrate px/um</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <widget class="QPushButton" name="std_dev_many_button">
-            <property name="text">
-             <string>std dev many</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QSpinBox" name="ArucospinBox">
-            <property name="maximum">
-             <number>999999</number>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="4">
-           <widget class="QDoubleSpinBox" name="y_fid_move_SpinBox">
-            <property name="decimals">
-             <number>3</number>
-            </property>
-            <property name="minimum">
-             <double>-1.990000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>1.990000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="label_19">
-            <property name="text">
-             <string>X move [mm]</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="3">
-           <widget class="QLabel" name="label_20">
-            <property name="text">
-             <string>Y move [mm]</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QCheckBox" name="calib_from_file_Box">
-            <property name="text">
-             <string>Calibration from file</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="3">
-           <widget class="QSpinBox" name="algorithm_box">
-            <property name="minimum">
-             <number>0</number>
-            </property>
-            <property name="maximum">
-             <number>5</number>
-            </property>
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="6">
-           <widget class="QPushButton" name="DelLogButton">
-            <property name="text">
-             <string>Del Log</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="6">
-           <widget class="QPushButton" name="destroy_Button">
-            <property name="text">
-             <string>destroy!!</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="6">
-           <widget class="QSpinBox" name="filter_spinBox">
-            <property name="maximum">
-             <number>200</number>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="5">
-           <widget class="QLabel" name="label_22">
-            <property name="text">
-             <string>filter size</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="6">
-           <widget class="QPushButton" name="focusalgotest_pushButton">
-            <property name="text">
-             <string>Focus algo test</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="5">
-           <widget class="QSpinBox" name="spinBox_input">
-            <property name="maximum">
-             <number>99999</number>
-            </property>
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="4">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Image</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
-           <widget class="QSpinBox" name="chip_number_spinBox"/>
           </item>
           <item row="2" column="2">
            <widget class="QLabel" name="label_21">
@@ -776,17 +773,30 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="6">
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="spinBox_dummy"/>
+          </item>
+          <item row="1" column="6">
+           <widget class="QPushButton" name="destroy_Button">
+            <property name="text">
+             <string>destroy!!</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="7">
            <widget class="QPushButton" name="Run_calib_plate_button">
             <property name="text">
              <string>RUN</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QPushButton" name="Circles_button">
+          <item row="2" column="7">
+           <widget class="QSpinBox" name="spinBox_plate_position"/>
+          </item>
+          <item row="2" column="6">
+           <widget class="QLabel" name="label_26">
             <property name="text">
-             <string>Circles finder</string>
+             <string>Plate position</string>
             </property>
            </widget>
           </item>

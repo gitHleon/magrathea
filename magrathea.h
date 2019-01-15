@@ -43,7 +43,7 @@ private slots:
 
     //camera
     void enableCameraBoxClicked(bool checked);
-    void focusButtonClicked();
+    bool focusButtonClicked();
     void captureButtonClicked();
     void calibrationCaller(int input);
     void Calibration_ButtonClicked();
@@ -75,7 +75,7 @@ private slots:
     void loop_test();
     void createTemplate_F();
     void capture_fid_and_move();
-    void calibration_plate_measure();
+    bool calibration_plate_measure();
 
 private:
     Ui::Magrathea *ui;

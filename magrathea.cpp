@@ -517,7 +517,7 @@ void Magrathea::FocusAlgoTest_Func(){
   delete FocusFinder;
 }
 
-void Magrathea::focusButtonClicked()
+bool Magrathea::focusButtonClicked()
 {
     qInfo(" > camera focus ... ");
     QElapsedTimer timer;
@@ -529,7 +529,7 @@ void Magrathea::focusButtonClicked()
     if (!cap.isOpened()){
         //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-        return;}
+        return false;}
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
@@ -556,7 +556,7 @@ void Magrathea::focusButtonClicked()
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
             qInfo("Cannot read a frame from video stream");
-            return;
+            return false;
         }
         std::vector<double> figures_of_merit;
         FocusFinder->eval_stddev_ROI(mat_from_camera,figures_of_merit);
@@ -575,7 +575,7 @@ void Magrathea::focusButtonClicked()
     //Going back to QCameraa
     //mCamera->start();
 
-    return;
+    return true;
 }
 
 //------------------------------------------
@@ -1403,137 +1403,138 @@ void Magrathea::createTemplate_F(){
     cv::imshow("fiducial E",fiducial_2);
 }
 
-
-
-void Magrathea::calibration_plate_measure(){
-
-    cv::destroyAllWindows();
-    mCamera->stop(); //closing QCamera
-
-    focusButtonClicked();
-    mMotionHandler->moveXBy(0.002,1);
-    mMotionHandler->moveYBy(0.002,1);
-    //opening camera with opencv
-    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-    if (!cap.isOpened()){
-        //Opening opencv-camera, needed for easier image manipulation
-        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-        return;}
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-
-    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cv::Mat mat_from_camera;
-    bool bSuccess = cap.read(mat_from_camera);
-    if (!bSuccess){ //if not success
-        qInfo("Cannot read a frame from video stream");
-        return;
-    }
-
-    std::vector< std::vector<double> > points;
-    std::vector< std::vector<double> > PRF_points;
-    std::vector<double> temp_v;
-
-    double angle = 0.;
-
-
-    std::vector<double> distances_1;
-    std::vector<double> distances_2;
-
-
-
-    //FiducialFinderCaller(1,distances_1);
-    //FiducialFinderCaller(1,distances_2);
-    //std::cout<<"Delta X dist1 : "<<fabs(distances_1[0]-distances_2[0])<<std::endl;
-    //std::cout<<"Delta Y dist1 : "<<fabs(distances_1[1]-distances_2[1])<<std::endl;
-
-    //if(fabs(distances_1[0]-distances_2[0])>0.001 || (distances_1[1]-distances_2[1])>0.001){
-    //    qWarning("ERROR!! Fiducial fail!");
-    //    std::cout<<"ERROR!! Fiducial fail!"<<std::endl;
-    //    return;
-    //}
-
-
-    //temp_v.push_back((distances_1[0]+distances_2[0])*0.5+mMotionHandler->whereAmI(1).at(0));
-    //temp_v.push_back((distances_1[1]+distances_2[1])*0.5+mMotionHandler->whereAmI(1).at(1));
-    auto one   = std::to_string(ui->chip_number_spinBox->value());
-    auto two   = std::to_string(ui->spinBox_input->value());
-    std::string file_name = "placa_calib_PRF_"+one+".txt";
-    QTime now = QTime::currentTime();
-    QString time_now = now.toString("hhmmss");
-    std::string time_now_str = time_now.toLocal8Bit().constData();
-    int start_x = 15;
-    int start_y = 5;
-    cv::putText(mat_from_camera,time_now_str,cv::Point(start_x,mat_from_camera.rows-start_y), CV_FONT_HERSHEY_PLAIN,2,cv::Scalar(255,255,255),2);
-
-    std::ofstream ofs (file_name, std::ofstream::app);
-    ofs <<"PRF "<<" "<<time_now_str<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "
-       <<mMotionHandler->whereAmI(1).at(0)<<" "<<mMotionHandler->whereAmI(1).at(1)<<" "<<mMotionHandler->whereAmI(1).at(2)
-      <<std::endl;
-//    ofs <<"PRF "<<" "<<time_now_str<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "
-//       <<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)
-//      <<"   "<<fabs(distances_1[0]-distances_2[0])<<" "<<fabs(distances_1[1]-distances_2[1])
-//      <<std::endl;
-    ofs.close();
-
-    cv::imwrite("EXPORT/"+time_now_str+"_"+one+"_"+two+".jpg",mat_from_camera);
-    cap.release();
-    //Going back to QCameraa
-    mCamera->start();
-
-    //mMotionHandler->moveXTo(temp_v[0],1);//Y axis of camera goes opposite direction than X axis of the gantry
-    //mMotionHandler->moveYTo(temp_v[1],1);
-    std::cout<<"DONE!"<<std::endl;
-//    temp_v.push_back(mMotionHandler->whereAmI(1).at(2));
-//    PRF_points.push_back(temp_v);
-
-//    angle = atan((PRF_points[1][1]-PRF_points[0][1])/(PRF_points[1][0]-PRF_points[0][0]));
-
-//    mMotionHandler->moveTo(points[0][0],points[0][1],points[0][2],5.);
-
-//    double step_x = 15.;
-//    double step_y = -12.;
-
-//    for(int i=0;i<10;i++){//y
-//        for(int j=0;j<10;j++){//x
-//            std::vector<double> distances;
-//            distances.clear();
-//            temp_v.clear();
-//            double target_x = PRF_points[0][0] + step_x*j*cos(angle) + step_y*i*sin(angle);
-//            double target_y = PRF_points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
-//            mMotionHandler->moveXTo(target_x,2.);
-//            mMotionHandler->moveYTo(target_y,2.);
-//            Sleeper::msleep(1100);
-//            focusButtonClicked(); //add error check
-//            FiducialFinderCaller(1,distances);
-//            temp_v.push_back(distances[0]+mMotionHandler->whereAmI(1).at(0));
-//            temp_v.push_back(distances[1]+mMotionHandler->whereAmI(1).at(1));
-//            std::string file_name = "calibration_plate.txt";
-//            std::ofstream ofs (file_name, std::ofstream::app);
-//            ofs <<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)<<" "<<distances[0]<<" "<<distances[1]
-//               <<std::endl;
-//            ofs.close();
-//        }
-//    }
-
-}
-
-
-
-//void Magrathea::calibration_plate_measure(){
-
+//bool Magrathea::calibration_plate_measure_one_point(){
+//DEPRECATED
 //    cv::destroyAllWindows();
+//    mCamera->stop(); //closing QCamera
+
+//    focusButtonClicked();
+//    //opening camera with opencv
+//    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+//    if (!cap.isOpened()){
+//        //Opening opencv-camera, needed for easier image manipulation
+//        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+//        return false;}
+//    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+//    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+//    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+//    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+//    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+//    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+//    cap.set(CV_CAP_PROP_FPS, 4.0);
+//    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+//    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+//    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+//    cv::Mat mat_from_camera;
+//    bool bSuccess = cap.read(mat_from_camera);
+//    if (!bSuccess){ //if not success
+//        qInfo("Cannot read a frame from video stream");
+//        return false;
+//    }
 
 //    std::vector< std::vector<double> > points;
 //    std::vector< std::vector<double> > PRF_points;
 //    std::vector<double> temp_v;
+
+//    double angle = 0.;
+
+//    std::vector<double> distances_1;
+//    std::vector<double> distances_2;
+
+//    //FiducialFinderCaller(1,distances_1);
+//    //FiducialFinderCaller(1,distances_2);
+//    //std::cout<<"Delta X dist1 : "<<fabs(distances_1[0]-distances_2[0])<<std::endl;
+//    //std::cout<<"Delta Y dist1 : "<<fabs(distances_1[1]-distances_2[1])<<std::endl;
+
+//    //if(fabs(distances_1[0]-distances_2[0])>0.001 || (distances_1[1]-distances_2[1])>0.001){
+//    //    qWarning("ERROR!! Fiducial fail!");
+//    //    std::cout<<"ERROR!! Fiducial fail!"<<std::endl;
+//    //    return;
+//    //}
+
+//    //temp_v.push_back((distances_1[0]+distances_2[0])*0.5+mMotionHandler->whereAmI(1).at(0));
+//    //temp_v.push_back((distances_1[1]+distances_2[1])*0.5+mMotionHandler->whereAmI(1).at(1));
+//    auto one   = std::to_string(ui->chip_number_spinBox->value());
+//    auto two   = std::to_string(ui->spinBox_input->value());
+//    std::string file_name = "placa_calib_PRF_"+one+".txt";
+//    QTime now = QTime::currentTime();
+//    QString time_now = now.toString("hhmmss");
+//    std::string time_now_str = time_now.toLocal8Bit().constData();
+//    int start_x = 15;
+//    int start_y = 5;
+//    cv::putText(mat_from_camera,time_now_str,cv::Point(start_x,mat_from_camera.rows-start_y), CV_FONT_HERSHEY_PLAIN,2,cv::Scalar(255,255,255),2);
+
+//    std::ofstream ofs (file_name, std::ofstream::app);
+//    ofs <<"PRF "<<" "<<time_now_str<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "
+//       <<mMotionHandler->whereAmI(1).at(0)<<" "<<mMotionHandler->whereAmI(1).at(1)<<" "<<mMotionHandler->whereAmI(1).at(2)
+//      <<std::endl;
+//    ofs.close();
+
+//    cv::imwrite("EXPORT/"+time_now_str+"_"+one+"_"+two+".jpg",mat_from_camera);
+//    cap.release();
+//    //Going back to QCameraa
+//    mCamera->start();
+//    return true;
+//}
+
+bool Magrathea::calibration_plate_measure(){
+
+    cv::destroyAllWindows();
+
+    double step_x = 15.;
+    double step_y = -12.;
+
+    std::vector< std::vector<double> > points;
+    std::vector<double> temp_v;
+
+    temp_v.push_back(ui->point1_x_box->value());
+    temp_v.push_back(ui->point1_y_box->value());
+    temp_v.push_back(ui->point1_z_box->value());
+    points.push_back(temp_v);
+    temp_v.clear();
+
+    temp_v.push_back(ui->point2_x_box->value());
+    temp_v.push_back(ui->point2_y_box->value());
+    temp_v.push_back(ui->point2_z_box->value());
+    points.push_back(temp_v);
+    temp_v.clear();
+
+    double angle = atan((points[1][1]-points[0][1])/(points[1][0]-points[0][0]));
+    //these are measured points from which I get the angle of the calibration plate
+    //These are also used as starting point (i.e. origin of the frame of reference) for the calibration plate measure
+
+    for(int i=0;i<10;i++){//y
+        ui->chip_number_spinBox->setValue(i);
+        for(int j=0;j<10;j++){//x
+            ui->spinBox_input->setValue(j);
+            std::vector<double> distances;
+            distances.clear();
+            temp_v.clear();
+            double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
+            double target_y = points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
+            if(!mMotionHandler->moveXTo(target_x,2.))
+                return false;
+            if(!mMotionHandler->moveYTo(target_y,2.))
+                return false;
+            if(!focusButtonClicked())
+                return false;
+            if(!FiducialFinderCaller(2,distances))
+                return false;
+            temp_v.push_back(distances[0]+mMotionHandler->whereAmI(1).at(0));
+            temp_v.push_back(distances[1]+mMotionHandler->whereAmI(1).at(1));
+            auto one = std::to_string(ui->spinBox_plate_position->value());
+            std::string file_name = "Calibration_plate_position_"+one+".txt";
+            std::ofstream ofs (file_name, std::ofstream::app);
+            ofs <<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)<<" "<<distances[0]<<" "<<distances[1]
+               <<std::endl;
+            ofs.close();
+        }
+    }
+
+    return true;
+}
+
 
 //    temp_v.push_back(ui->point1_x_box->value());
 //    temp_v.push_back(ui->point1_y_box->value());

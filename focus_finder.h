@@ -59,7 +59,7 @@ signals:
 public slots:
     void   eval_stddev(const cv::Mat &input_image, std::vector<double> &output);
     void   eval_stddev_ROI(const cv::Mat &input_image, std::vector<double> &output);
-    void   find_focus(double &focus_height);
+    bool   find_focus(double &focus_height);
     void   Eval_syst_time();
     void   Eval_syst_scan();
 

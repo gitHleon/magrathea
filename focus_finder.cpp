@@ -131,7 +131,7 @@ void Focus_finder::eval_stddev_ROI(const cv::Mat &input_image, std::vector<doubl
     return;
 }
 
-void Focus_finder::find_focus(double &focus_height)
+bool Focus_finder::find_focus(double &focus_height)
 {
     const int figure_index = 1;
     //Function that return the focus z coordinate
@@ -139,11 +139,11 @@ void Focus_finder::find_focus(double &focus_height)
     //http://doc.qt.io/qt-4.8/signalsandslots.html
     if (!cap.isOpened()){
         qWarning("Error : Not able to open camera.");
-        return;
+        return false;
     }
     if(!gantry->gantryConnected){
         QMessageBox::critical(nullptr, tr("Error"), tr("Gantry not connected!! Can not perform autofocus."));
-        return;
+        return false;
     }
     qInfo("----------------  Auto-focus start -----------------");
     cv::Mat mat_from_outside;
@@ -155,18 +155,24 @@ void Focus_finder::find_focus(double &focus_height)
 
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
     qInfo("Performing scan around the position : %5.5f",z_temp);
-
+    //add if() in moveby functions to be sure the code continues when the function returns
     int Iterations = 3;
     for(int j=0; j<Iterations;j++){//fine scan to find the position of the focus
-        if(z_pos_index==2)
-            gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.);
-        else if(z_pos_index ==4)
-            gantry->moveZ_2_By(-z_step*ceil(measure_points*0.6),1.);
+        if(z_pos_index==2){
+            if(!gantry->moveZBy(-z_step*ceil(measure_points*0.6),1.))
+                return false;
+        }else if(z_pos_index ==4){
+            if(!gantry->moveZ_2_By(-z_step*ceil(measure_points*0.6),1.))
+                return false;
+        }
         for(int i=0; i<measure_points;i++){
-            if(z_pos_index==2)
-                gantry->moveZBy(z_step,1.);
-            else if(z_pos_index ==4)
-                gantry->moveZ_2_By(z_step,1.);
+            if(z_pos_index==2){
+                if(gantry->moveZBy(z_step,1.))
+                    return false;
+            }else if(z_pos_index ==4){
+                if(gantry->moveZ_2_By(z_step,1.))
+                    return false;
+            }
             mat_from_outside = get_frame_from_camera();
             std::vector<double> figures_of_merit;
             eval_stddev_ROI(mat_from_outside,figures_of_merit);//gets RoI and proper color component
@@ -191,7 +197,7 @@ void Focus_finder::find_focus(double &focus_height)
         }// for 6
         z_step = 0.3 * z_step;
         if(z_pos_index==2)
-            gantry->moveZTo(Z_MAX,1.);//add safety control
+            gantry->moveZTo(Z_MAX,1.);
         else if(z_pos_index ==4)
             gantry->moveZ_2_To(Z_MAX,1.);
 
@@ -199,6 +205,7 @@ void Focus_finder::find_focus(double &focus_height)
     }
 
     qInfo("Focus max z : %3.4f ;  stddev_MAX : %5.5f ",Z_MAX,StdDev_MAX);
+    return true;
     /////////////////////
     //evaluation of the focus height ising the fit of a parabola
     //double Z_out = 0.;
