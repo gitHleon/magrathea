@@ -191,7 +191,7 @@ Magrathea::Magrathea(QWidget *parent) :
     //------------------------------------------
     //timer
     mPositionTimer = new QTimer(this);
-    connect(mPositionTimer, SIGNAL(timeout()), this, SLOT(updatePosition()));
+    /////////connect(mPositionTimer, SIGNAL(timeout()), this, SLOT(updatePosition()));
     mPositionTimer->start(100);//ms
 
     //------------------------------------------
@@ -757,8 +757,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     double distance_x = 0;
     double distance_y = 0;
     std::string timestamp = "";
-    std::string address = "D:/Images/Templates_mytutoyo/";
-    //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
+    //std::string address = "D:/Images/Templates_mytutoyo/";
+    std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
     std::string Images[] = {
         address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
         address + "Fiducial_chip_1_1_pos_1.TIF",
@@ -783,7 +783,9 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         address + "fid_test_3.jpg", //20
         address + "placa_fid_73_F.jpg",
         address + "placa_fid_F.jpg",
-        address + "placa_fid_test3_dotsandcrosses.jpg"
+        address + "placa_fid_test3_dotsandcrosses.jpg",
+        address + "003_F.jpg",
+        address + "003_F2.jpg"
     };
 
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
@@ -793,9 +795,21 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     bool success = false;
 
     if(from_file){
-        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Gantry_camera_test_fiducials/F_standard_7_3/";
+        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
         std::string Images[] = {
-            "0_0_163525.jpg"
+            "003.jpg",
+            "004.jpg",
+            "005.jpg",
+            "006.jpg",
+            "007.jpg",
+            "008.jpg",
+            "009.jpg",
+            "010.jpg",
+            "011.jpg",
+            "012.jpg",
+            "013.jpg",
+            "014.jpg",
+            "015.jpg"
             //"chip_1_1_pos_1.TIF"
         };
 
@@ -816,20 +830,20 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
     if(input==1 || input == 0){
         bool invalid_match = true;
-        int ii = 0;
-        while(invalid_match){
+        //int ii = 0;
+        //while(invalid_match){
             cv::Mat output_H;
             success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
                                       ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/,output_H);
             double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
             double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-            if( ( fabs(H_1_1/H_1_2) < 0.26 ) && (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 1.05 && sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 0.95) )
-                invalid_match = false;
-            ii++;
-            if(ii> 4)
-                invalid_match = false;
-            std::cout<<" ii "<<ii<<" ;invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
-        }//while invalid match
+//            if( ( fabs(H_1_1/H_1_2) < 0.26 ) && (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 1.05 && sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 0.95) )
+//                invalid_match = false;
+            //ii++;
+            //if(ii> 1)
+            //    invalid_match = false;
+            std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
+        //}//while invalid match
     } else if(input == 2){
         success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
     }
@@ -1352,14 +1366,14 @@ void Magrathea::destroy_all(){
 
 void Magrathea::loop_test(){
 
-    mMotionHandler->SetLimitsController();
+    //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically on a series of pictures
-//    for(int i=0;i<119;i++){//set appropriate value of the loop limit
-//        std::cout<<"It "<<i<<std::endl;
-//        ui->spinBox_input->setValue(i);
-//        std::vector <double> dummy;
-//        FiducialFinderCaller(2,dummy);
-//    }
+    for(int i=0;i<13;i++){//set appropriate value of the loop limit
+        std::cout<<"It "<<i<<std::endl;
+        ui->spinBox_input->setValue(i);
+        std::vector <double> dummy;
+        FiducialFinderCaller(1,dummy);
+    }
 }
 
 void Magrathea::Aruco_test(){
