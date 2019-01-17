@@ -191,7 +191,7 @@ Magrathea::Magrathea(QWidget *parent) :
     //------------------------------------------
     //timer
     mPositionTimer = new QTimer(this);
-    /////////connect(mPositionTimer, SIGNAL(timeout()), this, SLOT(updatePosition()));
+    connect(mPositionTimer, SIGNAL(timeout()), this, SLOT(updatePosition()));
     mPositionTimer->start(100);//ms
 
     //------------------------------------------
@@ -757,8 +757,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     double distance_x = 0;
     double distance_y = 0;
     std::string timestamp = "";
-    //std::string address = "D:/Images/Templates_mytutoyo/";
-    std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
+    std::string address = "D:/Images/Templates_mytutoyo/";
+    //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
     std::string Images[] = {
         address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
         address + "Fiducial_chip_1_1_pos_1.TIF",
@@ -785,7 +785,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         address + "placa_fid_F.jpg",
         address + "placa_fid_test3_dotsandcrosses.jpg",
         address + "003_F.jpg",
-        address + "003_F2.jpg"
+        address + "003_F3.jpg"
     };
 
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
@@ -795,7 +795,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     bool success = false;
 
     if(from_file){
-        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
+        //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
+        std::string address = "D:/Gantry/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
         std::string Images[] = {
             "003.jpg",
             "004.jpg",

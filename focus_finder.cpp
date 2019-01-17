@@ -167,10 +167,10 @@ bool Focus_finder::find_focus(double &focus_height)
         }
         for(int i=0; i<measure_points;i++){
             if(z_pos_index==2){
-                if(gantry->moveZBy(z_step,1.))
+                if(!gantry->moveZBy(z_step,1.))
                     return false;
             }else if(z_pos_index ==4){
-                if(gantry->moveZ_2_By(z_step,1.))
+                if(!gantry->moveZ_2_By(z_step,1.))
                     return false;
             }
             mat_from_outside = get_frame_from_camera();

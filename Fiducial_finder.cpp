@@ -500,8 +500,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         log->append("Error!! Fiducial is empty!!");
         return false;}
 
-    int center_rows = image.rows/2.0; //Defining the center of the image
-    int center_cols = image.cols/2.0;
+    int center_rows = image.rows/2; //Defining the center of the image
+    int center_cols = image.cols/2;
     if(debug)
         cv::imshow("f. 0 image",image);
     const int window_size = ( (image.cols > 2700 && image.rows > 2700) ? 2700 : 420);
@@ -510,7 +510,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         log->append("Error!! Window size wrongly set!!");
         return false;}
 
-    cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
+    cv::Rect regione_interessante(center_cols-(window_size/2),center_rows-(window_size/2),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
     cv::Mat RoiImage = image(regione_interessante);
     if(debug)
         cv::imshow("f. 0.1 image ROI",RoiImage);
@@ -647,7 +647,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow("2 threshold",image_gray);
         cv::imshow("2.f threshold",image_F_gray);
     }
-
+    std::cout<<"ok a"<<std::endl;
     cv::Ptr <cv::Feature2D> detector;
     //const int DescriptorAlgorithm = ui->algorithm_box->value();//set as input to the function
     std::string algo_name = "none";
@@ -687,8 +687,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
             cv::aruco::drawDetectedMarkers(outputImage, markerCorners, markerIds);
             cv::Point F_center = Square_center(markerCorners.at(0).at(0),markerCorners.at(0).at(1),
                                                markerCorners.at(0).at(2),markerCorners.at(0).at(3));
-            int ROIcenter_rows = outputImage.rows/2.0; //Defining the center of the image
-            int ROIcenter_cols = outputImage.cols/2.0;
+            int ROIcenter_rows = outputImage.rows/2; //Defining the center of the image
+            int ROIcenter_cols = outputImage.cols/2;
             X_distance = (ROIcenter_cols - F_center.x)*(1./Calibration); //[um]
             Y_distance = (ROIcenter_rows - F_center.y)*(1./Calibration); //[um]
             cv::circle(outputImage, F_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
@@ -704,6 +704,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }else{
         qWarning("Error!! DescriptorAlgorithm not set properly!!");
         return false;}
+    std::cout<<"ok aa"<<std::endl;
     std::vector<cv::KeyPoint> keypoints_F(0);
     std::vector<cv::KeyPoint> keypoints_image(0);
     keypoints_F.clear();
@@ -713,10 +714,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     std::vector<std::vector< cv::DMatch> > matches_2;
     cv::Mat descriptorImage;
     cv::Mat descriptorFiducial;
-    //        if(detector->empty()){
-    //            std::cout<<"Detector is empty"<<std::endl;
-    //        }
     if(DescriptorAlgorithm != 4){
+        std::cout<<"ok aaa"<<std::endl;
         detector->detectAndCompute(image_gray,cv::Mat(),keypoints_image,descriptorImage,false);
         detector->detectAndCompute(image_F_gray,cv::Mat(),keypoints_F,descriptorFiducial,false);
     }else{
@@ -727,6 +726,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         descriptor_extractor->compute(image_gray,keypoints_image,descriptorImage);
         descriptor_extractor->compute(image_F_gray,keypoints_F,descriptorFiducial);
     }
+    std::cout<<"ok 0"<<std::endl;
     qInfo("Fiducial keypoints %i",keypoints_F.size());
     qInfo("Image    keypoints %i",keypoints_image.size());
 
@@ -769,10 +769,12 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }
 
     //debug
+    std::cout<<"ok 00"<<std::endl;
     cv::Mat test_1;
     cv::Mat test_2;
     cv::drawKeypoints(image_gray,keypoints_image,test_1,cv::Scalar(0,0,255));
     cv::drawKeypoints(image_F_gray,keypoints_F,test_2,cv::Scalar(0,0,255));
+    std::cout<<"ok 1"<<std::endl;
     if(debug)
         cv::imshow("3. keypoints image",test_1);
     if(debug)
@@ -848,7 +850,9 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     std::string time_now_str = "";
     int start_x = 15;
     int start_y = 5;
+    std::cout<<"ok 1x"<<std::endl;
     addInfo(RoiImage,algo_name,start_x,start_y,3,2,time_now_str);
+    std::cout<<"ok 2x"<<std::endl;
     std::string s     = std::to_string(temp_input);
     std::string chip  = std::to_string(temp_input_2);
     //cv::imwrite("EXPORT/"+chip+"_"+s+"_"+time_now_str+".jpg",output_mat);
