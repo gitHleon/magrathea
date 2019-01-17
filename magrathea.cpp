@@ -798,26 +798,28 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
         std::string address = "D:/Gantry/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
         std::string Images[] = {
-            "003.jpg",
-            "004.jpg",
-            "005.jpg",
-            "006.jpg",
-            "007.jpg",
-            "008.jpg",
-            "009.jpg",
-            "010.jpg",
-            "011.jpg",
-            "012.jpg",
-            "013.jpg",
-            "014.jpg",
-            "015.jpg"
+//            "003.jpg",
+//            "004.jpg",
+//            "005.jpg",
+//            "006.jpg",
+//            "007.jpg",
+//            "008.jpg",
+//            "009.jpg",
+//            "010.jpg",
+//            "011.jpg",
+//            "012.jpg",
+//            "013.jpg",
+//            "014.jpg",
+//            "015.jpg",
+            "016.jpg",
+            "017.jpg"
             //"chip_1_1_pos_1.TIF"
         };
 
         tmp_filename = Images[ui->spinBox_input->value()];
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
                 ,CV_LOAD_IMAGE_COLOR);
-        Ffinder->Set_calibration(1); //get calibration from a private variable
+        Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -874,7 +876,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<std::endl;
+    ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<" "<<pos_t[4]<<std::endl;
     ofs.close();
     //    if(input == 0){
     //    mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
@@ -1369,11 +1371,19 @@ void Magrathea::loop_test(){
 
     //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically on a series of pictures
-    for(int i=0;i<13;i++){//set appropriate value of the loop limit
+    for(int i=0;i<30;i++){//set appropriate value of the loop limit
         std::cout<<"It "<<i<<std::endl;
         ui->spinBox_input->setValue(i);
         std::vector <double> dummy;
-        FiducialFinderCaller(1,dummy);
+        if(!mMotionHandler->moveZ_2_By(0.025))
+            return;
+        if(!focusButtonClicked())
+            return;
+        if(!FiducialFinderCaller(2,dummy))
+        {
+            std::cout<<"FAIL!!"<<std::endl;
+            return;
+        }
     }
 }
 
