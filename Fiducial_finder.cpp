@@ -341,6 +341,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
     bool debug = false;
+    bool print_raw = true;
 
 
     if(image.empty()){
@@ -453,7 +454,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         Find_SquareAndTriangles(Centers,Squares,Triangles);
         if(debug)
             std::cout<<"Squares.size() "<<Squares.size()<<std::endl;
-        cv::circle(RoiImage_out, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
+        //cv::circle(RoiImage_out, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
         for( size_t i = 0; i < Squares.size(); i++ ){
             for( int j = 0; j < 4; j++ )
                 cv::line(RoiImage_out, Centers.at(Squares[i][j]), Centers.at(Squares[i][(j+1)%4]), cv::Scalar(0,255,0), 2, 8);
@@ -463,9 +464,15 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             cv::circle(RoiImage_out, square_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
             cv::circle(RoiImage_out, square_center, 50*Calibration, cv::Scalar(255,0,0), 3, 8, 0 );
             if(Squares.size() == 1){
-                X_distance = (center_cols - square_center.x)*(1./Calibration); //[um]
-                Y_distance = (center_rows - square_center.y)*(1./Calibration); //[um]
-                cv::circle(RoiImage_out, cv::Point(RoiImage.cols/2,RoiImage.rows/2), 3, cv::Scalar(206,78,137), -1, 8, 0 );
+                X_distance = (square_center.x - RoiImage_out.cols/2)*(1./Calibration); //[um]
+                Y_distance = (square_center.y - RoiImage_out.rows/2)*(1./Calibration); //[um]
+                cv::circle(RoiImage_out, cv::Point(RoiImage_out.cols/2,RoiImage_out.rows/2), 3, cv::Scalar(0,0,255), -1, 8, 0 );
+                if(print_raw){
+                    std::string file_name = "output_raw.txt";
+                    std::ofstream ofs (file_name, std::ofstream::app);
+                    ofs << temp_input_2 <<" "<<temp_input<<" "<< square_center.x <<" "<<square_center.y<<std::endl;
+                    ofs.close();
+                }
             }
         }
 
@@ -688,8 +695,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
                                                markerCorners.at(0).at(2),markerCorners.at(0).at(3));
             int ROIcenter_rows = outputImage.rows/2; //Defining the center of the image
             int ROIcenter_cols = outputImage.cols/2;
-            X_distance = (ROIcenter_cols - F_center.x)*(1./Calibration); //[um]
-            Y_distance = (ROIcenter_rows - F_center.y)*(1./Calibration); //[um]
+            X_distance = (F_center.x - ROIcenter_cols)*(1./Calibration); //[um]
+            Y_distance = (F_center.y - ROIcenter_rows)*(1./Calibration); //[um]
             cv::circle(outputImage, F_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
         }
         if(debug)
@@ -859,8 +866,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     //cv::imwrite("EXPORT/"+algo_name+"_"+chip+"_"+s+".jpg",RoiImage);
     //cv::imwrite("EXPORT/"+algo_name+"_match_"+chip+"_"+s+"_"+time_now_str+".jpg",result);
 
-    int ROIcenter_rows = RoiImage.rows/2.0; //Defining the center of the image
-    int ROIcenter_cols = RoiImage.cols/2.0;
+    int ROIcenter_rows = RoiImage.rows/2; //Defining the center of the image
+    int ROIcenter_cols = RoiImage.cols/2;
 
     X_distance = (F_center.x - ROIcenter_cols)*(1./Calibration); //[um]
     Y_distance = (F_center.y - ROIcenter_rows)*(1./Calibration); //[um]

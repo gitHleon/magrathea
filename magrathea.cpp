@@ -878,6 +878,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
 #if VALENCIA
     ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<" "<<pos_t[4]<<std::endl;
+    ofs << "        "<<distance_x<<" "<<distance_y<<" "<<pos_t[4]<<std::endl;
     ofs.close();
     //    if(input == 0){
     //    mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
@@ -889,8 +890,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     mMotionHandler->moveYBy(distance_y*0.001,1);
 #endif
     F_point.clear();
-    F_point.push_back(-distance_y*0.001);
     F_point.push_back(distance_x*0.001);
+    F_point.push_back(distance_y*0.001);
 
     return true;
     }
@@ -1372,19 +1373,28 @@ void Magrathea::loop_test(){
 
     //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically on a series of pictures
-    for(int i=0;i<30;i++){//set appropriate value of the loop limit
+    for(int i=0;i<1;i++){//set appropriate value of the loop limit
         std::cout<<"It "<<i<<std::endl;
         ui->spinBox_input->setValue(i);
-        std::vector <double> dummy;
-        if(!mMotionHandler->moveZ_2_By(0.025))
-            return;
-        if(!focusButtonClicked())
-            return;
-        if(!FiducialFinderCaller(2,dummy))
+        std::vector <double> distances;
+        //if(!mMotionHandler->moveZ_2_By(0.025))
+        //    return;
+        //if(!focusButtonClicked())
+        //    return;
+        if(!FiducialFinderCaller(2,distances))
         {
             std::cout<<"FAIL!!"<<std::endl;
             return;
         }
+        double camera_angle = 0.715;
+        double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
+        double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+        //ATTENTION! distances[0] is cols, distances[1] is rows of the image
+        std::cout<<"target_x_short "<<target_x_short<<" target_y_short "<<target_y_short<<std::endl;
+        if(!mMotionHandler->moveXBy(-target_x_short,1.))
+            return;
+        if(!mMotionHandler->moveYBy(-target_y_short,1.))
+            return;
     }
 }
 
@@ -1546,17 +1556,23 @@ bool Magrathea::calibration_plate_measure(){
                 return false;
             if(!FiducialFinderCaller(2,distances))
                 return false;
-            temp_v.push_back(distances[0]+mMotionHandler->whereAmI(1).at(0));
-            temp_v.push_back(distances[1]+mMotionHandler->whereAmI(1).at(1));
+            double camera_angle = 0.715;
+            double target_x_short = distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
+            double target_y_short = distances[0]*sin(camera_angle) + distances[1]*cos(camera_angle);
+            if(!mMotionHandler->moveXTo(target_x_short,1.))
+                return false;
+            if(!mMotionHandler->moveYTo(target_y_short,1.))
+                return false;
+            temp_v.push_back(target_x_short+mMotionHandler->whereAmI(1).at(0));
+            temp_v.push_back(target_y_short+mMotionHandler->whereAmI(1).at(1));
             auto one = std::to_string(ui->spinBox_plate_position->value());
             std::string file_name = "Calibration_plate_position_"+one+".txt";
             std::ofstream ofs (file_name, std::ofstream::app);
-            ofs <<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(4)<<" "<<distances[0]<<" "<<distances[1]
+            ofs <<i<<" "<<j<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(4)<<" "<<distances[0]<<" "<<distances[1]<<" "<<mCalibration
                <<std::endl;
             ofs.close();
         }
     }
-
     return true;
 }
 
