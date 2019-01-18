@@ -309,6 +309,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
+    connect(ui->Run_calib_plate_button_3,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
 }
 
 //******************************************
@@ -1507,9 +1508,6 @@ bool Magrathea::calibration_plate_measure(){
 
     cv::destroyAllWindows();
 
-    double step_x = 15.;
-    double step_y = -12.;
-
     std::vector< std::vector<double> > points;
     std::vector<double> temp_v;
 
@@ -1529,6 +1527,8 @@ bool Magrathea::calibration_plate_measure(){
     //these are measured points from which I get the angle of the calibration plate
     //These are also used as starting point (i.e. origin of the frame of reference) for the calibration plate measure
 
+    double step_x = 15.;
+    double step_y = 12.;
     for(int i=0;i<10;i++){//y
         ui->chip_number_spinBox->setValue(i);
         for(int j=0;j<10;j++){//x
@@ -1551,7 +1551,7 @@ bool Magrathea::calibration_plate_measure(){
             auto one = std::to_string(ui->spinBox_plate_position->value());
             std::string file_name = "Calibration_plate_position_"+one+".txt";
             std::ofstream ofs (file_name, std::ofstream::app);
-            ofs <<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)<<" "<<distances[0]<<" "<<distances[1]
+            ofs <<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(4)<<" "<<distances[0]<<" "<<distances[1]
                <<std::endl;
             ofs.close();
         }

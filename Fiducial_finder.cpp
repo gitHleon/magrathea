@@ -453,6 +453,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         Find_SquareAndTriangles(Centers,Squares,Triangles);
         if(debug)
             std::cout<<"Squares.size() "<<Squares.size()<<std::endl;
+        cv::circle(RoiImage_out, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
         for( size_t i = 0; i < Squares.size(); i++ ){
             for( int j = 0; j < 4; j++ )
                 cv::line(RoiImage_out, Centers.at(Squares[i][j]), Centers.at(Squares[i][(j+1)%4]), cv::Scalar(0,255,0), 2, 8);

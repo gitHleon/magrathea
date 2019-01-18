@@ -985,23 +985,26 @@ std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
             qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
         position[4] = position_tmp;
     } else if(ific_value == 1){
-        if(acsc_GetTargetPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        std::string temp = "APOS";
+        char * tab = new char [temp.length()+1];
+        strcpy (tab, temp.c_str());
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position X axis: %d ",acsc_GetLastError());
         position[0] = position_tmp;
 
-        if(acsc_GetTargetPosition(gantry,Y_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position Y axis: %d ",acsc_GetLastError());
         position[1] = position_tmp;
 
-        if(acsc_GetTargetPosition(gantry,Z_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position Z axis: %d ",acsc_GetLastError());
         position[2] = position_tmp;
 
-        if(acsc_GetTargetPosition(gantry,U_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_6,ACSC_AXIS_6,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position U axis: %d ",acsc_GetLastError());
         position[3] = position_tmp;
 
-        if(acsc_GetTargetPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
         position[4] = position_tmp;
     }

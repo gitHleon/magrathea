@@ -139,9 +139,9 @@ private:
 
     double x_min = -500.0;
     double x_max =  500.0;
-    double y_min = -500.0;
-    double y_max =  500.0;
-    double z_1_min =  -90.0;
+    double y_min = -220.0;
+    double y_max =  0.0;
+    double z_1_min =  0.0;
     double z_1_max =  90.0;
     double z_2_min =  -70.0;
     double z_2_max =  90.0;
