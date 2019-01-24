@@ -306,7 +306,7 @@ Magrathea::Magrathea(QWidget *parent) :
     //test
     connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
-    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test()));
+    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test_2()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
     connect(ui->Run_calib_plate_button_3,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
@@ -870,8 +870,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ofs << timestamp<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename;//<<" "<<
     delete Ffinder;
     cap.release();         //Going back to QCameraa
-    if(input!=1)
-        mCamera->start();
+    //mCamera->start();
     //////////////
     //movng the gantry to get the fiducial at the center of the image
     ///////////////////////////////////////////////////////////////////
@@ -1000,7 +999,7 @@ void Magrathea::calibrationCaller(int input){
     mCalibration = calibration_value;
     delete calibrator;
     cap.release();         //Going back to QCamera
-    mCamera->start();
+    //mCamera->start();
     return;
 }
 
@@ -1374,15 +1373,15 @@ void Magrathea::destroy_all(){
     cv::destroyAllWindows();
 }
 
-void Magrathea::loop_test(){
+bool Magrathea::loop_test(){
     //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically on a series of pictures
     for(int j=0;j<70;j++){//set appropriate value of the loop limit
         ui->chip_number_spinBox->setValue(j);
         if(!mMotionHandler->moveXBy(0.070,1.))
-            return;
+            return false;
         if(!mMotionHandler->moveYBy(0.070,1.))
-            return;
+            return false;
         for(int i=0;i<5;i++){//set appropriate value of the loop limit
             std::cout<<"j "<<j<<" ; i "<<i<<std::endl;
             ui->spinBox_input->setValue(i);
@@ -1392,51 +1391,46 @@ void Magrathea::loop_test(){
             if(!FiducialFinderCaller(2,distances))
             {
                 std::cout<<"FAIL!!"<<std::endl;
-                return;
+                return false;
             }
             double camera_angle = 0.886;
             double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
             double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
-            std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
-            std::cout<<" BEFORE : X "<<pos_t_1[0]<<" ; Y : "<<pos_t_1[1]<<std::endl;
-            std::cout<<"target_x_short "<<target_x_short<<" target_y_short "<<target_y_short<<std::endl;
+            //std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
             if(!mMotionHandler->moveXBy(-target_x_short,1.))
-                return;
+                return false;
             if(!mMotionHandler->moveYBy(-target_y_short,1.))
-                return;
-            std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
-            std::cout<<" AFTER : X "<<pos_t_2[0]<<" ; Y : "<<pos_t_2[1]<<std::endl;
+                return false;
         }
     }
+    return true;
 }
 
-void Magrathea::loop_test_2(){
-
+bool Magrathea::loop_test_2(){
     //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically on a series of pictures
-    for(int i=0;i<5;i++){//set appropriate value of the loop limit
+    for(int i=0;i<3;i++){//set appropriate value of the loop limit
         std::cout<<"It "<<i<<std::endl;
-        ui->spinBox_input->setValue(i);
+        //ui->spinBox_input->setValue(i);
         std::vector <double> distances;
         //if(!focusButtonClicked())
         //    return;
         if(!FiducialFinderCaller(2,distances))
         {
             std::cout<<"FAIL!!"<<std::endl;
-            return;
+            return false;
         }
         double camera_angle = 0.886;
         double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
         double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
-        std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
-            return;
+            return false;
         if(!mMotionHandler->moveYBy(-target_y_short,1.))
-            return;
-        std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
+            return false;
     }
+    return true;
 }
 
 
@@ -1563,13 +1557,13 @@ bool Magrathea::calibration_plate_measure(){
     std::vector< std::vector<double> > points;
     std::vector<double> temp_v;
 
-    temp_v.push_back(ui->point1_x_box->value());
+    temp_v.push_back(ui->point1_x_box->value());//gantry coord of point 1
     temp_v.push_back(ui->point1_y_box->value());
     temp_v.push_back(ui->point1_z_box->value());
     points.push_back(temp_v);
     temp_v.clear();
 
-    temp_v.push_back(ui->point2_x_box->value());
+    temp_v.push_back(ui->point2_x_box->value());//gantry coord of point 2
     temp_v.push_back(ui->point2_y_box->value());
     temp_v.push_back(ui->point2_z_box->value());
     points.push_back(temp_v);
@@ -1585,34 +1579,29 @@ bool Magrathea::calibration_plate_measure(){
         ui->chip_number_spinBox->setValue(i);
         for(int j=0;j<10;j++){//x
             ui->spinBox_input->setValue(j);
-            std::vector<double> distances;
-            distances.clear();
             temp_v.clear();
-            double target_x = points[0][0] + step_x*j*cos(angle) + step_y*i*sin(angle);
-            double target_y = points[0][1] + step_x*j*sin(angle) - step_y*i*cos(angle);
+            double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
+            double target_y = points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
+            std::cout<<j<<" "<<i<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
             if(!mMotionHandler->moveXTo(target_x,2.))
                 return false;
             if(!mMotionHandler->moveYTo(target_y,2.))
                 return false;
             if(!focusButtonClicked())
                 return false;
-            if(!FiducialFinderCaller(2,distances))
+            if(!loop_test_2())
                 return false;
-            double camera_angle = 0.886;
-            double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
-            double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
-            temp_v.push_back(mMotionHandler->whereAmI(1).at(0)-target_x_short);
-            temp_v.push_back(mMotionHandler->whereAmI(1).at(1)-target_y_short);
+            std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+            temp_v.push_back(pos_t_1[0]);
+            temp_v.push_back(pos_t_1[1]);
             auto one = std::to_string(ui->spinBox_plate_position->value());
             std::string file_name = "Calibration_plate_position_"+one+".txt";
+            QTime now = QTime::currentTime();
+            QString time_now = now.toString("hhmmss");
+            std::string timestamp = time_now.toLocal8Bit().constData();
             std::ofstream ofs (file_name, std::ofstream::app);
-            ofs <<i<<" "<<j<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(4)<<" "<<distances[0]<<" "<<distances[1]<<" "<<mCalibration
-               <<std::endl;
+            ofs<<timestamp<<" "<<j<<" "<<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<pos_t_1[4]<<std::endl;
             ofs.close();
-            if(!mMotionHandler->moveXTo(-target_x_short,1.))
-                return false;
-            if(!mMotionHandler->moveYTo(-target_y_short,1.))
-                return false;
         }
     }
     return true;

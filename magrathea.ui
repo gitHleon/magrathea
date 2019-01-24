@@ -76,6 +76,13 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="Run_calib_plate_button">
+           <property name="text">
+            <string>RUN</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
@@ -780,13 +787,6 @@
            <widget class="QPushButton" name="destroy_Button">
             <property name="text">
              <string>destroy!!</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="7">
-           <widget class="QPushButton" name="Run_calib_plate_button">
-            <property name="text">
-             <string>RUN</string>
             </property>
            </widget>
           </item>

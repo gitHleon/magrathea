@@ -72,8 +72,8 @@ private slots:
     //test
     void color_test();
     void destroy_all();
-    void loop_test();
-    void loop_test_2();
+    bool loop_test();
+    bool loop_test_2();
     void createTemplate_F();
     void capture_fid_and_move();
     bool calibration_plate_measure();
