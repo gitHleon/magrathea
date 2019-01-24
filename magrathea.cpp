@@ -324,7 +324,7 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
-    std::vector <double> pos_t = mMotionHandler->whereAmI(0);
+    std::vector <double> pos_t = mMotionHandler->whereAmI(1);
 
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
     ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
@@ -850,6 +850,9 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         //}//while invalid match
     } else if(input == 2){
         success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
+        QTime now = QTime::currentTime();
+        QString time_now = now.toString("hhmmss");
+        timestamp = time_now.toLocal8Bit().constData();
     }
 
     if(success)
@@ -865,7 +868,6 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
     ofs << timestamp<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename;//<<" "<<
-    //distance_x<<" "<<distance_y<<" "<<pos_t[0]<<" "<<pos_t[1]<<" "<<pos_t[2];
     delete Ffinder;
     cap.release();         //Going back to QCameraa
     if(input!=1)
@@ -877,8 +879,10 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    ofs << " "<<(pos_t[1]+(distance_x*0.001))<<" "<<(pos_t[0]-(distance_y*0.001))<<" "<<pos_t[4]<<std::endl;
-    ofs << "        "<<distance_x<<" "<<distance_y<<" "<<pos_t[4]<<std::endl;
+    double camera_angle = 0.886;
+    double target_x_short = distance_x*0.001*cos(camera_angle) + distance_y*0.001*sin(camera_angle);
+    double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
+    ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
     ofs.close();
     //    if(input == 0){
     //    mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
@@ -991,6 +995,7 @@ void Magrathea::calibrationCaller(int input){
     calibrator->Calibration_strips(calibration_value,calibration_value_err, true);
     QString unit = " px/um";
     QString output = "C: "+QString::number(calibration_value,'g',3)+ " +- "+QString::number(calibration_value_err,'g',3)+ unit;
+    std::cout<<"calib = "<<calibration_value<<" err : "<<calibration_value_err<<std::endl;
     ui->Calib_value_lineEdit->setText(output);
     mCalibration = calibration_value;
     delete calibrator;
@@ -1370,15 +1375,50 @@ void Magrathea::destroy_all(){
 }
 
 void Magrathea::loop_test(){
+    //mMotionHandler->SetLimitsController();
+    //run fiducial finding algo automatically on a series of pictures
+    for(int j=0;j<70;j++){//set appropriate value of the loop limit
+        ui->chip_number_spinBox->setValue(j);
+        if(!mMotionHandler->moveXBy(0.070,1.))
+            return;
+        if(!mMotionHandler->moveYBy(0.070,1.))
+            return;
+        for(int i=0;i<5;i++){//set appropriate value of the loop limit
+            std::cout<<"j "<<j<<" ; i "<<i<<std::endl;
+            ui->spinBox_input->setValue(i);
+            std::vector <double> distances;
+            //if(!focusButtonClicked())
+            //    return;
+            if(!FiducialFinderCaller(2,distances))
+            {
+                std::cout<<"FAIL!!"<<std::endl;
+                return;
+            }
+            double camera_angle = 0.886;
+            double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
+            double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+            //ATTENTION! distances[0] is cols, distances[1] is rows of the image
+            std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+            std::cout<<" BEFORE : X "<<pos_t_1[0]<<" ; Y : "<<pos_t_1[1]<<std::endl;
+            std::cout<<"target_x_short "<<target_x_short<<" target_y_short "<<target_y_short<<std::endl;
+            if(!mMotionHandler->moveXBy(-target_x_short,1.))
+                return;
+            if(!mMotionHandler->moveYBy(-target_y_short,1.))
+                return;
+            std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
+            std::cout<<" AFTER : X "<<pos_t_2[0]<<" ; Y : "<<pos_t_2[1]<<std::endl;
+        }
+    }
+}
+
+void Magrathea::loop_test_2(){
 
     //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically on a series of pictures
-    for(int i=0;i<1;i++){//set appropriate value of the loop limit
+    for(int i=0;i<5;i++){//set appropriate value of the loop limit
         std::cout<<"It "<<i<<std::endl;
         ui->spinBox_input->setValue(i);
         std::vector <double> distances;
-        //if(!mMotionHandler->moveZ_2_By(0.025))
-        //    return;
         //if(!focusButtonClicked())
         //    return;
         if(!FiducialFinderCaller(2,distances))
@@ -1386,17 +1426,19 @@ void Magrathea::loop_test(){
             std::cout<<"FAIL!!"<<std::endl;
             return;
         }
-        double camera_angle = 0.715;
+        double camera_angle = 0.886;
         double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
         double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
-        std::cout<<"target_x_short "<<target_x_short<<" target_y_short "<<target_y_short<<std::endl;
+        std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
             return;
         if(!mMotionHandler->moveYBy(-target_y_short,1.))
             return;
+        std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
     }
 }
+
 
 void Magrathea::Aruco_test(){
     //visualize the different aruco markers
@@ -1546,8 +1588,8 @@ bool Magrathea::calibration_plate_measure(){
             std::vector<double> distances;
             distances.clear();
             temp_v.clear();
-            double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
-            double target_y = points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
+            double target_x = points[0][0] + step_x*j*cos(angle) + step_y*i*sin(angle);
+            double target_y = points[0][1] + step_x*j*sin(angle) - step_y*i*cos(angle);
             if(!mMotionHandler->moveXTo(target_x,2.))
                 return false;
             if(!mMotionHandler->moveYTo(target_y,2.))
@@ -1556,21 +1598,21 @@ bool Magrathea::calibration_plate_measure(){
                 return false;
             if(!FiducialFinderCaller(2,distances))
                 return false;
-            double camera_angle = 0.715;
-            double target_x_short = distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
-            double target_y_short = distances[0]*sin(camera_angle) + distances[1]*cos(camera_angle);
-            if(!mMotionHandler->moveXTo(target_x_short,1.))
-                return false;
-            if(!mMotionHandler->moveYTo(target_y_short,1.))
-                return false;
-            temp_v.push_back(target_x_short+mMotionHandler->whereAmI(1).at(0));
-            temp_v.push_back(target_y_short+mMotionHandler->whereAmI(1).at(1));
+            double camera_angle = 0.886;
+            double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
+            double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+            temp_v.push_back(mMotionHandler->whereAmI(1).at(0)-target_x_short);
+            temp_v.push_back(mMotionHandler->whereAmI(1).at(1)-target_y_short);
             auto one = std::to_string(ui->spinBox_plate_position->value());
             std::string file_name = "Calibration_plate_position_"+one+".txt";
             std::ofstream ofs (file_name, std::ofstream::app);
             ofs <<i<<" "<<j<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(4)<<" "<<distances[0]<<" "<<distances[1]<<" "<<mCalibration
                <<std::endl;
             ofs.close();
+            if(!mMotionHandler->moveXTo(-target_x_short,1.))
+                return false;
+            if(!mMotionHandler->moveYTo(-target_y_short,1.))
+                return false;
         }
     }
     return true;

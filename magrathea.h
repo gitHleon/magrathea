@@ -73,6 +73,7 @@ private slots:
     void color_test();
     void destroy_all();
     void loop_test();
+    void loop_test_2();
     void createTemplate_F();
     void capture_fid_and_move();
     bool calibration_plate_measure();
@@ -83,7 +84,7 @@ private:
     //cv::VideoCapture cap;
     cv::Mat sub_frame;
 
-    double mCalibration = 11.7;//3.43;//4.5; //[px/um]
+    double mCalibration = 10.0563;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;

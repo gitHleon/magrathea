@@ -36,10 +36,8 @@ public slots:
     void Set_lines(int m_lines, int m_threshold, int m_length);
     bool IsImageEmpty();
     void Find_calibration(double &calibration_value, double &calibration_value_err, bool is_pixel_over_micron);
-    void Calibration_strips(double &calibration_value, double &calibration_value_err, bool is_pixel_over_micron);
-    //void Find_lines();
-    //void Get_calibration();
-    //void Find_probabilistic_lines();
+    bool Calibration_strips(double &calibration_value, double &calibration_value_err, bool is_pixel_over_micron);
+    cv::Mat get_component(const cv::Mat &input_mat,const unsigned int &input);
 
 private:
     QTextEdit *log;

@@ -64,7 +64,14 @@ void Calibrator::Set_log(QTextEdit *m_log){
     log = m_log;
 }
 
-void Calibrator::Calibration_strips(double &calibration_value, double &calibration_value_err, bool is_pixel_over_micron){
+cv::Mat Calibrator::get_component(const cv::Mat &input_mat,const unsigned int &input){
+    cv::Mat bgr[3];   //destination array
+    cv::split(input_mat,bgr);//split source
+    return bgr[input];
+    //Note: OpenCV uses BGR color order
+}
+
+bool Calibrator::Calibration_strips(double &calibration_value, double &calibration_value_err, bool is_pixel_over_micron){
   //macro inspired from BNL calibration macro
   //https://github.com/sciollalab/BNL_ThermomechanicalStave/wiki
   //process_strips.py
@@ -72,13 +79,12 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
-        return;
+        return false;
     }
 
-    //log->append("ok 1");
     const bool debug = false;
-    int center_rows = image.rows/2.0; //Defining the center of the image
-    int center_cols = image.cols/2.0;
+    int center_rows = image.rows/2; //Defining the center of the image
+    int center_cols = image.cols/2;
     std::string ty =  type2str( image.type() );
     auto && oss = std::ostringstream();
 
@@ -90,23 +96,24 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
 
     auto && buf = oss.str();
     log->append(buf.c_str());
-    //log->append(form("Matrix: %s %dx%d \n", ty.c_str(), image.cols, image.rows ));
 
     if(debug)
         std::cout<<" center_rows "<<center_rows <<" center_cols "<<center_cols <<std::endl;
     cv::Point2i Center_point = {center_cols,center_rows};
-    //cv::circle(image,Center_point,3,cv::Scalar(255,255,255),2,8);//ddddddddddddddddddddd
-    const int window_size = 1000;
-    //const int window_size = 512;
-    //cv::Rect regione_interessante(center_cols-(256,center_rows-256,512,512); //Rectangle that will be the RegionOfInterest (ROI)
-    cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
+    const int window_size = ( (image.cols > 2700 && image.rows > 2200) ? 2200 : 420);
+    const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
+    if(window_size >= image.rows || window_size >= image.cols){
+        log->append("Error!! Window size wrongly set!!");
+        return false;}
+
+    cv::Rect regione_interessante(center_cols-(window_size/2),center_rows-(window_size/2),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
 
 
     cv::imshow("0. image original",image);
     cv::Mat RoiImage = image(regione_interessante);
     cv::imshow("0.1 image ROI",RoiImage);
     cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
-    cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
+    image_gray = get_component(image_gray,1);
 
 
     cv::imshow("1. gray",image_gray);
@@ -216,7 +223,7 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
 
     RoiImage = image(regione_interessante);
     image_gray   = RoiImage.clone();
-    cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
+    image_gray = get_component(image_gray,1);
     if(debug)
         cv::imshow("7. gray-rotated",image_gray);
     cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
@@ -320,7 +327,7 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     if(pitch_t.size()==0){
         qInfo("Something went wrong!!!");
         log->append("Something went wrong!!!");
-        return;
+        return false;
     }
     if(debug)
         std::cout<<" > pitch_t.size() : "<<pitch_t.size()<<std::endl;
@@ -377,7 +384,7 @@ void Calibrator::Calibration_strips(double &calibration_value, double &calibrati
         calibration_value_err = sqrt(temp_err_mea+temp_err_obj);
     }
     std::cout<<"Calibration_value: "<<calibration_value<<" ; calibration_value_err: "<<calibration_value_err<<std::endl;
-    return;
+    return true;
 }
 
 //https://docs.opencv.org/2.4/modules/core/doc/basic_structures.html?highlight=clone#mat-clone
