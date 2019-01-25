@@ -40,10 +40,8 @@
 //    case CV_64F: r = "64F"; break;
 //    default:     r = "User"; break;
 //  }
-
 //  r += "C";
 //  r += (chans+'0');
-
 //  return r;
 //}
 
@@ -1581,7 +1579,6 @@ bool Magrathea::calibration_plate_measure(){
         for(int j=0;j<10;j++){//x
             speed = (i!=0 && j==0) ? 6. : 3.;
             ui->spinBox_input->setValue(j);
-            temp_v.clear();
             double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
             double target_y = points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
             std::cout<<j<<" "<<i<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
@@ -1593,17 +1590,23 @@ bool Magrathea::calibration_plate_measure(){
                 return false;
             if(!loop_test_2())
                 return false;
-            std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
-            temp_v.push_back(pos_t_1[0]);
-            temp_v.push_back(pos_t_1[1]);
+
             auto one = std::to_string(ui->spinBox_plate_position->value());
-            std::string file_name = "Calibration_plate_position_"+one+".txt";
             QTime now = QTime::currentTime();
             QString time_now = now.toString("hhmmss");
             std::string timestamp = time_now.toLocal8Bit().constData();
+
+            std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+            std::string file_name = "Calibration_plate_position_"+one+".txt";
             std::ofstream ofs (file_name, std::ofstream::app);
-            ofs<<timestamp<<" "<<j<<" "<<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<pos_t_1[4]<<std::endl;
+            ofs<<timestamp<<" "<<j<<" "<<i<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
             ofs.close();
+
+            std::vector <double> pos_t_2 = mMotionHandler->whereAmI(0);
+            std::string file_name_2 = "Calibration_plate_position_"+one+"_other_var.txt";
+            std::ofstream ofs_2 (file_name_2, std::ofstream::app);
+            ofs_2<<timestamp<<" "<<j<<" "<<i<<" "<<pos_t_2[0]<<" "<<pos_t_2[1]<<" "<<pos_t_2[4]<<std::endl;
+            ofs_2.close();
         }
     }
     return true;

@@ -137,10 +137,10 @@ private:
     double default_speed         = 15;
     double default_angular_speed = 10;
 
-    double x_min = -500.0;
+    double x_min = -450.0;
     double x_max =  500.0;
-    double y_min = -220.0;
-    double y_max =  0.0;
+    double y_min = -350.0;
+    double y_max =  500.;
     double z_1_min =  0.0;
     double z_1_max =  90.0;
     double z_2_min =  -70.0;
