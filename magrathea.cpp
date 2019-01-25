@@ -867,7 +867,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
-    ofs << timestamp<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "<<tmp_filename;//<<" "<<
+    ofs << timestamp<<" "<<ui->spinBox_input->value()<<" "<<ui->chip_number_spinBox->value()<<" "<<tmp_filename;//<<" "<<
     delete Ffinder;
     cap.release();         //Going back to QCameraa
     //mCamera->start();
@@ -1575,17 +1575,19 @@ bool Magrathea::calibration_plate_measure(){
 
     double step_x = 15.;
     double step_y = 12.;
+    double speed = 3.;
     for(int i=0;i<10;i++){//y
         ui->chip_number_spinBox->setValue(i);
         for(int j=0;j<10;j++){//x
+            speed = (i!=0 && j==0) ? 6. : 3.;
             ui->spinBox_input->setValue(j);
             temp_v.clear();
             double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
             double target_y = points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
             std::cout<<j<<" "<<i<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
-            if(!mMotionHandler->moveXTo(target_x,2.))
+            if(!mMotionHandler->moveXTo(target_x,speed))
                 return false;
-            if(!mMotionHandler->moveYTo(target_y,2.))
+            if(!mMotionHandler->moveYTo(target_y,3.))
                 return false;
             if(!focusButtonClicked())
                 return false;

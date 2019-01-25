@@ -337,7 +337,7 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
     return Out;
 }
 
-bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &temp_input, const int &temp_input_2){
+bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
     bool debug = false;
@@ -470,7 +470,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                 if(print_raw){
                     std::string file_name = "output_raw.txt";
                     std::ofstream ofs (file_name, std::ofstream::app);
-                    ofs << temp_input_2 <<" "<<temp_input<<" "<< square_center.x <<" "<<square_center.y<<std::endl;
+                    ofs << input_1 <<" "<<input_2<<" "<< square_center.x <<" "<<square_center.y<<std::endl;
                     ofs.close();
                 }
             }
@@ -479,9 +479,9 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         if(debug)
             cv::imshow("3 Results",RoiImage_out);
         std::string dummy = std::to_string(iterations);
-        std::string s     = std::to_string(temp_input);
-        std::string chip  = std::to_string(temp_input_2);
-        cv::imwrite("EXPORT/Circles_"+chip+"_"+s+"_"+dummy+".jpg",RoiImage_out);
+        std::string one   = std::to_string(input_1);
+        std::string two   = std::to_string(input_2);
+        cv::imwrite("EXPORT/Circles_"+one+"_"+two+"_"+dummy+".jpg",RoiImage_out);
         if(Squares.size() == 1)
             return true;
         if(iterations>2)
