@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QWidget>
+#include <QTime>
 #include <QTextEdit>
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
@@ -26,8 +27,14 @@ public slots:
     void SetImage(const std::string& filename, int flags);
     void SetImageFiducial(const std::string& filename, int flags);
     bool IsImageEmpty();
-    void Find_circles(double &X_distance, double &Y_distance);
-    void Find_F(const int &DescriptorAlgorithm,double &X_distance, double &Y_distance, const int &temp_input);
+    bool Find_circles(double &X_distance, double &Y_distance,const int &temp_input, const int &temp_input_2);
+    bool Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance,
+                const int &temp_input, const int &temp_input_2, std::string &timestamp, int dummy_temp,
+                cv::Mat &transform_out);
+    cv::Mat get_component(const cv::Mat &input_mat,const unsigned int &input);
+    cv::Mat enance_contrast(const cv::Mat &input_mat, const double &alpha, const double &beta);
+    cv::Mat dan_contrast(const cv::Mat &input_mat, const double &max_alpha);
+    cv::Mat change_gamma(const cv::Mat &input_mat, const double &gamma);
 
 private:
     double Calibration = -1.1; //[px/um]
@@ -39,11 +46,11 @@ private:
     bool Is_a_triangle(const cv::Point& P_1, const cv::Point& P_2, const cv::Point& P_3);
     bool Is_a_square(const cv::Point& P_1, const cv::Point& P_2, const cv::Point& P_3, const cv::Point& P_4);
     void Find_SquareAndTriangles(const std::vector <cv::Point> &Centers,
-                                 std::vector <std::vector <int> > &Squares,
-                                 std::vector <std::vector <int> > &Triangles);
+                                 std::vector<std::vector<unsigned int> > &Squares,
+                                 std::vector<std::vector<unsigned int> > &Triangles);
     cv::Point Square_center(const cv::Point& P_1, const cv::Point& P_2,
                             const cv::Point& P_3, const cv::Point& P_4);
-
+    void addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp);
 };
 
 #endif // FIDUCIALFINDER_H

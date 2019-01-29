@@ -105,7 +105,16 @@ public slots:
     virtual bool endRunU();
 
     // Safety limits for movement
-    virtual bool validate_target_pos(double x, double y, double z_1, double z_2);
+    virtual bool validate_target_pos_x(double val);
+    virtual bool validate_target_pos_y(double val);
+    virtual bool validate_target_pos_z_1(double val);
+    virtual bool validate_target_pos_z_2(double val);
+    virtual bool SetLimitsController();
+    virtual bool GetLimitsController(std::vector <double> & limits);
+    virtual int  GetfaultSateXAxis();
+    virtual int  GetfaultSateYAxis();
+    virtual int  GetfaultSateZ1Axis();
+    virtual int  GetfaultSateZ2Axis();
 
 signals:
 
@@ -127,22 +136,15 @@ private:
     double default_speed         = 15;
     double default_angular_speed = 10;
 
-//    A3200Handle gantry;
+    double x_min = -450.0;
+    double x_max =  500.0;
+    double y_min = -350.0;
+    double y_max =  500.;
+    double z_1_min =  0.0;
+    double z_1_max =  90.0;
+    double z_2_min =  -70.0;
+    double z_2_max =  90.0;
 
-//    AXISMASK xaxis;
-//    AXISINDEX xindex;
-
-//    AXISMASK yaxis;
-//    AXISINDEX yindex;
-
-//    AXISMASK zaxis;
-//    AXISINDEX zindex;
-
-//    AXISMASK uaxis;
-//    AXISINDEX uindex;
-
-//    AXISMASK allAxes;
-//    AXISMASK xyAxes;
 };
 
 #endif //ACSCMOTIONHANDLER_H

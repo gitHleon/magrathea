@@ -43,16 +43,18 @@ private slots:
 
     //camera
     void enableCameraBoxClicked(bool checked);
-    void focusButtonClicked();
+    bool focusButtonClicked();
     void captureButtonClicked();
     void calibrationCaller(int input);
     void Calibration_ButtonClicked();
-    void Calibration_2_ButtonClicked();
-    void FiducialFinderCaller(const int &input);
+    bool FiducialFinderCaller(const int &input,std::vector <double> & F_point);
     void Fiducial_finder_button_Clicked();
+    void Circles_button_Clicked();
     void VignetteButton_clicked();
     void Camera_test();
     void Aruco_test();
+    void FocusAlgoTest_Func();
+    bool loop_fid_finder();
 
     //gantry
     void connectGantryBoxClicked(bool checked);
@@ -71,15 +73,16 @@ private slots:
     //test
     void color_test();
     void destroy_all();
-    void loop_test();
+    bool loop_test();
+    void createTemplate_F();
+    bool calibration_plate_measure();
 
 private:
     Ui::Magrathea *ui;
 
-    //cv::VideoCapture cap;
     cv::Mat sub_frame;
 
-    double mCalibration = -100000.1;
+    double mCalibration = 10.0563;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;
