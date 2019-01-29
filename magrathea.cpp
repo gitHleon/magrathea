@@ -304,10 +304,9 @@ Magrathea::Magrathea(QWidget *parent) :
     //test
     connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
-    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test_2()));
+    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_fid_finder()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
-    connect(ui->Run_calib_plate_button_3,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
 }
 
 //******************************************
@@ -688,6 +687,11 @@ void Magrathea::Camera_test(){
 //------------------------------------------
 //------------------------------------------
 void Magrathea::VignetteButton_clicked(){
+    //this function is to evaluate perpendicularity of the camera wrt to the table
+    //It is still in prototype fase and it has not been tested yet.
+    //Use with caution!!
+    //Written from BNL function described here: https://github.com/sciollalab/BNL_ThermomechanicalStave/wiki/Calibration-Methods
+    //"Checking optical axis alignment"
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
@@ -710,7 +714,6 @@ void Magrathea::VignetteButton_clicked(){
     return;
 }
 
-//------------------------------------------
 //------------------------------------------
 
 void Magrathea::Fiducial_finder_button_Clicked()
@@ -833,6 +836,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     if(input==1 || input == 0){
         bool invalid_match = true;
         //int ii = 0;
+        //here you can apply condition on the found match to evaluate if it is good or bad
         //while(invalid_match){
             cv::Mat output_H;
             success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
@@ -869,8 +873,6 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     delete Ffinder;
     cap.release();         //Going back to QCameraa
     //mCamera->start();
-    //////////////
-    //movng the gantry to get the fiducial at the center of the image
     ///////////////////////////////////////////////////////////////////
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
@@ -881,10 +883,6 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
     ofs.close();
-    //    if(input == 0){
-    //    mMotionHandler->moveXBy(-distance_y*0.001,1);//Y axis of camera goes opposite direction than X axis of the gantry
-    //    mMotionHandler->moveYBy(distance_x*0.001,1);
-    //    }
 #else
     ofs << std::endl;
     mMotionHandler->moveXBy(distance_x*0.001,1);
@@ -898,27 +896,6 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     }
 
 //------------------------------------------
-//Move and capture
-
-void Magrathea::capture_fid_and_move(){
-
-    ui->spinBox_input->setValue(0);
-    std::vector <double> dummy;
-    for(int h=0;h<8;h++){
-        //capture fiducial
-        FiducialFinderCaller(0,dummy);
-        Sleeper::msleep(300);
-        FiducialFinderCaller(1,dummy);
-        Sleeper::msleep(300);
-        mMotionHandler->moveXBy(ui->x_fid_move_SpinBox->value(),2);
-        mMotionHandler->moveYBy(ui->y_fid_move_SpinBox->value(),2);
-        ui->spinBox_input->setValue(ui->spinBox_input->value()+1);
-        Sleeper::msleep(500);
-    }
-    ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value()+1);
-}
-
-//------------------------------------------
 //calibrate
 
 void Magrathea::Calibration_ButtonClicked()
@@ -927,14 +904,6 @@ void Magrathea::Calibration_ButtonClicked()
 void Magrathea::calibrationCaller(int input){
     //Eventually add command to move the gantry to the place where the
     //calibration area is.
-    /////////////////////////////////////////
-    //    cv::Point2f temp_coord;
-    //    std::string temp_str = "dumb";
-    //    f_locations->initialise();
-    //    bool status = f_locations->get_value(1,temp_str,temp_coord);
-    //    std::cout<<"st: "<<status<<" identifier: "<<temp_str<<" ; x: "<< temp_coord.x<<" y: "<<temp_coord.y<<std::endl;
-    //    return;
-    ////////////////////////////////////////
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
     Calibrator * calibrator = new Calibrator(this);
@@ -1373,10 +1342,11 @@ void Magrathea::destroy_all(){
 
 bool Magrathea::loop_test(){
     //mMotionHandler->SetLimitsController();
-    //run fiducial finding algo automatically on a series of pictures
+    //run fiducial finding algo automatically
+    //and move to the fiducial position
     for(int j=0;j<70;j++){//set appropriate value of the loop limit
         ui->chip_number_spinBox->setValue(j);
-        if(!mMotionHandler->moveXBy(0.070,1.))
+        if(!mMotionHandler->moveXBy(0.070,1.))//dispalacement added for systematic testing of the algorithm
             return false;
         if(!mMotionHandler->moveYBy(0.070,1.))
             return false;
@@ -1405,15 +1375,13 @@ bool Magrathea::loop_test(){
     return true;
 }
 
-bool Magrathea::loop_test_2(){
+bool Magrathea::loop_fid_finder(){
     //mMotionHandler->SetLimitsController();
-    //run fiducial finding algo automatically on a series of pictures
+    //run fiducial finding algo automatically
+    //and move to the fiducial position
     for(int i=0;i<3;i++){//set appropriate value of the loop limit
         std::cout<<"It "<<i<<std::endl;
-        //ui->spinBox_input->setValue(i);
         std::vector <double> distances;
-        //if(!focusButtonClicked())
-        //    return;
         if(!FiducialFinderCaller(2,distances))
         {
             std::cout<<"FAIL!!"<<std::endl;
@@ -1430,7 +1398,6 @@ bool Magrathea::loop_test_2(){
     }
     return true;
 }
-
 
 void Magrathea::Aruco_test(){
     //visualize the different aruco markers
@@ -1473,83 +1440,12 @@ void Magrathea::createTemplate_F(){
     cv::imshow("fiducial E",fiducial_2);
 }
 
-//bool Magrathea::calibration_plate_measure_one_point(){
-//DEPRECATED
-//    cv::destroyAllWindows();
-//    mCamera->stop(); //closing QCamera
-
-//    focusButtonClicked();
-//    //opening camera with opencv
-//    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-//    if (!cap.isOpened()){
-//        //Opening opencv-camera, needed for easier image manipulation
-//        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-//        return false;}
-//    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-//    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-
-//    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-//    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-//    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-//    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-//    cap.set(CV_CAP_PROP_FPS, 4.0);
-//    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-//    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-//    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-//    cv::Mat mat_from_camera;
-//    bool bSuccess = cap.read(mat_from_camera);
-//    if (!bSuccess){ //if not success
-//        qInfo("Cannot read a frame from video stream");
-//        return false;
-//    }
-
-//    std::vector< std::vector<double> > points;
-//    std::vector< std::vector<double> > PRF_points;
-//    std::vector<double> temp_v;
-
-//    double angle = 0.;
-
-//    std::vector<double> distances_1;
-//    std::vector<double> distances_2;
-
-//    //FiducialFinderCaller(1,distances_1);
-//    //FiducialFinderCaller(1,distances_2);
-//    //std::cout<<"Delta X dist1 : "<<fabs(distances_1[0]-distances_2[0])<<std::endl;
-//    //std::cout<<"Delta Y dist1 : "<<fabs(distances_1[1]-distances_2[1])<<std::endl;
-
-//    //if(fabs(distances_1[0]-distances_2[0])>0.001 || (distances_1[1]-distances_2[1])>0.001){
-//    //    qWarning("ERROR!! Fiducial fail!");
-//    //    std::cout<<"ERROR!! Fiducial fail!"<<std::endl;
-//    //    return;
-//    //}
-
-//    //temp_v.push_back((distances_1[0]+distances_2[0])*0.5+mMotionHandler->whereAmI(1).at(0));
-//    //temp_v.push_back((distances_1[1]+distances_2[1])*0.5+mMotionHandler->whereAmI(1).at(1));
-//    auto one   = std::to_string(ui->chip_number_spinBox->value());
-//    auto two   = std::to_string(ui->spinBox_input->value());
-//    std::string file_name = "placa_calib_PRF_"+one+".txt";
-//    QTime now = QTime::currentTime();
-//    QString time_now = now.toString("hhmmss");
-//    std::string time_now_str = time_now.toLocal8Bit().constData();
-//    int start_x = 15;
-//    int start_y = 5;
-//    cv::putText(mat_from_camera,time_now_str,cv::Point(start_x,mat_from_camera.rows-start_y), CV_FONT_HERSHEY_PLAIN,2,cv::Scalar(255,255,255),2);
-
-//    std::ofstream ofs (file_name, std::ofstream::app);
-//    ofs <<"PRF "<<" "<<time_now_str<<" "<<ui->chip_number_spinBox->value() <<" "<<ui->spinBox_input->value()<<" "
-//       <<mMotionHandler->whereAmI(1).at(0)<<" "<<mMotionHandler->whereAmI(1).at(1)<<" "<<mMotionHandler->whereAmI(1).at(2)
-//      <<std::endl;
-//    ofs.close();
-
-//    cv::imwrite("EXPORT/"+time_now_str+"_"+one+"_"+two+".jpg",mat_from_camera);
-//    cap.release();
-//    //Going back to QCameraa
-//    mCamera->start();
-//    return true;
-//}
-
 bool Magrathea::calibration_plate_measure(){
-
+    //function to calibrate the gantry
+    //it is meant to be used with a calibration plate
+    //for now to be used only in valencia, it can be taken as starting point for others that would
+    //like to perform a similar measure
+    //Fpr questions : dmadaffa@cern.ch
     cv::destroyAllWindows();
 
     std::vector< std::vector<double> > points;
@@ -1557,13 +1453,11 @@ bool Magrathea::calibration_plate_measure(){
 
     temp_v.push_back(ui->point1_x_box->value());//gantry coord of point 1
     temp_v.push_back(ui->point1_y_box->value());
-    temp_v.push_back(ui->point1_z_box->value());
     points.push_back(temp_v);
     temp_v.clear();
 
     temp_v.push_back(ui->point2_x_box->value());//gantry coord of point 2
     temp_v.push_back(ui->point2_y_box->value());
-    temp_v.push_back(ui->point2_z_box->value());
     points.push_back(temp_v);
     temp_v.clear();
 
@@ -1588,7 +1482,7 @@ bool Magrathea::calibration_plate_measure(){
                 return false;
             if(!focusButtonClicked())
                 return false;
-            if(!loop_test_2())
+            if(!loop_fid_finder())
                 return false;
 
             auto one = std::to_string(ui->spinBox_plate_position->value());
@@ -1612,77 +1506,3 @@ bool Magrathea::calibration_plate_measure(){
     return true;
 }
 
-
-//    temp_v.push_back(ui->point1_x_box->value());
-//    temp_v.push_back(ui->point1_y_box->value());
-//    temp_v.push_back(ui->point1_z_box->value());
-//    points.push_back(temp_v);
-//    temp_v.clear();
-
-//    temp_v.push_back(ui->point2_x_box->value());
-//    temp_v.push_back(ui->point2_y_box->value());
-//    temp_v.push_back(ui->point2_z_box->value());
-//    points.push_back(temp_v);
-//    temp_v.clear();
-
-//    temp_v.push_back(ui->point3_x_box->value());
-//    temp_v.push_back(ui->point3_y_box->value());
-//    temp_v.push_back(ui->point3_z_box->value());
-//    points.push_back(temp_v);
-//    temp_v.clear();
-//    PRF_points.clear();
-//    double angle = 0.;
-
-//    for(int i=0;i<3;i++){
-//        std::vector<double> distances;
-//        distances.clear();
-//        temp_v.clear();
-//        mMotionHandler->moveXTo(points[i][0],20.);
-//        mMotionHandler->moveYTo(points[i][1],20.);
-//        mMotionHandler->moveZTo(points[i][2],20.);
-//        //Sleeper::msleep(4000);
-//        focusButtonClicked(); //add error check
-//        FiducialFinderCaller(1,distances);
-//        temp_v.push_back(distances[0]+mMotionHandler->whereAmI(1).at(0));
-//        temp_v.push_back(distances[1]+mMotionHandler->whereAmI(1).at(1));
-//        std::string file_name = "placa_calib_PRF.txt";
-//        std::ofstream ofs (file_name, std::ofstream::app);
-//        ofs <<"PRF "<<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)
-//           <<std::endl;
-//        ofs.close();
-//        temp_v.push_back(mMotionHandler->whereAmI(1).at(2));
-//        PRF_points.push_back(temp_v);
-//    }
-
-//    return;
-
-//    angle = atan((PRF_points[1][1]-PRF_points[0][1])/(PRF_points[1][0]-PRF_points[0][0]));
-
-//    mMotionHandler->moveTo(points[0][0],points[0][1],points[0][2],5.);
-
-//    double step_x = 15.;
-//    double step_y = -12.;
-
-//    for(int i=0;i<10;i++){//y
-//        for(int j=0;j<10;j++){//x
-//            std::vector<double> distances;
-//            distances.clear();
-//            temp_v.clear();
-//            double target_x = PRF_points[0][0] + step_x*j*cos(angle) + step_y*i*sin(angle);
-//            double target_y = PRF_points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
-//            mMotionHandler->moveXTo(target_x,2.);
-//            mMotionHandler->moveYTo(target_y,2.);
-//            Sleeper::msleep(1100);
-//            focusButtonClicked(); //add error check
-//            FiducialFinderCaller(1,distances);
-//            temp_v.push_back(distances[0]+mMotionHandler->whereAmI(1).at(0));
-//            temp_v.push_back(distances[1]+mMotionHandler->whereAmI(1).at(1));
-//            std::string file_name = "calibration_plate.txt";
-//            std::ofstream ofs (file_name, std::ofstream::app);
-//            ofs <<i<<" "<<temp_v[0]<<" "<<temp_v[1]<<" "<<mMotionHandler->whereAmI(1).at(2)<<" "<<distances[0]<<" "<<distances[1]
-//               <<std::endl;
-//            ofs.close();
-//        }
-//    }
-
-//}

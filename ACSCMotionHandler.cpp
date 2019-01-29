@@ -1118,26 +1118,3 @@ bool ACSCMotionHandler::validate_target_pos_z_2(double val){
         return true;
     }
 }
-
-
-bool ACSCMotionHandler::validate_target_pos(double x, double y, double z_1,double z_2)
-{
-
-    qInfo("checking if target position is safe");
-    if (y > 300 && z_2 < -40) { // condition is true, position is NOT valid, abort motion.
-        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
-        return true;
-    } else if (y < -300 && z_1 < -40){
-        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
-        return true;
-    } else if (z_1 < -60){
-        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
-        return true;
-    } else if (z_2 < -20){
-        qWarning("ERROR!! Target position is NOT valid, aborting motion.");
-        return true;
-    } else { // conditions are not met, position is valid, carry on...
-        return false;
-    }
-    return true;
-}

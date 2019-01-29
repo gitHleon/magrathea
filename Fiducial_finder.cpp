@@ -106,14 +106,13 @@ cv::Mat FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max
     cv::Scalar  mean_t;
     cv::Scalar  stddev_t;
     cv::meanStdDev(input_mat,mean_t,stddev_t);
-    const double steps = 5;
-    int threshold_step = 255/steps;
+    const int steps = 5;
     double alpha_steps = max_alpha/(steps-2);
     bool debug = false;
 
     std::vector<cv::Mat> matrices;
     std::vector<cv::Mat> matrices_mod;
-    std::vector<int> threshold_steps;
+    std::vector<double> threshold_steps;
     threshold_steps.push_back(0);
     threshold_steps.push_back(mean_t[0]-1*stddev_t[0]);
     threshold_steps.push_back(mean_t[0]+1*stddev_t[0]);
@@ -124,14 +123,14 @@ cv::Mat FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max
     threshold_steps.push_back(255);
 
     matrices.push_back(input_mat);
-    for(int i=1;i<(steps-1);i++){
+    for(unsigned int i=1;i<(steps-1);i++){
         cv::Mat temp_thr;
         cv::threshold(input_mat,temp_thr,threshold_steps.at(i),255,CV_THRESH_TOZERO);
         matrices.push_back(temp_thr);
     }
     matrices.push_back(cv::Mat::zeros(input_mat.rows,input_mat.cols,input_mat.type()));
 
-    for(int i=0;i<(steps-1);i++){
+    for(unsigned int i=0;i<(steps-1);i++){
         cv::Mat temp_thr;
         temp_thr = matrices.at(i) - matrices.at(i+1);
         double square_step = i/(steps-2);
@@ -191,8 +190,8 @@ bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, c
     //http://en.cppreference.com/w/cpp/language/range-for
     //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
     //Distances between points are 22 - 20 um
-    const int threshold_H = 27*Calibration;
-    const int threshold_L = 15*Calibration;
+    const double threshold_H = 27*Calibration;
+    const double threshold_L = 15*Calibration;
     cv::Vec2i p_1 = {P_1.x,P_1.y};
     cv::Vec2i p_2 = {P_2.x,P_2.y};
     cv::Vec2i p_3 = {P_3.x,P_3.y};
@@ -209,7 +208,7 @@ bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, c
     }
 }
 
-void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Centers, std::vector<std::vector<int> > &Squares, std::vector<std::vector<int> > &Triangles){
+void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Centers, std::vector<std::vector<unsigned int> > &Squares, std::vector<std::vector<unsigned int> > &Triangles){
     //function needed when searching for fiducial not using SURF
     int Iteration = 0;
     Squares.clear();
@@ -220,7 +219,7 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Cente
             for(unsigned int k=j+1;k<num_points;k++){
                 if(Is_a_triangle(Centers.at(i),Centers.at(j),Centers.at(k))){
                     std::cout<<">> Tria True <<"<<std::endl;
-                    std::vector <int> indeces (3);
+                    std::vector <unsigned int> indeces (3);
                     indeces.at(0) = i;
                     indeces.at(1) = j;
                     indeces.at(2) = k;
@@ -230,7 +229,7 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Cente
                     Iteration++;
                     if(Is_a_square(Centers.at(i),Centers.at(j),Centers.at(k),Centers.at(l))){
                         std::cout<<">> True <<"<<std::endl;
-                        std::vector <int> indeces (4);
+                        std::vector <unsigned int> indeces (4);
                         indeces.at(0) = i;
                         indeces.at(1) = j;
                         indeces.at(2) = k;
@@ -328,9 +327,9 @@ bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, con
 
 cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3, const cv::Point &P_4){
     float X_coord = P_1.x + P_2.x + P_3.x + P_4.x;
-    X_coord /= 4.;
+    X_coord /= 4;
     float Y_coord = P_1.y + P_2.y + P_3.y + P_4.y;
-    Y_coord /= 4.;
+    Y_coord /= 4;
     cv::Point Out;
     Out.x = X_coord;
     Out.y = Y_coord;
@@ -415,7 +414,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             int hough_threshold = min_radius*0.2; //[px] 36
             if(debug)
                 std::cout<<">> calibration "<<Calibration<<std::endl;
-            std::vector<cv::Vec3f> circles;
+            std::vector<cv::Vec3i> circles;
             circles.clear();
 
             //    for(int iterations = 0;;iterations++){
@@ -448,8 +447,8 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                 std::cout<<" norm "<<cv::norm(Centers.at(i)-Centers.at((i+1)%Centers.size())) <<" CXX "<<Centers[(i+1)%4].x<<" CYY "<<Centers[(i+1)%4].y<<std::endl;
             }
 
-        std::vector <std::vector <int> > Squares(0);
-        std::vector <std::vector <int> > Triangles(0);
+        std::vector <std::vector <unsigned int> > Squares(0);
+        std::vector <std::vector <unsigned int> > Triangles(0);
 
         Find_SquareAndTriangles(Centers,Squares,Triangles);
         if(debug)
@@ -872,25 +871,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     X_distance = (F_center.x - ROIcenter_cols)*(1./Calibration); //[um]
     Y_distance = (F_center.y - ROIcenter_rows)*(1./Calibration); //[um]
     timestamp = time_now_str;
-    //        cv::Scalar value_t = H.at<uchar>(0,0);
-    //        double a = value_t.val[0];
-    //        value_t = H.at<uchar>(0,1);//image_gray.at<uchar>(row,col)
-    //        double b = value_t.val[0];
-    //        value_t = H.at<uchar>(0,2);
-    //        double c = value_t.val[0];
-    //        value_t = H.at<uchar>(1,0);
-    //        double d = value_t.val[0];
-    //        value_t = H.at<uchar>(1,1);
-    //        double e = value_t.val[0];
-    //        value_t = H.at<uchar>(1,2);
-    //        double f = value_t.val[0];
-    //        double p_0 = sqrt(a*a + b*b);
-    //        double theta = atan(d/a);
-    //        qInfo("Rotation    :\t %.2f deg",((theta*180.)/3.14159));
-    //        qInfo("Translation :\t %.0f px,\t %.0f px",c,f);
-    //        qInfo("Scale 0      :\t %.2f",p_0);
-    //        X_distance = c*Calibration;
-    //        Y_distance = f*Calibration;
     descriptor_extractor.release();
     matcher.release();
     detector.release();

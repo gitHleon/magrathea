@@ -54,6 +54,7 @@ private slots:
     void Camera_test();
     void Aruco_test();
     void FocusAlgoTest_Func();
+    bool loop_fid_finder();
 
     //gantry
     void connectGantryBoxClicked(bool checked);
@@ -73,15 +74,12 @@ private slots:
     void color_test();
     void destroy_all();
     bool loop_test();
-    bool loop_test_2();
     void createTemplate_F();
-    void capture_fid_and_move();
     bool calibration_plate_measure();
 
 private:
     Ui::Magrathea *ui;
 
-    //cv::VideoCapture cap;
     cv::Mat sub_frame;
 
     double mCalibration = 10.0563;//3.43;//4.5; //[px/um]

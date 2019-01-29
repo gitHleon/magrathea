@@ -105,7 +105,6 @@ public slots:
     virtual bool endRunU();
 
     // Safety limits for movement
-    virtual bool validate_target_pos(double x, double y, double z_1, double z_2);
     virtual bool validate_target_pos_x(double val);
     virtual bool validate_target_pos_y(double val);
     virtual bool validate_target_pos_z_1(double val);
@@ -146,22 +145,6 @@ private:
     double z_2_min =  -70.0;
     double z_2_max =  90.0;
 
-//    A3200Handle gantry;
-
-//    AXISMASK xaxis;
-//    AXISINDEX xindex;
-
-//    AXISMASK yaxis;
-//    AXISINDEX yindex;
-
-//    AXISMASK zaxis;
-//    AXISINDEX zindex;
-
-//    AXISMASK uaxis;
-//    AXISINDEX uindex;
-
-//    AXISMASK allAxes;
-//    AXISMASK xyAxes;
 };
 
 #endif //ACSCMOTIONHANDLER_H
