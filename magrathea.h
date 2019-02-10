@@ -76,6 +76,7 @@ private slots:
     bool loop_test();
     void createTemplate_F();
     bool calibration_plate_measure();
+    int FitTestButtonClick();
 
 private:
     Ui::Magrathea *ui;

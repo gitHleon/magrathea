@@ -1,31 +1,41 @@
 #include "Fiducial_finder.h"
 
+void function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
+{
+    //
+    // this callback calculates chi square function for square of circles
+    // We will have 8+4 variables, 8 for the points coordinates and 4 for the paremeters we want to fit.
+    // In the body of the routine we will call minbleicsetlc to set the values of the first 8 variables to the points measured
+    // and set the thers 4 in a way that the function do not diverge, i.e. denoeminator never gets close to zero.
+    // This can be achived setting the limits of <= and >= that 1 or some small value, since I do not expecte the intercept
+    // of the lines to be closer than that value.
+    // Legend of the valiables : x[0], x[1], etc.. => x_1, y_1, x_2, y_2, etc.. coordinates of the points of the image
+    // variables x[8], ... ,  x[11] are the intercepts q_1, q_2, q_3, and q_4
+    //
+    if( (fabs(x[8]-x[10])<=0.999999999999) || (fabs(x[9]-x[11])<=0.999999999999) )
+    {
+        func = 1.0E+300;
+        return;
+    }
+    double one_over_sigmasquare = 0.25;
+    func =  one_over_sigmasquare * (
+              (x[1] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[0] + x[8])
+            + (x[3] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[2] + x[8])
+            + (x[3] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[2] - x[9])
+            + (x[5] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[4] - x[9])
+            + (x[5] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[4] + x[10])
+            + (x[7] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[6] + x[10])
+            + (x[7] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[6] - x[11])
+            + (x[1] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[0] - x[11])
+            );
+            //100*pow(x[0]+3,4) + pow(x[1]-3,4);
+}
+
 bool Distance_sorter(cv::DMatch m_1,cv::DMatch m_2){
     return m_1.distance < m_2.distance;
 }
 
-//std::string type2str(int type) {
-//  std::string r;
-
-//  uchar depth = type & CV_MAT_DEPTH_MASK;
-//  uchar chans = 1 + (type >> CV_CN_SHIFT);
-
-//  switch ( depth ) {
-//    case CV_8U:  r = "8U"; break;
-//    case CV_8S:  r = "8S"; break;
-//    case CV_16U: r = "16U"; break;
-//    case CV_16S: r = "16S"; break;
-//    case CV_32S: r = "32S"; break;
-//    case CV_32F: r = "32F"; break;
-//    case CV_64F: r = "64F"; break;
-//    default:     r = "User"; break;
-//  }
-
-//  r += "C";
-//  r += (chans+'0');
-
-//  return r;
-//}
+std::string type2str(int type);
 
 FiducialFinder::FiducialFinder(QWidget *parent) : QWidget(parent)
 {}
@@ -176,7 +186,6 @@ void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int st
     start_x += um_size.width;
     cv::line(image,cv::Point(start_x,window_size-start_y),cv::Point(start_x+(50*Calibration),window_size-start_y),cv::Scalar(255,255,255),text_thikness);
 }
-
 
 bool FiducialFinder::Is_equal(const double &one, const double &two){
     //function needed when searching for fiducial not using SURF
@@ -336,10 +345,10 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
     return Out;
 }
 
-bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2){
+bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
-    bool debug = false;
+    bool debug = true;
     bool print_raw = true;
 
 
@@ -352,7 +361,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
 
         if(debug)
             cv::imshow("f. 0 image",image);
-        const int window_size = ( (image.cols > 2700 && image.rows > 2700) ? 2700 : 420);
+        const int window_size = ( (image.cols > 2600 && image.rows > 2600) ? 2600 : 420);
         const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
@@ -404,8 +413,12 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             if(debug)
                 cv::imshow("2 threshold",image_gray);
 
+            if(debug){
+                std::string ty =  type2str( image_gray.type() );
+                std::cout<< ty<<std::endl;
+            }
             //------
-
+            //return true;
             //Size of dot: diameter = 20 um
             //double Calibration; //[px/um]
             int min_radius = 14*0.5*Calibration; //[px] //14
@@ -414,7 +427,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             int hough_threshold = min_radius*0.2; //[px] 36
             if(debug)
                 std::cout<<">> calibration "<<Calibration<<std::endl;
-            std::vector<cv::Vec3i> circles;
+            std::vector<cv::Vec3f> circles;//if this vector has 4 elements the fourth is the votes got buy the circle!
             circles.clear();
 
             //    for(int iterations = 0;;iterations++){
@@ -423,8 +436,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             //            if(debug)
             //                cv::imshow("contrast",image_gray);
             //        }
-
-        cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius); //image_gray
+        cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius);
         if(debug)
             std::cout<<">> circles "<<circles.size()<<std::endl;
         std::vector <cv::Point> Centers (circles.size());
@@ -481,14 +493,170 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         std::string one   = std::to_string(input_1);
         std::string two   = std::to_string(input_2);
         cv::imwrite("EXPORT/Circles_"+one+"_"+two+"_"+dummy+".jpg",RoiImage_out);
-        if(Squares.size() == 1)
+        if(!fit && Squares.size() == 1)
             return true;
+        else {
+
+            //1.reorder the points of the square
+            std::vector<cv::Point2d > input;
+            std::vector<cv::Point2d> output;
+            input.clear();
+            for(unsigned int j = 0; j < 4; j++ )
+                input.push_back(Centers.at(Squares[0][j]));
+            OrderSquare(input,output);
+            std::vector<double> q_start(4);
+            std::vector<double> m_start(4);
+            for(unsigned int j = 0; j < 4; j++ )
+            {
+                q_start[j] = ((output[j].y*output[(j+1)%4].x) - (output[(j+1)%4].y*output[j].x) )/(output[(j+1)%4].x-output[j].x)  ;
+                m_start[j] = (output[(j+1)%4].y - output[j].y )/(output[(j+1)%4].x - output[j].x)  ;
+                std::cout<<output[j].x<<" "<<output[j].y<<" "<<output[(j+1)%4].x<<" "<<output[(j+1)%4].y<<" "
+                        <<m_start[j]<<" "<<q_start[j]<<std::endl;
+            }
+            //2.minimize the chi square
+            //http://www.alglib.net/translator/man/manual.cpp.html#example_minbleic_d_2
+            alglib::real_1d_array starting_value_variables ;//starting point to be set for all 12 variables
+            alglib::real_2d_array limiting_conditions ;//= "[[1,0,2],[1,1,6]]";//limiting conditions for all 12 variables
+            alglib::integer_1d_array conditions_relation ;//= "[1,1]";//limiting operator for conditions for all 12 var.
+            double x_1[] = {output[0].x,output[0].y,
+                            output[1].x,output[1].y,
+                            output[2].x,output[2].y,
+                            output[3].x,output[3].y,
+                            q_start[0],
+                            q_start[1],
+                            q_start[2],
+                            q_start[3]};
+            starting_value_variables.setcontent(12,x_1);
+            printf("%s\n", starting_value_variables.tostring(12).c_str()); // EXPECTED: [2,4]
+
+            //setting the boundry condition for the fit
+            //first 8 conditions are the coordinates of the centers of the circles
+            //last 4 conditions are to avoid the functions to diverge when q_1(2) and q_3(4) are the same
+            //for sysntaxis look here:
+            //http://www.alglib.net/translator/man/manual.cpp.html#example_minbleic_d_2
+            double c_1[] = {
+                1,0,0,0,0,  0,0,0,0,0, 0,0, output[0].x,
+                0,1,0,0,0,  0,0,0,0,0, 0,0, output[0].y,
+                0,0,1,0,0,  0,0,0,0,0, 0,0, output[1].x,
+                0,0,0,1,0,  0,0,0,0,0, 0,0, output[1].y,
+                0,0,0,0,1,  0,0,0,0,0, 0,0, output[2].x,
+                0,0,0,0,0,  1,0,0,0,0, 0,0, output[2].y,
+                0,0,0,0,0,  0,1,0,0,0, 0,0, output[3].x,
+                0,0,0,0,0,  0,0,1,0,0, 0,0, output[3].y
+
+                //0,0,0,0,0,  0,0,0,1,0, -1,0, 1,
+                //0,0,0,0,0,  0,0,0,1,0, -1,0, -1,
+                //0,0,0,0,0,  0,0,0,0,1, 0,-1, 1,
+                //0,0,0,0,0,  0,0,0,0,1, 0,-1, -1
+            };
+            limiting_conditions.setcontent(8,13,c_1);
+
+            int ct_1[] = {
+                0,0,0,0,0,  0,0,0//,1,-1, //1,-1
+            };
+            conditions_relation.setcontent(8,ct_1);
+            //use setcontent function to fill the arrays properly
+            //http://www.alglib.net/translator/man/manual.cpp.html#gs_datatypes
+            alglib::minbleicstate state;
+            alglib::minbleicreport rep;
+            //
+            // These variables define stopping conditions for the optimizer.
+            //
+            // We use very simple condition - |g|<=epsg
+            //
+
+            double epsg = 0.000001;
+            double epsf = 0;
+            double epsx = 0;
+            alglib::ae_int_t maxits = 0;
+
+            //
+            // Now we are ready to actually optimize something:
+            // * first we create optimizer
+            // * we add linear constraints
+            // * we tune stopping conditions
+            // * and, finally, optimize and obtain results...
+            //
+            std::cout<<"ok 1"<<std::endl;
+            minbleiccreate(starting_value_variables, state);
+            std::cout<<"ok 2"<<std::endl;
+            minbleicsetlc(state, limiting_conditions, conditions_relation);
+            std::cout<<"ok 3"<<std::endl;
+            minbleicsetcond(state, epsg, epsf, epsx, maxits);
+            std::cout<<"ok 4"<<std::endl;
+            alglib::minbleicoptimize(state, function_ChiSquare);
+            std::cout<<"ok 5"<<std::endl;
+            minbleicresults(state, starting_value_variables, rep);
+
+            //
+            // ...and evaluate these results
+            //
+            printf("%d\n", int(rep.terminationtype)); // EXPECTED: 4
+            printf("%s\n", starting_value_variables.tostring(12).c_str()); // EXPECTED: [2,4]
+            //2.1 check that the convergence is good
+            std::cout<<"ok 6"<<std::endl;
+
+            if (int(rep.terminationtype) != 4){
+                qWarning("fit of square failed!!");
+                return false;
+            }
+
+            //3 evaluate the center of the new square
+
+            double fitted_square_center_x = 0.;
+            double fitted_square_center_y = 0.;
+            double m_1 = fabs(starting_value_variables[8] - starting_value_variables[10])/
+                    fabs(starting_value_variables[9] - starting_value_variables[11]);
+            fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
+            fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
+
+            X_distance = (fitted_square_center_x - RoiImage_out.cols/2)*(1./Calibration); //[um]
+            Y_distance = (fitted_square_center_y - RoiImage_out.rows/2)*(1./Calibration); //[um]
+            //add plot
+            return true;
+        }
         if(iterations>2)
             break;
     }
 
     return false;
 }
+
+int FiducialFinder::OrderSquare(const std::vector<cv::Point2d> &input, std::vector<cv::Point2d> &output){
+    //I am assuming it is a square
+    if(input.size()!=4){
+        qWarning("Error in square reordering size.");
+        return 1;
+    }
+    output.clear();
+    cv::Vec2d p_0 = {input[0].x,input[0].y};
+    cv::Vec2d p_1 = {input[1].x,input[1].y};
+    cv::Vec2d p_2 = {input[2].x,input[2].y};
+    cv::Vec2d p_3 = {input[3].x,input[3].y};
+    output.push_back(input[0]);
+    if(cv::norm(p_0,p_1) >= cv::norm(p_0,p_2))
+        if(cv::norm(p_0,p_1) >= cv::norm(p_0,p_3)){
+            output.push_back(input[2]);
+            output.push_back(input[1]);//this is the opposite corner
+            output.push_back(input[3]);
+        }else{
+            output.push_back(input[2]);
+            output.push_back(input[3]);//this is the opposite corner
+            output.push_back(input[1]);
+        }
+    else
+        if(cv::norm(p_0,p_2) >= cv::norm(p_0,p_3)){
+            output.push_back(input[1]);
+            output.push_back(input[2]);//this is the opposite corner
+            output.push_back(input[3]);
+        }else{
+            output.push_back(input[1]);
+            output.push_back(input[3]);//this is the opposite corner
+            output.push_back(input[2]);
+        }
+    return 0;
+}
+
 
 bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance,
                             const int &temp_input, const int &temp_input_2, std::string &timestamp, int dummy_temp,
@@ -878,23 +1046,39 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
 }
 
 
+void function1_func(const alglib::real_1d_array &x, double &func, void *ptr)
+{
+    //
+    // this callback calculates f(x0,x1) = 100*(x0+3)^4 + (x1-3)^4
+    //
+    func = 100*pow(x[0]+3,4) + pow(x[1]-3,4);
+}
 
 
+int FiducialFinder::dumb_test()
+{
+    //
+    // This example demonstrates minimization of f(x,y) = 100*(x+3)^4+(y-3)^4
+    // using numerical differentiation to calculate gradient.
+    //
+    alglib::real_1d_array x = "[0,0]";
+    double epsg = 0.0000000001;
+    double epsf = 0;
+    double epsx = 0;
+    double diffstep = 1.0e-6;
+    alglib::ae_int_t maxits = 0;
+    alglib::minlbfgsstate state;
+    alglib::minlbfgsreport rep;
 
+    alglib::minlbfgscreatef(1, x, diffstep, state);
+    alglib::minlbfgssetcond(state, epsg, epsf, epsx, maxits);
+    alglib::minlbfgsoptimize(state, function1_func);
+    alglib::minlbfgsresults(state, x, rep);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    printf("%d\n", int(rep.terminationtype)); // EXPECTED: 4
+    printf("%s\n", x.tostring(2).c_str()); // EXPECTED: [-3,3]
+    return 0;
+}
 
 
 

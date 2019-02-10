@@ -253,7 +253,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
-    connect(ui->cap_and_move_button,SIGNAL(clicked(bool)),this,SLOT(capture_fid_and_move()));
+    //connect(ui->cap_and_move_button,SIGNAL(clicked(bool)),this,SLOT(capture_fid_and_move()));
     connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
 
     //gantry
@@ -307,6 +307,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_fid_finder()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
+    connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
 }
 
 //******************************************
@@ -355,6 +356,8 @@ void Magrathea::updatePosition(){
     led_label(ui->label_16, current);
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
     //reading fault state for each axis
+
+    return;
 
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
     unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
@@ -798,7 +801,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
     if(from_file){
         //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
-        std::string address = "D:/Gantry/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
+        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/Calibration_plate_measures/pos_5/";
         std::string Images[] = {
 //            "003.jpg",
 //            "004.jpg",
@@ -813,8 +816,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 //            "013.jpg",
 //            "014.jpg",
 //            "015.jpg",
-            "016.jpg",
-            "017.jpg"
+            "Circles_0_2_0.jpg",
+            //"017.jpg"
             //"chip_1_1_pos_1.TIF"
         };
 
@@ -833,7 +836,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     }
     qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
 
-    if(input==1 || input == 0){
+    if(input == 1 || input == 0){
         bool invalid_match = true;
         //int ii = 0;
         //here you can apply condition on the found match to evaluate if it is good or bad
@@ -851,7 +854,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
             std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
         //}//while invalid match
     } else if(input == 2){
-        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
+        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),true);
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
@@ -1505,4 +1508,13 @@ bool Magrathea::calibration_plate_measure(){
     }
     return true;
 }
+
+int Magrathea::FitTestButtonClick(){
+
+    FiducialFinder * Ffinder = new FiducialFinder(this);
+    Ffinder->Set_log(outputLogTextEdit);
+    Ffinder->dumb_test();
+    return 0;
+}
+
 
