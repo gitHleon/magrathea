@@ -19,14 +19,14 @@ void function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
     }
     double one_over_sigmasquare = 0.25;
     func =  one_over_sigmasquare * (
-              (x[1] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[0] + x[8])
-            + (x[3] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[2] + x[8])
-            + (x[3] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[2] - x[9])
-            + (x[5] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[4] - x[9])
-            + (x[5] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[4] + x[10])
-            + (x[7] - (fabs(x[8]-x[10])/(fabs(x[9]-x[11])) )*x[6] + x[10])
-            + (x[7] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[6] - x[11])
-            + (x[1] + (fabs(x[9]-x[11])/(fabs(x[8]-x[10])) )*x[0] - x[11])
+                pow((x[1] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[0] + x[8]),2)
+              + pow((x[3] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[2] + x[8]),2)
+              + pow((x[3] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[2] - x[9]),2)
+              + pow((x[5] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[4] - x[9]),2)
+              + pow((x[5] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[4] + x[10]),2)
+              + pow((x[7] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[6] + x[10]),2)
+              + pow((x[7] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[6] - x[11]),2)
+              + pow((x[1] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[0] - x[11]),2)
             );
             //100*pow(x[0]+3,4) + pow(x[1]-3,4);
 }
@@ -484,6 +484,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                     ofs << input_1 <<" "<<input_2<<" "<< square_center.x <<" "<<square_center.y<<std::endl;
                     ofs.close();
                 }
+                std::cout<<"pre fit : "<< square_center.x <<" "<<square_center.y<<std::endl;
             }
         }
 
@@ -518,6 +519,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             alglib::real_1d_array starting_value_variables ;//starting point to be set for all 12 variables
             alglib::real_2d_array limiting_conditions ;//= "[[1,0,2],[1,1,6]]";//limiting conditions for all 12 variables
             alglib::integer_1d_array conditions_relation ;//= "[1,1]";//limiting operator for conditions for all 12 var.
+            alglib::real_1d_array variables_range ;
             double x_1[] = {output[0].x,output[0].y,
                             output[1].x,output[1].y,
                             output[2].x,output[2].y,
@@ -528,7 +530,15 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                             q_start[3]};
             starting_value_variables.setcontent(12,x_1);
             printf("%s\n", starting_value_variables.tostring(12).c_str()); // EXPECTED: [2,4]
-
+            double fitted_square_center_x = 0.;
+            double fitted_square_center_y = 0.;
+            double m_1 = fabs(starting_value_variables[8] - starting_value_variables[10])/
+                    fabs(starting_value_variables[9] - starting_value_variables[11]);
+            fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
+            fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
+            //here is wrong!! Add the other point and then evaluate the average!!! this is (or should be) a corner of the fitted square!!
+            //also, this does not retrn the point it is supposed to return, fix it!!
+            std::cout<<"Pre fit 2 : "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
             //setting the boundry condition for the fit
             //first 8 conditions are the coordinates of the centers of the circles
             //last 4 conditions are to avoid the functions to diverge when q_1(2) and q_3(4) are the same
@@ -540,9 +550,15 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                 0,0,1,0,0,  0,0,0,0,0, 0,0, output[1].x,
                 0,0,0,1,0,  0,0,0,0,0, 0,0, output[1].y,
                 0,0,0,0,1,  0,0,0,0,0, 0,0, output[2].x,
+
                 0,0,0,0,0,  1,0,0,0,0, 0,0, output[2].y,
                 0,0,0,0,0,  0,1,0,0,0, 0,0, output[3].x,
                 0,0,0,0,0,  0,0,1,0,0, 0,0, output[3].y
+
+//                0,0,0,0,0,  0,0,0,1,0, 0,0, q_start[0],
+//                0,0,0,0,0,  0,0,0,0,1, 0,0, q_start[1],
+//                0,0,0,0,0,  0,0,0,0,0, 1,0, q_start[2],
+//                0,0,0,0,0,  0,0,0,0,0, 0,1, q_start[3]
 
                 //0,0,0,0,0,  0,0,0,1,0, -1,0, 1,
                 //0,0,0,0,0,  0,0,0,1,0, -1,0, -1,
@@ -552,19 +568,36 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             limiting_conditions.setcontent(8,13,c_1);
 
             int ct_1[] = {
-                0,0,0,0,0,  0,0,0//,1,-1, //1,-1
+                0,0,0,0,0,  0,0,0  //,0,0,0//,1,-1, //1,-1
             };
             conditions_relation.setcontent(8,ct_1);
+
+            double s_1[] = {
+                 output[0].x*0.1,
+                 output[0].y*0.1,
+                 output[1].x*0.1,
+                 output[1].y*0.1,
+                 output[2].x*0.1,
+
+                 output[2].y*0.1,
+                 output[3].x*0.1,
+                 output[3].y*0.1,
+
+                 q_start[0]*0.1,
+                 q_start[1]*0.1,
+                 q_start[2]*0.1,
+                 q_start[3]*0.1
+            };
+            variables_range.setcontent(12,s_1);
+
             //use setcontent function to fill the arrays properly
             //http://www.alglib.net/translator/man/manual.cpp.html#gs_datatypes
-            alglib::minbleicstate state;
-            alglib::minbleicreport rep;
             //
             // These variables define stopping conditions for the optimizer.
             //
             // We use very simple condition - |g|<=epsg
             //
-
+            double diffstep = 1.0e-6;
             double epsg = 0.000001;
             double epsf = 0;
             double epsx = 0;
@@ -577,39 +610,46 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             // * we tune stopping conditions
             // * and, finally, optimize and obtain results...
             //
+
+            alglib::minbleicstate state;
+            alglib::minbleicreport rep;
             std::cout<<"ok 1"<<std::endl;
-            minbleiccreate(starting_value_variables, state);
+            minbleiccreatef(starting_value_variables, diffstep,state);
             std::cout<<"ok 2"<<std::endl;
             minbleicsetlc(state, limiting_conditions, conditions_relation);
             std::cout<<"ok 3"<<std::endl;
             minbleicsetcond(state, epsg, epsf, epsx, maxits);
             std::cout<<"ok 4"<<std::endl;
-            alglib::minbleicoptimize(state, function_ChiSquare);
+            minbleicsetscale(state,variables_range);
+            //std::cout<<dummy_function_ChiSquare(starting_value_variables)<<std::endl;
+            //return false;
             std::cout<<"ok 5"<<std::endl;
+            alglib::minbleicoptimize(state, function_ChiSquare);
+            std::cout<<"ok 6"<<std::endl;
             minbleicresults(state, starting_value_variables, rep);
 
             //
             // ...and evaluate these results
             //
-            printf("%d\n", int(rep.terminationtype)); // EXPECTED: 4
-            printf("%s\n", starting_value_variables.tostring(12).c_str()); // EXPECTED: [2,4]
+            printf("%d\n", int(rep.terminationtype));
+            printf("%s\n", starting_value_variables.tostring(12).c_str());
             //2.1 check that the convergence is good
             std::cout<<"ok 6"<<std::endl;
 
-            if (int(rep.terminationtype) != 4){
+            if (int(rep.terminationtype) < 0){
                 qWarning("fit of square failed!!");
                 return false;
             }
 
             //3 evaluate the center of the new square
 
-            double fitted_square_center_x = 0.;
-            double fitted_square_center_y = 0.;
-            double m_1 = fabs(starting_value_variables[8] - starting_value_variables[10])/
+//            double fitted_square_center_x = 0.;
+//            double fitted_square_center_y = 0.;
+            m_1 = fabs(starting_value_variables[8] - starting_value_variables[10])/
                     fabs(starting_value_variables[9] - starting_value_variables[11]);
             fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
             fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
-
+            std::cout<<" "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
             X_distance = (fitted_square_center_x - RoiImage_out.cols/2)*(1./Calibration); //[um]
             Y_distance = (fitted_square_center_y - RoiImage_out.rows/2)*(1./Calibration); //[um]
             //add plot
