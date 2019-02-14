@@ -55,6 +55,7 @@ private slots:
     void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
+    bool CVCaptureButtonClicked();
 
     //gantry
     void connectGantryBoxClicked(bool checked);
@@ -76,6 +77,7 @@ private slots:
     bool loop_test();
     void createTemplate_F();
     bool calibration_plate_measure();
+    bool fiducial_chip_measure();
 
 private:
     Ui::Magrathea *ui;
