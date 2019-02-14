@@ -495,7 +495,7 @@ void Magrathea::FocusAlgoTest_Func(){
   delete FocusFinder;
 }
 
-bool Magrathea::CVCaptureButtonClicked(){
+bool Magrathea::CVCaptureButtonClicked(std::string &timestamp){
     mCamera->stop(); //closing QCamera
 
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
@@ -521,13 +521,11 @@ bool Magrathea::CVCaptureButtonClicked(){
         qInfo("Cannot read a frame from video stream");
         return false;
     }
-    QTime now = QTime::currentTime();
-    QString time_now = now.toString("hhmmss");
-    std::string timestamp = time_now.toLocal8Bit().constData();
 
-    std::string one   = std::to_string(ui->spinBox_input->value());
-    std::string two   = std::to_string(ui->chip_number_spinBox->value());
-    cv::imwrite("EXPORT/Image_"+one+"_"+two+"_"+timestamp+".jpg",mat_from_camera);
+    std::string one     = std::to_string(ui->spinBox_plate_position->value());
+    std::string two     = std::to_string(ui->chip_number_spinBox->value());
+    std::string three   = std::to_string(ui->spinBox_input->value());
+    cv::imwrite("EXPORT/Image_"+one+"_"+two+"_"+three+"_"+timestamp+".jpg",mat_from_camera);
     return true;
 }
 
@@ -1546,40 +1544,52 @@ bool Magrathea::fiducial_chip_measure(){
 
     double step_x = 0.3;
     double step_y = 0.5;
+    double big_step_y = 4.72; //distance between the first fiducial of two adjiacent chips
+    double big_step_x = 4.5029;  //vertical distance between the first fiducial of two adjiacent chips
     double speed  = 3.;
-    for(int i=0;i<10;i++){//y
-        ui->chip_number_spinBox->setValue(i);
-        for(int j=0;j<10;j++){//x
-            speed = (i!=0 && j==0) ? 6. : 3.;
-            ui->spinBox_input->setValue(j);
-            double target_x = step_x*j*cos(angle) - step_y*i*sin(angle);
-            double target_y = step_x*j*sin(angle) + step_y*i*cos(angle);
-            std::cout<<j<<" "<<i<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
-            if(!mMotionHandler->moveXTo(target_x,speed))
-                return false;
-            if(!mMotionHandler->moveYTo(target_y,3.))
-                return false;
-            if(!focusButtonClicked())
-                return false;
-            //if(!loop_fid_finder())
-            //    return false;
+    for(int m = 0; m<34;m++){//chip ID from 0 to 34
+        ui->spinBox_plate_position->setValue(m);
+        int working_m  = (m < 17) ? m : (m-17);
+        int second_row = (m < 17) ? 0 : 1;
+        double big_target_x = points[0][0] + big_step_x*second_row*cos(angle) - big_step_y*working_m*sin(angle);
+        double big_target_y = points[0][1] + big_step_x*second_row*sin(angle) + big_step_y*working_m*cos(angle);
+        std::cout<<m<<"BIG : target_x "<<big_target_x<<" target_y "<<big_target_y<<std::endl;
+        if(!mMotionHandler->moveXTo(big_target_x,speed))
+            return false;
+        if(!mMotionHandler->moveYTo(big_target_y,3.))
+            return false;
+        for(int i=0;i<8;i++){//chip row (y of gantry)
+            ui->chip_number_spinBox->setValue(i);
+            for(int j=0;j<12;j++){//chip column (x of gantry)
+                //                speed = (i!=0 && j==0) ? 6. : 3.;
+                ui->spinBox_input->setValue(j);
+                double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
+                double target_y = points[0][1] + step_x*j*sin(angle) + step_y*i*cos(angle);
+                std::cout<<j<<" "<<i<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
+                if(!mMotionHandler->moveXTo(target_x,speed))
+                    return false;
+                if(!mMotionHandler->moveYTo(target_y,3.))
+                    return false;
+                if(!focusButtonClicked())
+                    return false;
+                std::string timestamp = "";
+                if(!CVCaptureButtonClicked(timestamp))
+                    return false;
 
-            auto one = std::to_string(ui->spinBox_plate_position->value());
-            QTime now = QTime::currentTime();
-            QString time_now = now.toString("hhmmss");
-            std::string timestamp = time_now.toLocal8Bit().constData();
+                auto one = std::to_string(ui->spinBox_plate_position->value());
 
-            std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
-            std::string file_name = "Calibration_plate_position_"+one+".txt";
-            std::ofstream ofs (file_name, std::ofstream::app);
-            ofs<<timestamp<<" "<<j<<" "<<i<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
-            ofs.close();
+                std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+                std::string file_name = "Image_position_"+one+".txt";
+                std::ofstream ofs (file_name, std::ofstream::app);
+                ofs<<timestamp<<" "<<m<<" "<<j<<" "<<i<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
+                ofs.close();
 
-            std::vector <double> pos_t_2 = mMotionHandler->whereAmI(0);
-            std::string file_name_2 = "Calibration_plate_position_"+one+"_other_var.txt";
-            std::ofstream ofs_2 (file_name_2, std::ofstream::app);
-            ofs_2<<timestamp<<" "<<j<<" "<<i<<" "<<pos_t_2[0]<<" "<<pos_t_2[1]<<" "<<pos_t_2[4]<<std::endl;
-            ofs_2.close();
+                std::vector <double> pos_t_2 = mMotionHandler->whereAmI(0);
+                std::string file_name_2 = "Image__position_"+one+"_other_var.txt";
+                std::ofstream ofs_2 (file_name_2, std::ofstream::app);
+                ofs_2<<timestamp<<" "<<m<<" "<<j<<" "<<i<<" "<<pos_t_2[0]<<" "<<pos_t_2[1]<<" "<<pos_t_2[4]<<std::endl;
+                ofs_2.close();
+            }
         }
     }
     return true;

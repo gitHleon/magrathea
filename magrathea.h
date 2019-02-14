@@ -55,7 +55,7 @@ private slots:
     void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
-    bool CVCaptureButtonClicked();
+    bool CVCaptureButtonClicked(std::string &timestamp);
 
     //gantry
     void connectGantryBoxClicked(bool checked);
