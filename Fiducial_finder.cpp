@@ -5,29 +5,29 @@ void function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
     //
     // this callback calculates chi square function for square of circles
     // We will have 8+4 variables, 8 for the points coordinates and 4 for the paremeters we want to fit.
-    // Legend of the valiables : x[0], x[1], etc.. => x_1, y_1, x_2, y_2, etc.. coordinates of the points of the image
-    // variables x[8], ... ,  x[11] are the intercepts q_1, q_2, q_3, and q_4
+    // Legend of the valiables : x[0], x[1], etc.. => x_1, y_1, x_2, y_2, etc.. coordinates of the points of the image;
+    // variables x[8], ... ,  x[11] are the fit prameters
     //
-    if( (fabs(x[8]-x[10])<=0.999999999999) || (fabs(x[9]-x[11])<=0.999999999999) )
-    {
-        func = 1.0E+300;
-        return;
-    }
-    double one_over_sigmasquare = 0.25;
-    func =  one_over_sigmasquare * (
-                pow((x[1] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[0] + x[8]),2)
-              + pow((x[3] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[2] + x[8]),2)
-              + pow((x[3] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[2] - x[9]),2)
-              + pow((x[5] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[4] - x[9]),2)
-              + pow((x[5] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[4] + x[10]),2)
-              + pow((x[7] + (fabs(x[8]-x[10])/fabs(x[9]-x[11]) )*x[6] + x[10]),2)
-              + pow((x[7] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[6] - x[11]),2)
-              + pow((x[1] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[0] - x[11]),2)
-            );
+    double calibration_value = 10.5; //[px/um]
+    double one_over_sigma_square = 1./(5*calibration_value); //error of 2 um, calibration is 10 px / um and measures are in pixels
+    double real_side_size = 50 * calibration_value;
+    double real_side_size_err = real_side_size*0.2;
+    func =  one_over_sigma_square *
+            ( pow(x[0]-(x[8]-(x[11]/sqrt(2))*cos(x[10]+M_PI/4)),2)+pow(x[1]-(x[9]-(x[11]/sqrt(2))*sin(x[10]+M_PI/4)),2)
+            + pow(x[2]-(x[8]-(x[11]/sqrt(2))*cos(M_PI/4-x[10])),2)+pow(x[3]-(x[9]+(x[11]/sqrt(2))*sin(M_PI/4-x[10])),2)
+            + pow(x[4]-(x[8]+(x[11]/sqrt(2))*cos(M_PI/4+x[10])),2)+pow(x[5]-(x[9]+(x[11]/sqrt(2))*sin(M_PI/4+x[10])),2)
+            + pow(x[6]-(x[8]+(x[11]/sqrt(2))*cos(M_PI/4-x[10])),2)+pow(x[7]-(x[9]-(x[11]/sqrt(2))*sin(M_PI/4-x[10])),2)
+            )
+            +(pow(x[11]-real_side_size,2)/(real_side_size_err*real_side_size))
+            ;
 }
 
 bool Distance_sorter(cv::DMatch m_1,cv::DMatch m_2){
     return m_1.distance < m_2.distance;
+}
+
+bool Point_sorter(cv::Point2d m_1,cv::Point2d m_2){
+    return m_1.x < m_2.x;
 }
 
 std::string type2str(int type);
@@ -343,7 +343,7 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
 bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
-    bool debug = true;
+    bool debug = false;
     bool print_raw = true;
 
 
@@ -435,7 +435,8 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         if(debug)
             std::cout<<">> circles "<<circles.size()<<std::endl;
         std::vector <cv::Point> Centers (circles.size());
-        cv::Mat RoiImage_out = RoiImage.clone();
+        cv::Mat RoiImage_out     = RoiImage.clone();
+        cv::Mat RoiImage_out_fit = RoiImage.clone();
         for( size_t i = 0; i < circles.size(); i++ ){
             Centers[i].x = circles[i][0];
             Centers[i].y = circles[i][1];
@@ -445,8 +446,10 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                 std::cout<<" radius "<<radius<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<<std::endl;
             // circle center
             cv::circle(RoiImage_out, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+            cv::circle(RoiImage_out_fit, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
             // circle outline
             cv::circle(RoiImage_out, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+            cv::circle(RoiImage_out_fit, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
         }
         if(debug)
             for( size_t i = 0; i < Centers.size(); i++ ){
@@ -461,6 +464,9 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         if(debug)
             std::cout<<"Squares.size() "<<Squares.size()<<std::endl;
         //cv::circle(RoiImage_out, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
+        //define square center variables, to be used later in the fit
+        double square_center_x = 0.;
+        double square_center_y = 0.;
         for( size_t i = 0; i < Squares.size(); i++ ){
             for( int j = 0; j < 4; j++ )
                 cv::line(RoiImage_out, Centers.at(Squares[i][j]), Centers.at(Squares[i][(j+1)%4]), cv::Scalar(0,255,0), 2, 8);
@@ -480,6 +486,8 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                     ofs.close();
                 }
                 std::cout<<"pre fit : "<< square_center.x <<" "<<square_center.y<<std::endl;
+                square_center_x = square_center.x;
+                square_center_y = square_center.y;
             }
         }
 
@@ -488,10 +496,11 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         std::string dummy = std::to_string(iterations);
         std::string one   = std::to_string(input_1);
         std::string two   = std::to_string(input_2);
+        cv::imwrite("EXPORT/Circles_ORIGINAL_"+one+"_"+two+"_"+dummy+".jpg",image);
         cv::imwrite("EXPORT/Circles_"+one+"_"+two+"_"+dummy+".jpg",RoiImage_out);
-        if(!fit && Squares.size() == 1)
+        if(!fit && Squares.size() == 1){
             return true;
-        else {
+        }else if(fit && Squares.size() == 1){
 
             //1.reorder the points of the square
             std::vector<cv::Point2d > input;
@@ -499,15 +508,10 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             input.clear();
             for(unsigned int j = 0; j < 4; j++ )
                 input.push_back(Centers.at(Squares[0][j]));
-            OrderSquare(input,output);
-            std::vector<double> q_start(4);
-            std::vector<double> m_start(4);
+            output = OrderSquare(input);
             for(unsigned int j = 0; j < 4; j++ )
             {
-                q_start[j] = ((output[j].y*output[(j+1)%4].x) - (output[(j+1)%4].y*output[j].x) )/(output[(j+1)%4].x-output[j].x)  ;
-                m_start[j] = (output[(j+1)%4].y - output[j].y )/(output[(j+1)%4].x - output[j].x)  ;
-                std::cout<<output[j].x<<" "<<output[j].y<<" "<<output[(j+1)%4].x<<" "<<output[(j+1)%4].y<<" "
-                        <<m_start[j]<<" "<<q_start[j]<<std::endl;
+                std::cout<<output[j].x<<" "<<output[j].y<<" "<<output[(j+1)%4].x<<" "<<output[(j+1)%4].y<<" "<<std::endl;
             }
             //2.minimize the chi square
             //http://www.alglib.net/translator/man/manual.cpp.html#example_minbleic_d_2
@@ -515,31 +519,21 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             alglib::real_2d_array limiting_conditions ;//= "[[1,0,2],[1,1,6]]";//limiting conditions for all 12 variables
             alglib::integer_1d_array conditions_relation ;//= "[1,1]";//limiting operator for conditions for all 12 var.
             alglib::real_1d_array variables_range ;
+            //define theta and L variable to used in the fit
+            double theta = 0.01;
+            double side = 50*Calibration; //side is approximately 50 um
             double x_1[] = {output[0].x,output[0].y,
                             output[1].x,output[1].y,
                             output[2].x,output[2].y,
                             output[3].x,output[3].y,
-                            q_start[0],
-                            q_start[1],
-                            q_start[2],
-                            q_start[3]};
+                            square_center_x,
+                            square_center_y,
+                            theta,
+                            side};
             starting_value_variables.setcontent(12,x_1);
             printf("%s\n", starting_value_variables.tostring(12).c_str()); // EXPECTED: [2,4]
-            double fitted_square_center_x = 0.;
-            double fitted_square_center_y = 0.;
-            double m_1_sign = m_start[0]/m_start[0];
-            double m_1 =  m_1_sign * (fabs(starting_value_variables[8] - starting_value_variables[10])/
-                    fabs(starting_value_variables[9] - starting_value_variables[11]));
-//            fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
-//            fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
-            fitted_square_center_x = (q_start[1]-q_start[0]) / (m_start[0]-m_start[1]);
-            fitted_square_center_y = m_start[0]* ((q_start[1]-q_start[0]) / (m_start[0]-m_start[1]) ) + q_start[0];
-            //here is wrong!! Add the other point and then evaluate the average!!! this is (or should be) a corner of the fitted square!!
-            //also, this does not retrn the point it is supposed to return, fix it!!
-            std::cout<<"Pre fit 2 : "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
             //setting the boundry condition for the fit
             //first 8 conditions are the coordinates of the centers of the circles
-            //last 4 conditions are to avoid the functions to diverge when q_1(2) and q_3(4) are the same
             //for sysntaxis look here:
             //http://www.alglib.net/translator/man/manual.cpp.html#example_minbleic_d_2
             double c_1[] = {
@@ -552,16 +546,6 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                 0,0,0,0,0,  1,0,0,0,0, 0,0, output[2].y,
                 0,0,0,0,0,  0,1,0,0,0, 0,0, output[3].x,
                 0,0,0,0,0,  0,0,1,0,0, 0,0, output[3].y
-
-//                0,0,0,0,0,  0,0,0,1,0, 0,0, q_start[0],
-//                0,0,0,0,0,  0,0,0,0,1, 0,0, q_start[1],
-//                0,0,0,0,0,  0,0,0,0,0, 1,0, q_start[2],
-//                0,0,0,0,0,  0,0,0,0,0, 0,1, q_start[3]
-
-                //0,0,0,0,0,  0,0,0,1,0, -1,0, 1,
-                //0,0,0,0,0,  0,0,0,1,0, -1,0, -1,
-                //0,0,0,0,0,  0,0,0,0,1, 0,-1, 1,
-                //0,0,0,0,0,  0,0,0,0,1, 0,-1, -1
             };
             limiting_conditions.setcontent(8,13,c_1);
 
@@ -571,21 +555,20 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             conditions_relation.setcontent(8,ct_1);
 
             double s_1[] = {
-                 output[0].x*0.1,
-                 output[0].y*0.1,
-                 output[1].x*0.1,
-                 output[1].y*0.1,
-                 output[2].x*0.1,
+                 1*Calibration,
+                 1*Calibration,
+                 1*Calibration,
+                 1*Calibration,
+                 1*Calibration,
 
-                 output[2].y*0.1,
-                 output[3].x*0.1,
-                 output[3].y*0.1,
+                 1*Calibration,
+                 1*Calibration,
+                 1*Calibration,
 
-                 q_start[0]*0.1,
-                 q_start[1]*0.1,
-                 q_start[2]*0.1,
-                 q_start[3]*0.1
-            };
+                1*Calibration,
+                1*Calibration,
+                theta*0.1,
+                side*0.1};
             variables_range.setcontent(12,s_1);
 
             //use setcontent function to fill the arrays properly
@@ -611,67 +594,72 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
 
             alglib::minbleicstate state;
             alglib::minbleicreport rep;
-            std::cout<<"ok 1"<<std::endl;
             minbleiccreatef(starting_value_variables, diffstep,state);
-            std::cout<<"ok 2"<<std::endl;
             minbleicsetlc(state, limiting_conditions, conditions_relation);
-            std::cout<<"ok 3"<<std::endl;
             minbleicsetcond(state, epsg, epsf, epsx, maxits);
-            std::cout<<"ok 4"<<std::endl;
             minbleicsetscale(state,variables_range);
-            //std::cout<<dummy_function_ChiSquare(starting_value_variables)<<std::endl;
-            //return false;
-            std::cout<<"ok 5"<<std::endl;
             alglib::minbleicoptimize(state, function_ChiSquare);
-            std::cout<<"ok 6"<<std::endl;
             minbleicresults(state, starting_value_variables, rep);
-
             //
             // ...and evaluate these results
             //
             printf("%d\n", int(rep.terminationtype));
             printf("%s\n", starting_value_variables.tostring(12).c_str());
             //2.1 check that the convergence is good
-            std::cout<<"ok 6"<<std::endl;
-
             if (int(rep.terminationtype) < 0){
                 qWarning("fit of square failed!!");
                 return false;
             }
-
             //3 evaluate the center of the new square
 
 //            double fitted_square_center_x = 0.;
 //            double fitted_square_center_y = 0.;
-            m_1 = m_1_sign * (fabs(starting_value_variables[8] - starting_value_variables[10])/
-                    fabs(starting_value_variables[9] - starting_value_variables[11]));
-            fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
-            fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
+            double fitted_square_center_x = starting_value_variables[8];
+            double fitted_square_center_y = starting_value_variables[9];
             std::cout<<" "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
             X_distance = (fitted_square_center_x - RoiImage_out.cols/2)*(1./Calibration); //[um]
             Y_distance = (fitted_square_center_y - RoiImage_out.rows/2)*(1./Calibration); //[um]
-            //add plot
+
+            //0.5 added for rounding when converting from double to int
+            cv::circle(RoiImage_out_fit, cv::Point(square_center_x+0.5,square_center_y+0.5), 3, cv::Scalar(255,0,0), -1, 8, 0 );
+            cv::circle(RoiImage_out_fit, cv::Point(square_center_x+0.5,square_center_y+0.5), 5*Calibration, cv::Scalar(255,0,0), 2, 8, 0 );
+            cv::circle(RoiImage_out_fit, cv::Point(fitted_square_center_x+0.5,fitted_square_center_y+0.5), 3, cv::Scalar(0,0,255), -1, 8, 0 );
+            cv::imwrite("EXPORT/Circles_FIT_"+one+"_"+two+"_"+dummy+".jpg",RoiImage_out_fit);
             return true;
         }
+
         if(iterations>2)
             break;
-    }
-
-    return false;
+        }
+        return false;
 }
 
-int FiducialFinder::OrderSquare(const std::vector<cv::Point2d> &input, std::vector<cv::Point2d> &output){
+std::vector<cv::Point2d>  FiducialFinder::OrderSquare(const std::vector<cv::Point2d> &input){
+    std::vector<cv::Point2d>  output(4);
     //I am assuming it is a square
     if(input.size()!=4){
         qWarning("Error in square reordering size.");
-        return 1;
+        return output;
     }
-    output.clear();
+    double X_coord = input[0].x + input[1].x + input[2].x + input[3].x;
+    X_coord /= 4;
+    double Y_coord = input[0].y + input[1].y + input[2].y + input[3].y;
+    Y_coord /= 4;
+
     cv::Vec2d p_0 = {input[0].x,input[0].y};
     cv::Vec2d p_1 = {input[1].x,input[1].y};
     cv::Vec2d p_2 = {input[2].x,input[2].y};
     cv::Vec2d p_3 = {input[3].x,input[3].y};
-    output.push_back(input[0]);
+    for(unsigned int i=0;i<4;i++){
+        if(input[i].x < X_coord && input[i].y<Y_coord)
+            output.at(0) = input.at(i);
+        else if(input[i].x < X_coord && input[i].y>Y_coord)
+            output.at(1) = input.at(i);
+        else if (input[i].x > X_coord && input[i].y>Y_coord)
+            output.at(2) = input.at(i);
+        else if(input[i].x > X_coord && input[i].y<Y_coord)
+            output.at(3) = input.at(i);
+    }
     if(cv::norm(p_0,p_1) >= cv::norm(p_0,p_2))
         if(cv::norm(p_0,p_1) >= cv::norm(p_0,p_3)){
             output.push_back(input[2]);
@@ -692,7 +680,7 @@ int FiducialFinder::OrderSquare(const std::vector<cv::Point2d> &input, std::vect
             output.push_back(input[3]);//this is the opposite corner
             output.push_back(input[2]);
         }
-    return 0;
+    return output;
 }
 
 

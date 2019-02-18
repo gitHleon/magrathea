@@ -59,7 +59,7 @@ private:
     cv::Point Square_center(const cv::Point& P_1, const cv::Point& P_2,
                             const cv::Point& P_3, const cv::Point& P_4);
     void addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp);
-    int OrderSquare(const std::vector<cv::Point2d> &input, std::vector<cv::Point2d> &output);
+    std::vector<cv::Point2d> OrderSquare(const std::vector<cv::Point2d> &input);
 
     double measured_points[8];
 };
