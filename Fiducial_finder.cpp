@@ -5,10 +5,6 @@ void function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
     //
     // this callback calculates chi square function for square of circles
     // We will have 8+4 variables, 8 for the points coordinates and 4 for the paremeters we want to fit.
-    // In the body of the routine we will call minbleicsetlc to set the values of the first 8 variables to the points measured
-    // and set the thers 4 in a way that the function do not diverge, i.e. denoeminator never gets close to zero.
-    // This can be achived setting the limits of <= and >= that 1 or some small value, since I do not expecte the intercept
-    // of the lines to be closer than that value.
     // Legend of the valiables : x[0], x[1], etc.. => x_1, y_1, x_2, y_2, etc.. coordinates of the points of the image
     // variables x[8], ... ,  x[11] are the intercepts q_1, q_2, q_3, and q_4
     //
@@ -28,7 +24,6 @@ void function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
               + pow((x[7] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[6] - x[11]),2)
               + pow((x[1] - (fabs(x[9]-x[11])/fabs(x[8]-x[10]) )*x[0] - x[11]),2)
             );
-            //100*pow(x[0]+3,4) + pow(x[1]-3,4);
 }
 
 bool Distance_sorter(cv::DMatch m_1,cv::DMatch m_2){
@@ -532,10 +527,13 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             printf("%s\n", starting_value_variables.tostring(12).c_str()); // EXPECTED: [2,4]
             double fitted_square_center_x = 0.;
             double fitted_square_center_y = 0.;
-            double m_1 = fabs(starting_value_variables[8] - starting_value_variables[10])/
-                    fabs(starting_value_variables[9] - starting_value_variables[11]);
-            fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
-            fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
+            double m_1_sign = m_start[0]/m_start[0];
+            double m_1 =  m_1_sign * (fabs(starting_value_variables[8] - starting_value_variables[10])/
+                    fabs(starting_value_variables[9] - starting_value_variables[11]));
+//            fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
+//            fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
+            fitted_square_center_x = (q_start[1]-q_start[0]) / (m_start[0]-m_start[1]);
+            fitted_square_center_y = m_start[0]* ((q_start[1]-q_start[0]) / (m_start[0]-m_start[1]) ) + q_start[0];
             //here is wrong!! Add the other point and then evaluate the average!!! this is (or should be) a corner of the fitted square!!
             //also, this does not retrn the point it is supposed to return, fix it!!
             std::cout<<"Pre fit 2 : "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
@@ -645,8 +643,8 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
 
 //            double fitted_square_center_x = 0.;
 //            double fitted_square_center_y = 0.;
-            m_1 = fabs(starting_value_variables[8] - starting_value_variables[10])/
-                    fabs(starting_value_variables[9] - starting_value_variables[11]);
+            m_1 = m_1_sign * (fabs(starting_value_variables[8] - starting_value_variables[10])/
+                    fabs(starting_value_variables[9] - starting_value_variables[11]));
             fitted_square_center_x = (starting_value_variables[11] - starting_value_variables[10])/(m_1 + 1./m_1);
             fitted_square_center_y = ( (starting_value_variables[11] - starting_value_variables[10])/(m_1*m_1 + 1) ) * m_1*m_1 + starting_value_variables[10];
             std::cout<<" "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;

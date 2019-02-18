@@ -60,6 +60,8 @@ private:
                             const cv::Point& P_3, const cv::Point& P_4);
     void addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp);
     int OrderSquare(const std::vector<cv::Point2d> &input, std::vector<cv::Point2d> &output);
+
+    double measured_points[8];
 };
 
 #endif // FIDUCIALFINDER_H
