@@ -1548,7 +1548,7 @@ bool Magrathea::fiducial_chip_measure(){
     double big_step_x = 4.72; //distance between the first fiducial of two adjiacent chips
     double big_step_y = 4.5029;  //vertical distance between the first fiducial of two adjiacent chips
     double speed  = 3.;
-    for(int m = 17; m<34;m++){//chip ID from 0 to 34
+    for(int m = 0; m<34;m++){//chip ID from 0 to 34
         ui->spinBox_plate_position->setValue(m);
         int working_m  = (m < 17) ? m : (m-17);
         int second_row = (m < 17) ? 0 : 1;
