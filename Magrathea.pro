@@ -78,16 +78,16 @@ FORMS += \
 
 INCLUDEPATH += .\alglib-3.14.0\cpp\src
 INCLUDEPATH += C:\opencv-build\install\include
-       LIBS += C:\opencv-build\bin\libopencv_flann341.dll
-       LIBS += C:\opencv-build\bin\libopencv_core341.dll
-       LIBS += C:\opencv-build\bin\libopencv_highgui341.dll
-       LIBS += C:\opencv-build\bin\libopencv_videoio341.dll
-       LIBS += C:\opencv-build\bin\libopencv_imgcodecs341.dll
-       LIBS += C:\opencv-build\bin\libopencv_imgproc341.dll
-       LIBS += C:\opencv-build\bin\libopencv_features2d341.dll
-       LIBS += C:\opencv-build\bin\libopencv_xfeatures2d341.dll
-       LIBS += C:\opencv-build\bin\libopencv_calib3d341.dll
-       LIBS += C:\opencv-build\bin\libopencv_aruco341.dll
+       LIBS += C:\opencv-build\bin\libopencv_flann401.dll
+       LIBS += C:\opencv-build\bin\libopencv_core401.dll
+       LIBS += C:\opencv-build\bin\libopencv_highgui401.dll
+       LIBS += C:\opencv-build\bin\libopencv_videoio401.dll
+       LIBS += C:\opencv-build\bin\libopencv_imgcodecs401.dll
+       LIBS += C:\opencv-build\bin\libopencv_imgproc401.dll
+       LIBS += C:\opencv-build\bin\libopencv_features2d401.dll
+       LIBS += C:\opencv-build\bin\libopencv_xfeatures2d401.dll
+       LIBS += C:\opencv-build\bin\libopencv_calib3d401.dll
+       LIBS += C:\opencv-build\bin\libopencv_aruco401.dll
 
 #Vancouver
 win32 : exists(C:/Program Files (x86)/Aerotech/A3200/CLibrary/Include/A3200.h) {

@@ -124,7 +124,7 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     cv::Scalar Mean_I;
     cv::Scalar Stddv_I;
     cv::meanStdDev(image_gray,Mean_I,Stddv_I);
-    cv::threshold(image_gray,image_gray,Mean_I.val[0] + 3*Stddv_I.val[0],255,CV_THRESH_BINARY | CV_THRESH_OTSU); //CV_THRESH_BINARY
+    cv::threshold(image_gray,image_gray,Mean_I.val[0] + 3*Stddv_I.val[0],255, cv::THRESH_BINARY | cv::THRESH_OTSU); //CV_THRESH_BINARY
     cv::imshow("2. threshold",image_gray);
 
     cv::Mat planes[] = {cv::Mat_<float>(image_gray), cv::Mat::zeros(image_gray.size(), CV_32F)};
@@ -158,7 +158,7 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     q2.copyTo(q1);
     tmp.copyTo(q2);
 
-    cv::normalize(magI, magI, 0, 1, CV_MINMAX); // Transform the matrix with float values into a
+    cv::normalize(magI, magI, 0, 1, cv::NORM_MINMAX); // Transform the matrix with float values into a
                                                 // viewable image form (float between values 0 and 1).
 
     if(debug)
@@ -166,7 +166,7 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
 
     //thresholding the image to have only the relevant points and the rest zeros
     cv::meanStdDev(magI,Mean_I,Stddv_I);
-    cv::threshold(magI,magI,Mean_I.val[0] + 20*Stddv_I.val[0],1,CV_THRESH_BINARY);
+    cv::threshold(magI,magI,Mean_I.val[0] + 20*Stddv_I.val[0],1,cv::THRESH_BINARY);
 
     if(debug)
         std::cout<<" mean "<<Mean_I.val[0] <<" ; std dev "<<Stddv_I.val[0]<<std::endl;
@@ -203,7 +203,7 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
         }
 
     cv::Vec4f out_line;
-    cv::fitLine(nonZeroCoordinates,out_line,CV_DIST_L2,0,0.01,0.01);
+    cv::fitLine(nonZeroCoordinates,out_line,cv::DIST_L2,0,0.01,0.01);
 
     if(debug)
         std::cout<<"out_line [0]  "<<out_line.val[0] <<" [1] "<<out_line.val[1] <<
@@ -216,7 +216,7 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
         std::cout<< " angle "<<Angle<<std::endl;
 
     cv::Mat rot_mat_1 = cv::getRotationMatrix2D(Center_point, Angle, 1.0);
-    cv::warpAffine(image, image, rot_mat_1, image.size(),CV_INTER_LINEAR,CV_HAL_BORDER_CONSTANT,cv::Scalar(0));
+    cv::warpAffine(image, image, rot_mat_1, image.size(),cv::INTER_LINEAR,CV_HAL_BORDER_CONSTANT,cv::Scalar(0));
     if(debug)
         cv::imshow("6. rotaed",image);
     //use rotated image to find the calibration
@@ -226,7 +226,7 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     image_gray = get_component(image_gray,1);
     if(debug)
         cv::imshow("7. gray-rotated",image_gray);
-    cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+    cv::threshold(image_gray,image_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
     cv::imshow("8. threshold",image_gray);
 
     //Strips are assumed orizzontal in the picture from now on
@@ -402,7 +402,7 @@ void Calibrator::Find_calibration(double &calibration_value, double &calibration
     cv::Mat detected_edges;
     cv::Mat image_temp;
     cv::Mat image_gray = image.clone();
-    cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
+    cv::cvtColor(image_gray,image_gray,cv::COLOR_BGR2GRAY);
     cv::Scalar MatMean;
     cv::Scalar MatStddv;
     cv::meanStdDev(image_gray,MatMean,MatStddv);
@@ -450,7 +450,7 @@ void Calibrator::Find_calibration(double &calibration_value, double &calibration
             return;
         }
         std::cout<<" "<<MatMean.val[0]<<" "<<MatStddv.val[0]<<" THR: "<<threshold_m<<std::endl;
-        cv::threshold(image_loop,image_temp,threshold_m,255,CV_THRESH_BINARY_INV);
+        cv::threshold(image_loop,image_temp,threshold_m,255,cv::THRESH_BINARY_INV);
         cv::Scalar MatMean_2;
         cv::Scalar MatStddv_2;
         cv::meanStdDev(image_temp,MatMean_2,MatStddv_2);

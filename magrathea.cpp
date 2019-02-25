@@ -437,7 +437,7 @@ void Magrathea::FocusAlgoTest_Func(){
   std::vector<double> std_dev_value;
   for(int i=0;i<21;i++){
     file_name = address + Images[i] + ".tif";
-    mat_mat = cv::imread( file_name, CV_LOAD_IMAGE_COLOR);
+    mat_mat = cv::imread( file_name, cv::IMREAD_COLOR);
     const int kernel_size = ( (mat_mat.rows > 1000 && mat_mat.cols > 1000) ? 11 : 5);
     FocusFinder->Set_ksize(kernel_size);
     FocusFinder->Set_color_int(ui->ColorBox->value());
@@ -456,7 +456,7 @@ void Magrathea::FocusAlgoTest_Func(){
     }
     ///draw histogram
     /// Establish the number of bins
-    cv::Mat mat_mat_g = cv::imread( file_name, CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat mat_mat_g = cv::imread( file_name, cv::IMREAD_COLOR);
     int histSize = 256;
 
     /// Set the ranges ( for B,G,R) )
@@ -473,7 +473,7 @@ void Magrathea::FocusAlgoTest_Func(){
     int hist_w = 512; int hist_h = 400;
     int bin_w = cvRound( (double) hist_w/histSize );
     cv::Mat histImage( hist_h, hist_w, CV_8UC1, cv::Scalar(0) );
-    normalize(g_hist, g_hist, 0, histImage.rows, CV_MINMAX, -1, cv::Mat() );
+    normalize(g_hist, g_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
 
     /// Draw for each channel
     for( int i = 1; i < histSize; i++ )
@@ -484,7 +484,7 @@ void Magrathea::FocusAlgoTest_Func(){
     }
 
     /// Display
-    cv::namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+    cv::namedWindow("calcHist Demo", cv::WINDOW_AUTOSIZE );
     cv::imshow("calcHist Demo", histImage );
     //cv::imwrite("EXPORT/"+Images[i]+"_hist.jpg",histImage);
   }
@@ -512,18 +512,18 @@ bool Magrathea::focusButtonClicked()
         //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     //veryfing that the setting of the camera is optimal
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    cap.set(CV_CAP_PROP_GAIN, 4.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    cap.set(cv::CAP_PROP_GAIN, 4.0);
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     FocusFinder->Set_camera(cap);
@@ -594,50 +594,50 @@ void Magrathea::Camera_test(){
         return;
     }
 
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));//https://www.fourcc.org/yuv.php
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
 
     //cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
     //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
 
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    qInfo("cap.get(CV_CAP_PROP_POS_MSEC);      : %5.5f",cap.get(CV_CAP_PROP_POS_MSEC));
-    qInfo("cap.get(CV_CAP_PROP_POS_FRAMES );   : %5.5f",cap.get(CV_CAP_PROP_POS_FRAMES ));
-    qInfo("cap.get(CV_CAP_PROP_POS_AVI_RATIO); : %5.5f",cap.get(CV_CAP_PROP_POS_AVI_RATIO));
-    qInfo("cap.get(CV_CAP_PROP_FRAME_WIDTH );  : %5.5f",cap.get(CV_CAP_PROP_FRAME_WIDTH ));
-    qInfo("cap.get(CV_CAP_PROP_FRAME_HEIGHT);  : %5.5f",cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-    qInfo("cap.get(CV_CAP_PROP_FPS );          : %5.5f",cap.get(CV_CAP_PROP_FPS ));
-    qInfo("cap.get(CV_CAP_PROP_FOURCC);        : %5.5f",cap.get(CV_CAP_PROP_FOURCC));
-    qInfo("cap.get(CV_CAP_PROP_FRAME_COUNT );  : %5.5f",cap.get(CV_CAP_PROP_FRAME_COUNT ));
-    qInfo("cap.get(CV_CAP_PROP_FORMAT );       : %5.5f",cap.get(CV_CAP_PROP_FORMAT ));
-    qInfo("cap.get(CV_CAP_PROP_MODE );         : %5.5f",cap.get(CV_CAP_PROP_MODE ));
-    qInfo("cap.get(CV_CAP_PROP_BRIGHTNESS);    : %5.5f",cap.get(CV_CAP_PROP_BRIGHTNESS));
-    qInfo("cap.get(CV_CAP_PROP_CONTRAST);      : %5.5f",cap.get(CV_CAP_PROP_CONTRAST));
-    qInfo("cap.get(CV_CAP_PROP_SATURATION);    : %5.5f",cap.get(CV_CAP_PROP_SATURATION));
-    qInfo("cap.get(CV_CAP_PROP_HUE);           : %5.5f",cap.get(CV_CAP_PROP_HUE));
-    qInfo("cap.get(CV_CAP_PROP_GAIN);          : %5.5f",cap.get(CV_CAP_PROP_GAIN));
-    qInfo("cap.get(CV_CAP_PROP_GAMMA);         : %5.5f",cap.get(CV_CAP_PROP_GAMMA));
-    qInfo("cap.get(CV_CAP_PROP_EXPOSURE);      : %5.5f",cap.get(CV_CAP_PROP_EXPOSURE));
-    qInfo("cap.get(CV_CAP_PROP_CONVERT_RGB);   : %5.5f",cap.get(CV_CAP_PROP_CONVERT_RGB));
-    qInfo("cap.get(CV_CAP_PROP_RECTIFICATION); : %5.5f",cap.get(CV_CAP_PROP_RECTIFICATION));
-    qInfo("cap.get(CV_CAP_PROP_ISO_SPEED );    : %5.5f",cap.get(CV_CAP_PROP_ISO_SPEED ));
-    qInfo("cap.get(CV_CAP_PROP_BUFFERSIZE );   : %5.5f",cap.get(CV_CAP_PROP_BUFFERSIZE ));
+    qInfo("cap.get(CV_CAP_PROP_POS_MSEC);      : %5.5f",cap.get(cv::CAP_PROP_POS_MSEC));
+    qInfo("cap.get(CV_CAP_PROP_POS_FRAMES );   : %5.5f",cap.get(cv::CAP_PROP_POS_FRAMES ));
+    qInfo("cap.get(CV_CAP_PROP_POS_AVI_RATIO); : %5.5f",cap.get(cv::CAP_PROP_POS_AVI_RATIO));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_WIDTH );  : %5.5f",cap.get(cv::CAP_PROP_FRAME_WIDTH ));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_HEIGHT);  : %5.5f",cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    qInfo("cap.get(CV_CAP_PROP_FPS );          : %5.5f",cap.get(cv::CAP_PROP_FPS ));
+    qInfo("cap.get(CV_CAP_PROP_FOURCC);        : %5.5f",cap.get(cv::CAP_PROP_FOURCC));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_COUNT );  : %5.5f",cap.get(cv::CAP_PROP_FRAME_COUNT ));
+    qInfo("cap.get(CV_CAP_PROP_FORMAT );       : %5.5f",cap.get(cv::CAP_PROP_FORMAT ));
+    qInfo("cap.get(CV_CAP_PROP_MODE );         : %5.5f",cap.get(cv::CAP_PROP_MODE ));
+    qInfo("cap.get(CV_CAP_PROP_BRIGHTNESS);    : %5.5f",cap.get(cv::CAP_PROP_BRIGHTNESS));
+    qInfo("cap.get(CV_CAP_PROP_CONTRAST);      : %5.5f",cap.get(cv::CAP_PROP_CONTRAST));
+    qInfo("cap.get(CV_CAP_PROP_SATURATION);    : %5.5f",cap.get(cv::CAP_PROP_SATURATION));
+    qInfo("cap.get(CV_CAP_PROP_HUE);           : %5.5f",cap.get(cv::CAP_PROP_HUE));
+    qInfo("cap.get(CV_CAP_PROP_GAIN);          : %5.5f",cap.get(cv::CAP_PROP_GAIN));
+    qInfo("cap.get(CV_CAP_PROP_GAMMA);         : %5.5f",cap.get(cv::CAP_PROP_GAMMA));
+    qInfo("cap.get(CV_CAP_PROP_EXPOSURE);      : %5.5f",cap.get(cv::CAP_PROP_EXPOSURE));
+    qInfo("cap.get(CV_CAP_PROP_CONVERT_RGB);   : %5.5f",cap.get(cv::CAP_PROP_CONVERT_RGB));
+    qInfo("cap.get(CV_CAP_PROP_RECTIFICATION); : %5.5f",cap.get(cv::CAP_PROP_RECTIFICATION));
+    qInfo("cap.get(CV_CAP_PROP_ISO_SPEED );    : %5.5f",cap.get(cv::CAP_PROP_ISO_SPEED ));
+    qInfo("cap.get(CV_CAP_PROP_BUFFERSIZE );   : %5.5f",cap.get(cv::CAP_PROP_BUFFERSIZE ));
 
-    cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
+    cv::namedWindow("MyVideo", cv::WINDOW_AUTOSIZE); //create a window called "MyVideo"
     bool bEnd = false;
     int img = 10;
     while (!bEnd && img > 0)
@@ -682,12 +682,12 @@ void Magrathea::VignetteButton_clicked(){
     if (!cap.isOpened()){
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 5.0);
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 5.0);
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     VerticalAlignmentTool * tool = new VerticalAlignmentTool(this);
     tool->Set_camera(cap);
@@ -721,17 +721,17 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     if(debug)
         qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     if(debug)
         qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
@@ -775,7 +775,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     };
 
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
-            ,CV_LOAD_IMAGE_COLOR);
+            ,cv::IMREAD_COLOR);
 
     std::string tmp_filename = "";
     bool success = false;
@@ -804,7 +804,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
         tmp_filename = Images[ui->spinBox_input->value()];
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
-                ,CV_LOAD_IMAGE_COLOR);
+                ,cv::IMREAD_COLOR);
         Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
@@ -900,19 +900,19 @@ void Magrathea::calibrationCaller(int input){
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
 
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    cap.set(CV_CAP_PROP_GAIN, 363.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', '8', '0', '0'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    cap.set(cv::CAP_PROP_GAIN, 363.0);
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cv::Mat mat_from_camera;
@@ -930,7 +930,7 @@ void Magrathea::calibrationCaller(int input){
                                   "C:/Temporary_files/image_007_600_60_15_dan_rot_min20.png"
                                  };
         calibrator->SetImage(Images[2]
-                ,CV_LOAD_IMAGE_COLOR);
+                ,cv::IMREAD_COLOR);
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -1292,12 +1292,12 @@ void Magrathea::color_test(){
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     cv::Mat input;

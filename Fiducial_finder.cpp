@@ -130,7 +130,7 @@ cv::Mat FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max
     matrices.push_back(input_mat);
     for(unsigned int i=1;i<(steps-1);i++){
         cv::Mat temp_thr;
-        cv::threshold(input_mat,temp_thr,threshold_steps.at(i),255,CV_THRESH_TOZERO);
+        cv::threshold(input_mat,temp_thr,threshold_steps.at(i),255,cv::THRESH_TOZERO);
         matrices.push_back(temp_thr);
     }
     matrices.push_back(cv::Mat::zeros(input_mat.rows,input_mat.cols,input_mat.type()));
@@ -166,18 +166,18 @@ void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int st
 
     int window_size = image.rows;
     std::string um_str = " 50um";
-    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
-    cv::Size text_size = cv::getTextSize(algo_name, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
+    cv::Size text_size = cv::getTextSize(algo_name, cv::FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
     QTime now = QTime::currentTime();
     QString time_now = now.toString("hhmmss");
     std::string time_now_str = time_now.toLocal8Bit().constData();
     timestamp = time_now_str;
     start_x += text_size.width;
-    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-    cv::Size time_size = cv::getTextSize(time_now_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+    cv::Size time_size = cv::getTextSize(time_now_str, cv::FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
     start_x += time_size.width;
-    cv::putText(image,um_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-    cv::Size um_size = cv::getTextSize(um_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    cv::putText(image,um_str,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+    cv::Size um_size = cv::getTextSize(um_str, cv::FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
     start_x += um_size.width;
     cv::line(image,cv::Point(start_x,window_size-start_y),cv::Point(start_x+(50*Calibration),window_size-start_y),cv::Scalar(255,255,255),text_thikness);
 }
@@ -343,7 +343,7 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
 bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
-    bool debug = false;
+    bool debug = true;
     bool print_raw = true;
 
 
@@ -394,7 +394,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             if(debug)
                 cv::imshow("1 blur",image_gray);
 
-            cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+            cv::threshold(image_gray,image_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
             if(debug)
                 cv::imshow("1.1 blur+thr",image_gray);
 
@@ -403,7 +403,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             if(debug)
                 cv::imshow("1.2 blur+thr+close",image_gray);
 
-            cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+            cv::adaptiveThreshold(image_gray,image_gray,255,cv::ADAPTIVE_THRESH_GAUSSIAN_C,cv::THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
 
             if(debug)
                 cv::imshow("2 threshold",image_gray);
@@ -422,7 +422,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             int hough_threshold = min_radius*0.2; //[px] 36
             if(debug)
                 std::cout<<">> calibration "<<Calibration<<std::endl;
-            std::vector<cv::Vec3f> circles;//if this vector has 4 elements the fourth is the votes got buy the circle!
+            std::vector<cv::Vec3f> circles;
             circles.clear();
 
             //    for(int iterations = 0;;iterations++){
@@ -431,7 +431,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             //            if(debug)
             //                cv::imshow("contrast",image_gray);
             //        }
-        cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius);
+        cv::HoughCircles(image_gray, circles, cv::HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius);
         if(debug)
             std::cout<<">> circles "<<circles.size()<<std::endl;
         std::vector <cv::Point> Centers (circles.size());
@@ -442,8 +442,9 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             Centers[i].y = circles[i][1];
             cv::Point center(circles[i][0], circles[i][1]);
             int radius = circles[i][2];
+            auto vote = circles[i][3];
             if(debug)
-                std::cout<<" radius "<<radius<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<<std::endl;
+                std::cout<<" radius "<<radius<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<< " vote : "<<vote<<std::endl;
             // circle center
             cv::circle(RoiImage_out, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
             cv::circle(RoiImage_out_fit, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
@@ -819,8 +820,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     if(debug)
         cv::imshow("1.f blur",image_F_gray);
 
-    cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
-    cv::threshold(image_F_gray,image_F_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+    cv::threshold(image_gray,image_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
+    cv::threshold(image_F_gray,image_F_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
     if(debug)
         cv::imshow("1.1 blur+thr",image_gray);
     if(debug)
@@ -840,8 +841,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     //        cv::imshow("0.2.1 threshold+blur",image_gray);
     //        cv::imshow("0.2.1.f threshold+blur",image_F_gray);
 
-    cv::adaptiveThreshold(image_F_gray,image_F_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
-    cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+    cv::adaptiveThreshold(image_F_gray,image_F_gray,255,cv::ADAPTIVE_THRESH_GAUSSIAN_C,cv::THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+    cv::adaptiveThreshold(image_gray,image_gray,255,cv::ADAPTIVE_THRESH_GAUSSIAN_C,cv::THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
     if(debug){
         cv::imshow("2 threshold",image_gray);
         cv::imshow("2.f threshold",image_F_gray);
@@ -881,7 +882,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         if(markerCorners.size()!=1){
             X_distance = 800000+markerCorners.size();
             Y_distance = 800000+markerCorners.size();
-            cv::putText(outputImage,"fail"+match,cv::Point(30,window_size-4), CV_FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
+            cv::putText(outputImage,"fail"+match,cv::Point(30,window_size-4),cv::FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
         }else{
             cv::aruco::drawDetectedMarkers(outputImage, markerCorners, markerIds);
             cv::Point F_center = Square_center(markerCorners.at(0).at(0),markerCorners.at(0).at(1),

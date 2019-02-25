@@ -50,7 +50,7 @@ void VerticalAlignmentTool::Evaluate_vignette(){
     cv::Rect regione_interessante(center_cols-(window_size*0.5),center_rows-(window_size*0.5),window_size,window_size); //Rectangle that will be the RegionOfInterest (ROI)
     cv::Mat RoiImage = mat_from_outside(regione_interessante);
     cv::Mat image_gray   = RoiImage.clone(); // Selecting ROI from the input image
-    cv::cvtColor(image_gray,image_gray,CV_BGR2GRAY);
+    cv::cvtColor(image_gray,image_gray,cv::COLOR_BGR2GRAY);
     cv::GaussianBlur(image_gray,image_gray,cv::Size(7,7),2,2);
     cv::medianBlur(image_gray,image_gray,7);
     //find brightest spot
@@ -66,13 +66,13 @@ void VerticalAlignmentTool::Evaluate_vignette(){
         threshold_value += i*7;
         cv::Mat image_gray_2;
         std::cout<<"i: "<<i <<" ; ok0"<<std::endl;
-        cv::threshold(image_gray,image_gray_2,threshold_value,255,CV_THRESH_BINARY);
+        cv::threshold(image_gray,image_gray_2,threshold_value,255,cv::THRESH_BINARY);
         std::cout<<"i: "<<i <<" ; ok1"<<std::endl;
         cv::imshow("thr",image_gray_2);
         std::vector<std::vector<cv::Point> > contours;
         std::vector<cv::Vec4i> hierarchy;
         cv::RNG rng(12345);
-        cv::findContours(image_gray_2, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+        cv::findContours(image_gray_2, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
         //cv::Mat image_temp   = RoiImage.clone();
         std::cout<<"It. : "<<i<<" thr. :"<<threshold_value<<",contours.size(): "<<contours.size()<<std::endl;
         std::vector <cv::Point> Centers;
