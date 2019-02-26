@@ -54,13 +54,13 @@ private:
     bool Is_equal(const double &one,const double &two);
     bool Is_a_triangle(const cv::Point& P_1, const cv::Point& P_2, const cv::Point& P_3);
     bool Is_a_square(const cv::Point& P_1, const cv::Point& P_2, const cv::Point& P_3, const cv::Point& P_4);
-    void Find_SquareAndTriangles(const std::vector <cv::Point> &Centers,
+    void Find_SquareAndTriangles(const std::vector<cv::Vec4f> &Centers,
                                  std::vector<std::vector<unsigned int> > &Squares,
                                  std::vector<std::vector<unsigned int> > &Triangles);
     cv::Point Square_center(const cv::Point& P_1, const cv::Point& P_2,
                             const cv::Point& P_3, const cv::Point& P_4);
     void addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp);
-    std::vector<cv::Point2d> OrderSquare(const std::vector<cv::Point2d> &input);
+    std::vector<cv::Vec4d> OrderSquare(const std::vector<cv::Vec4d> &input);
 
     double measured_points[8];
 };
