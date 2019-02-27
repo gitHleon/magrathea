@@ -713,12 +713,13 @@ std::vector<cv::Vec4d>  FiducialFinder::OrderSquare(const std::vector<cv::Vec4d>
 
 
 bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance,
-                            const int &temp_input, const int &temp_input_2, std::string &timestamp, int dummy_temp,
+                            std::string &timestamp,
+                            const int &input_1, const int &input_2, const int &input_3,
                             cv::Mat &transform_out){
     //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
-    bool debug = true;
+    bool debug = false;
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
@@ -731,7 +732,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     int center_cols = image.cols/2;
     if(debug)
         cv::imshow("f. 0 image",image);
-    const int window_size = ( (image.cols > 2700 && image.rows > 2700) ? 2700 : 420);
+    const int window_size = ( (image.cols > 2000 && image.rows > 2000) ? 2000 : 420);
     const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
     if(window_size >= image.rows || window_size >= image.cols){
         log->append("Error!! Window size wrongly set!!");
@@ -874,7 +875,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         cv::imshow("2 threshold",image_gray);
         cv::imshow("2.f threshold",image_F_gray);
     }
-    std::cout<<"ok a"<<std::endl;
     cv::Ptr <cv::Feature2D> detector;
     //const int DescriptorAlgorithm = ui->algorithm_box->value();//set as input to the function
     std::string algo_name = "none";
@@ -903,8 +903,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         //cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
         cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds);
         cv::Mat outputImage = RoiImage.clone();
-        auto s     = std::to_string(temp_input);
-        auto chip  = std::to_string(temp_input_2);
+        auto s     = std::to_string(input_1);
+        auto chip  = std::to_string(input_2);
         auto match = std::to_string(markerCorners.size());
         if(markerCorners.size()!=1){
             X_distance = 800000+markerCorners.size();
@@ -931,7 +931,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }else{
         qWarning("Error!! DescriptorAlgorithm not set properly!!");
         return false;}
-    std::cout<<"ok aa"<<std::endl;
     std::vector<cv::KeyPoint> keypoints_F(0);
     std::vector<cv::KeyPoint> keypoints_image(0);
     keypoints_F.clear();
@@ -942,7 +941,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     cv::Mat descriptorImage;
     cv::Mat descriptorFiducial;
     if(DescriptorAlgorithm != 4){
-        std::cout<<"ok aaa"<<std::endl;
         detector->detectAndCompute(image_gray,cv::Mat(),keypoints_image,descriptorImage,false);
         detector->detectAndCompute(image_F_gray,cv::Mat(),keypoints_F,descriptorFiducial,false);
     }else{
@@ -953,7 +951,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         descriptor_extractor->compute(image_gray,keypoints_image,descriptorImage);
         descriptor_extractor->compute(image_F_gray,keypoints_F,descriptorFiducial);
     }
-    std::cout<<"ok 0"<<std::endl;
     qInfo("Fiducial keypoints %i",keypoints_F.size());
     qInfo("Image    keypoints %i",keypoints_image.size());
 
@@ -967,7 +964,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
         matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
     }else{
-        log->append("Star, Surf, Sift matching");
+        qInfo("Star, Surf, Sift matching");
         if(flann_true){//flann is NOT working
             int FLANN_INDEX_KDTREE = 0;
             cv::Ptr<cv::flann::IndexParams> index_params;
@@ -982,7 +979,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         }
     }
     std::vector<cv::DMatch> SortedMatches;
-    const double Lowe_ratio = 0.7; //loose: 0.9, tight: 0.7
+    const float Lowe_ratio = 0.7; //loose: 0.9, tight: 0.7
     if(DescriptorAlgorithm == 2){//ORB
         SortedMatches = matches;
         sort(SortedMatches.begin(),SortedMatches.end(),Distance_sorter);
@@ -996,12 +993,10 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }
 
     //debug
-    std::cout<<"ok 00"<<std::endl;
     cv::Mat test_1;
     cv::Mat test_2;
     cv::drawKeypoints(image_gray,keypoints_image,test_1,cv::Scalar(0,0,255));
     cv::drawKeypoints(image_F_gray,keypoints_F,test_2,cv::Scalar(0,0,255));
-    std::cout<<"ok 1"<<std::endl;
     if(debug)
         cv::imshow("3. keypoints image",test_1);
     if(debug)
@@ -1075,15 +1070,17 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }
     //putting labels on output image
     std::string time_now_str = "";
-    int start_x = 15;
-    int start_y = 5;
-    std::cout<<"ok 1x"<<std::endl;
-    addInfo(RoiImage,algo_name,start_x,start_y,3,2,time_now_str);
-    std::cout<<"ok 2x"<<std::endl;
-    std::string s     = std::to_string(temp_input);
-    std::string chip  = std::to_string(temp_input_2);
+//    int start_x = 15;
+//    int start_y = 5;
+//    std::cout<<"ok 1x"<<std::endl;
+//    addInfo(RoiImage,algo_name,start_x,start_y,3,2,time_now_str);
+//    std::cout<<"ok 2x"<<std::endl;
+    std::string one      = std::to_string(input_1);
+    std::string two      = std::to_string(input_2);
+    std::string three    = std::to_string(input_3);
+    std::string result_s = "";
     //cv::imwrite("EXPORT/"+chip+"_"+s+"_"+time_now_str+".jpg",output_mat);
-    cv::imwrite("EXPORT/"+algo_name+"_"+chip+"_"+s+"_"+time_now_str+".jpg",RoiImage);
+    //cv::imwrite("EXPORT/"+algo_name+"_"+one+"_"+two+"_"+three+".jpg",RoiImage);
     //cv::imwrite("EXPORT/"+algo_name+"_"+chip+"_"+s+".jpg",RoiImage);
     //cv::imwrite("EXPORT/"+algo_name+"_match_"+chip+"_"+s+"_"+time_now_str+".jpg",result);
 
@@ -1096,9 +1093,18 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     descriptor_extractor.release();
     matcher.release();
     detector.release();
-    return true;
-}
 
+    if((abs(F_center.x - ROIcenter_cols) > image_F_gray.cols/4) || (abs(F_center.y - ROIcenter_rows) > image_F_gray.rows/4)){
+        result_s = "FAIL";
+        cv::imwrite("EXPORT/"+algo_name+"_"+one+"_"+two+"_"+three+"_"+result_s+".jpg",RoiImage);
+        return false;
+    }else{
+        result_s = "SUCCES";
+        cv::imwrite("EXPORT/"+algo_name+"_"+one+"_"+two+"_"+three+"_"+result_s+".jpg",RoiImage);
+        return true;
+    }
+
+}
 
 void function1_func(const alglib::real_1d_array &x, double &func, void *ptr)
 {

@@ -285,7 +285,7 @@ Magrathea::Magrathea(QWidget *parent) :
     //test
     connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
-    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_fid_finder()));
+    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test_images()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
     connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
@@ -823,8 +823,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         //here you can apply condition on the found match to evaluate if it is good or bad
         //while(invalid_match){
             cv::Mat output_H;
-            success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
-                                      ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/,output_H);
+            success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,timestamp,ui->spinBox_input->value(),
+                                      ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
             double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
             double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
 //            if( ( fabs(H_1_1/H_1_2) < 0.26 ) && (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 1.05 && sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 0.95) )
@@ -1354,6 +1354,65 @@ bool Magrathea::loop_test(){
                 return false;
             if(!mMotionHandler->moveYBy(-target_y_short,1.))
                 return false;
+        }
+    }
+    return true;
+}
+
+bool Magrathea::loop_test_images(){
+    //run fiducial finding algo automatically
+    cv::destroyAllWindows();
+    std::string timestamp = "";
+    std::string address_images = "C:/Users/Silicio/cernbox/Gantry_2018_BIG/Fiducial_chip_images_5_5_20190218/";
+    std::string address_fiducial = "C:/Users/Silicio/cernbox/Gantry_2018_BIG/Templates_5_5/";
+    std::string Images_fiducial[] = {
+        address_fiducial + "ATLAS_E.jpg",
+        address_fiducial + "ATLAS_F.jpg",
+        address_fiducial + "ATLAS_G.jpg",
+        address_fiducial + "ATLAS_H.jpg",
+        address_fiducial + "ATLAS_I.jpg"
+    };
+    for(int i=0;i<34;i++){//chip number
+        for(int j=0;j<5;j++){//chip row (i.e. fiducial type)
+            for(int m=0;m<8;m++){//chip column
+                std::cout<<"i "<<i<<" ; j "<<j<<" ; m "<<m<<std::endl;
+                cv::destroyAllWindows();
+                FiducialFinder * Ffinder = new FiducialFinder(this);
+                Ffinder->Set_log(outputLogTextEdit);
+                Ffinder->SetImageFiducial(Images_fiducial[j]
+                        ,cv::IMREAD_COLOR);
+                std::string one     = std::to_string(i);
+                std::string two     = std::to_string(j);
+                std::string three   = std::to_string(m);
+                std::string image_address = "Image_"+one+"_"+two+"_"+three+"_.jpg";
+                Ffinder->SetImage(address_images + image_address,cv::IMREAD_COLOR);
+                Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
+                cv::Mat output_H;
+                double distance_x = 0;
+                double distance_y = 0;
+                //fix input values
+                bool success = Ffinder->Find_F(0,
+                                               distance_x,distance_y,timestamp,
+                                               i,j,m,output_H);
+
+                double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
+                double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
+                if( (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 1.05 || sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 0.95) )
+                    success = false; //control on the scale of the fiducial, which should be close to 1
+
+                std::string file_name = (success ? "output_success" : "output_fail");
+                file_name += ("_" +two+".txt");
+                std::ofstream ofs (file_name, std::ofstream::app);
+                ofs <<i<<" "<<j<<" "<<m<<" "<<timestamp<<" "<<distance_x<<" "<<distance_y<<std::endl;
+                ofs.close();
+                delete Ffinder;
+                //                double camera_angle   = 0.886; //to be measured
+                //                double target_x_short = distance_y*cos(camera_angle) + distance_x*sin(camera_angle);
+                //                double target_y_short = distance_y*sin(camera_angle) - distance_x*cos(camera_angle);
+                //double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
+                //double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+                //ATTENTION! distances[0] is cols, distances[1] is rows of the image
+            }
         }
     }
     return true;
