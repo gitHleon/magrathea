@@ -714,12 +714,14 @@ std::vector<cv::Vec4d>  FiducialFinder::OrderSquare(const std::vector<cv::Vec4d>
 
 bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance,
                             std::string &timestamp,
+                            int &fail_code,
                             const int &input_1, const int &input_2, const int &input_3,
                             cv::Mat &transform_out){
     //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
     bool debug = false;
+    fail_code = 0;
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
@@ -1094,7 +1096,15 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     matcher.release();
     detector.release();
 
-    if((abs(F_center.x - ROIcenter_cols) > image_F_gray.cols/4) || (abs(F_center.y - ROIcenter_rows) > image_F_gray.rows/4)){
+    double H_1_1 = cv::Scalar(H.at<double>(0,0)).val[0];
+    double H_1_2 = cv::Scalar(H.at<double>(0,1)).val[0];
+    if( (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 1.05 || sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 0.95) )
+        fail_code = 1; //control on the scale of the fiducial, which should be close to 1
+
+    if((abs(F_center.x - ROIcenter_cols) > image_F_gray.cols/3) || (abs(F_center.y - ROIcenter_rows) > image_F_gray.rows/3))
+        fail_code = 2;
+
+    if(fail_code != 0){
         result_s = "FAIL";
         cv::imwrite("EXPORT/"+algo_name+"_"+one+"_"+two+"_"+three+"_"+result_s+".jpg",RoiImage);
         return false;

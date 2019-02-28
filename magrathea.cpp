@@ -823,7 +823,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         //here you can apply condition on the found match to evaluate if it is good or bad
         //while(invalid_match){
             cv::Mat output_H;
-            success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,timestamp,ui->spinBox_input->value(),
+            int fail_code = 0;
+            success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,timestamp,fail_code,ui->spinBox_input->value(),
                                       ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
             double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
             double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
@@ -1378,6 +1379,7 @@ bool Magrathea::loop_test_images(){
                 std::cout<<"i "<<i<<" ; j "<<j<<" ; m "<<m<<std::endl;
                 cv::destroyAllWindows();
                 FiducialFinder * Ffinder = new FiducialFinder(this);
+                Ffinder->Set_calibration(1.);
                 Ffinder->Set_log(outputLogTextEdit);
                 Ffinder->SetImageFiducial(Images_fiducial[j]
                         ,cv::IMREAD_COLOR);
@@ -1390,20 +1392,15 @@ bool Magrathea::loop_test_images(){
                 cv::Mat output_H;
                 double distance_x = 0;
                 double distance_y = 0;
+                int fail_code = 0;
                 //fix input values
-                bool success = Ffinder->Find_F(0,
-                                               distance_x,distance_y,timestamp,
+                bool success = Ffinder->Find_F(0,distance_x,distance_y,timestamp,fail_code,
                                                i,j,m,output_H);
-
-                double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
-                double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-                if( (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 1.05 || sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 0.95) )
-                    success = false; //control on the scale of the fiducial, which should be close to 1
 
                 std::string file_name = (success ? "output_success" : "output_fail");
                 file_name += ("_" +two+".txt");
                 std::ofstream ofs (file_name, std::ofstream::app);
-                ofs <<i<<" "<<j<<" "<<m<<" "<<timestamp<<" "<<distance_x<<" "<<distance_y<<std::endl;
+                ofs <<i<<" "<<j<<" "<<m<<" "<<timestamp<<" "<<fail_code<<" "<<distance_x<<" "<<distance_y<<std::endl;
                 ofs.close();
                 delete Ffinder;
                 //                double camera_angle   = 0.886; //to be measured

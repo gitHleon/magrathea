@@ -36,7 +36,7 @@ public slots:
     void SetImageFiducial(const std::string& filename, int flags);
     bool IsImageEmpty();
     bool Find_circles(double &X_distance, double &Y_distance, const int &temp_input, const int &temp_input_2, bool fit = false);
-    bool Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, std::string &timestamp,
+    bool Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance, std::string &timestamp, int &fail_code,
                 const int &temp_input, const int &temp_input_2, const int &dummy_temp,
                 cv::Mat &transform_out);
     cv::Mat get_component(const cv::Mat &input_mat,const unsigned int &input);
@@ -46,7 +46,7 @@ public slots:
     int dumb_test();
 
 private:
-    double Calibration = -1.1; //[px/um]
+    double Calibration = 1.0; //[px/um]
     cv::Mat image;
     cv::Mat image_fiducial;
     QTextEdit *log;
