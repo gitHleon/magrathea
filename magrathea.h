@@ -55,6 +55,7 @@ private slots:
     void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
+    bool loop_find_circles();
 
     //gantry
     void connectGantryBoxClicked(bool checked);
@@ -84,7 +85,7 @@ private:
 
     cv::Mat sub_frame;
 
-    double mCalibration = 10.0563;//3.43;//4.5; //[px/um]
+    double mCalibration = 10.035;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;

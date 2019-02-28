@@ -234,8 +234,10 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
-    //connect(ui->cap_and_move_button,SIGNAL(clicked(bool)),this,SLOT(capture_fid_and_move()));
     connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
+    connect(ui->button_measure_30,SIGNAL(clicked(bool)),this,SLOT(loop_find_circles()));
+    connect(ui->button_measure_1_well,SIGNAL(clicked(bool)),this,SLOT(loop_fid_finder()));
+
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -338,7 +340,7 @@ void Magrathea::updatePosition(){
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
     //reading fault state for each axis
 
-    return;
+    //return;
 
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
     unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
@@ -819,24 +821,18 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
     if(input == 1 || input == 0){
         bool invalid_match = true;
-        //int ii = 0;
         //here you can apply condition on the found match to evaluate if it is good or bad
-        //while(invalid_match){
-            cv::Mat output_H;
-            int fail_code = 0;
-            success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,timestamp,fail_code,ui->spinBox_input->value(),
-                                      ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
-            double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
-            double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-//            if( ( fabs(H_1_1/H_1_2) < 0.26 ) && (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 1.05 && sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 0.95) )
-//                invalid_match = false;
-            //ii++;
-            //if(ii> 1)
-            //    invalid_match = false;
-            std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
-        //}//while invalid match
-    } else if(input == 2){
-        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),true);
+        cv::Mat output_H;
+        int fail_code = 0;
+        success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,timestamp,fail_code,ui->spinBox_input->value(),
+                                  ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
+        double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
+        double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
+        //add matched fiducial size control
+        std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
+    } else {
+        bool do_fit = ((input == 2) ? false : true);//do fit when inputis different than 2
+        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),do_fit);
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
@@ -863,7 +859,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    double camera_angle = 0.886;
+    double camera_angle = 0.740;
     double target_x_short = distance_x*0.001*cos(camera_angle) + distance_y*0.001*sin(camera_angle);
     double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
@@ -1346,7 +1342,7 @@ bool Magrathea::loop_test(){
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double camera_angle = 0.886;
+            double camera_angle = 0.740;
             double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
             double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
@@ -1355,6 +1351,22 @@ bool Magrathea::loop_test(){
                 return false;
             if(!mMotionHandler->moveYBy(-target_y_short,1.))
                 return false;
+        }
+    }
+    return true;
+}
+
+bool Magrathea::loop_find_circles(){
+    //mMotionHandler->SetLimitsController();
+    //run fiducial finding algo automatically
+    for(int j=0;j<30;j++){//set appropriate value of the loop limit
+        ui->chip_number_spinBox->setValue(j);
+        std::cout<<"j "<<j<<std::endl;
+        std::vector <double> distances;
+        if(!FiducialFinderCaller(2,distances))
+        {
+            std::cout<<"FAIL!!"<<std::endl;
+            return false;
         }
     }
     return true;
@@ -1419,15 +1431,16 @@ bool Magrathea::loop_fid_finder(){
     //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
     //and move to the fiducial position
-    for(int i=0;i<3;i++){//set appropriate value of the loop limit
+    for(int i=0;i<4;i++){//set appropriate value of the loop limit
         std::cout<<"It "<<i<<std::endl;
         std::vector <double> distances;
-        if(!FiducialFinderCaller(2,distances))
+        int input = ((i==3) ? 3 : 2);
+        if(!FiducialFinderCaller(input,distances))
         {
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double camera_angle = 0.886;
+        double camera_angle = 0.740;
         double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
         double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image

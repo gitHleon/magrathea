@@ -122,7 +122,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="joystickTab">
         <attribute name="title">
@@ -850,6 +850,27 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_23">
+            <property name="text">
+             <string>Point 1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QPushButton" name="button_measure_30">
+            <property name="text">
+             <string>1 point, 30 times</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_24">
+            <property name="text">
+             <string>Point 2</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="point2_x_box">
             <property name="decimals">
@@ -866,17 +887,19 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_23">
-            <property name="text">
-             <string>Point 1</string>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="point2_y_box">
+            <property name="decimals">
+             <number>3</number>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_24">
-            <property name="text">
-             <string>Point 2</string>
+            <property name="minimum">
+             <double>-555.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>555.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-6.425000000000000</double>
             </property>
            </widget>
           </item>
@@ -896,19 +919,10 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
-           <widget class="QDoubleSpinBox" name="point2_y_box">
-            <property name="decimals">
-             <number>3</number>
-            </property>
-            <property name="minimum">
-             <double>-555.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>555.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>-6.425000000000000</double>
+          <item row="0" column="4">
+           <widget class="QPushButton" name="button_measure_1_well">
+            <property name="text">
+             <string>1 point, very well</string>
             </property>
            </widget>
           </item>

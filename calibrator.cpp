@@ -117,6 +117,9 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
 
 
     cv::imshow("1. gray",image_gray);
+    cv::medianBlur(image_gray,image_gray,kernel_size);
+    cv::imshow("1.1 blur",image_gray);
+
     //Performing fourier analysis for rotation detection and compensation
     //https://docs.opencv.org/2.4/doc/tutorials/core/discrete_fourier_transform/discrete_fourier_transform.html#discretfouriertransform
 
@@ -226,6 +229,9 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
     image_gray = get_component(image_gray,1);
     if(debug)
         cv::imshow("7. gray-rotated",image_gray);
+
+    cv::medianBlur(image_gray,image_gray,kernel_size);
+    cv::imshow("7.1 blur",image_gray);
     cv::threshold(image_gray,image_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
     cv::imshow("8. threshold",image_gray);
 
@@ -281,7 +287,7 @@ bool Calibrator::Calibration_strips(double &calibration_value, double &calibrati
                     std::cout<<" < OFF the step "<<std::endl;
                 on_the_step = false;
                 //removing bad peaks, like the one due to imperfections
-                if(counter > 2){ //selecting peaks that are at least 3 pixels
+                if(counter > 10){ //selecting peaks that are at least 10 pixels
                     centers_t.push_back( (counter / 2.0) + top);
                     widths_t.push_back(counter); //widths of the peaks
                     if(debug)

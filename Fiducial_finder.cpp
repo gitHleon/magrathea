@@ -346,7 +346,7 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
 bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
-    bool debug = true;
+    bool debug = false;
     bool print_raw = true;
 
 
@@ -642,9 +642,16 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
 
 //            double fitted_square_center_x = 0.;
 //            double fitted_square_center_y = 0.;
-            double fitted_square_center_x = starting_value_variables[8];
-            double fitted_square_center_y = starting_value_variables[9];
+            double fitted_square_center_x = starting_value_variables[12];
+            double fitted_square_center_y = starting_value_variables[13];
             std::cout<<" "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
+            if(print_raw){
+                std::string file_name = "output_raw_POSTFIT.txt";
+                std::ofstream ofs (file_name, std::ofstream::app);
+                ofs << input_1 <<" "<<input_2<<" "<< fitted_square_center_x <<" "<<fitted_square_center_y<<std::endl;
+                ofs.close();
+            }
+
             X_distance = (fitted_square_center_x - RoiImage_out.cols/2)*(1./Calibration); //[um]
             Y_distance = (fitted_square_center_y - RoiImage_out.rows/2)*(1./Calibration); //[um]
 
