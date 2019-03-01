@@ -20,6 +20,7 @@ public:
     bool zAxisEnabled;
     bool z_2_AxisEnabled;
     bool uAxisEnabled;
+    bool JogAxisEnabled;
 
 public slots:
 
@@ -43,12 +44,14 @@ public slots:
     virtual bool enableZAxis(bool flag=true);
     virtual bool enableZ_2_Axis(bool flag=true);
     virtual bool enableUAxis(bool flag=true);
+    virtual bool enableJOGAxis(bool flag=true);
     virtual bool disableAxes();
     virtual bool disableXAxis();
     virtual bool disableYAxis();
     virtual bool disableZAxis();
     virtual bool disableZ_2_Axis();
     virtual bool disableUAxis();
+    virtual bool disableJOGAxis();
 
     //******************************************
     // gantry current position
@@ -59,6 +62,7 @@ public slots:
     virtual bool getZAxisState();
     virtual bool getZ_2_AxisState();
     virtual bool getUAxisState();
+    virtual bool getJOGAxisState();
 
     //******************************************
     // home axes
@@ -68,7 +72,7 @@ public slots:
     virtual bool homeZ();
     virtual bool homeZ_2();
     virtual bool homeU();
-
+    virtual bool homeJOG();
     //******************************************
     // absolute motion
     // NOTE units in mm, mm/s and deg/s
@@ -79,6 +83,7 @@ public slots:
     virtual bool moveZTo(double z, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveZ_2_To(double z, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveUTo(double u, double speed=std::numeric_limits<double>::quiet_NaN());
+    virtual bool moveJOGTo(double jog, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
     // motion relative to current location
@@ -90,6 +95,7 @@ public slots:
     virtual bool moveZBy(double z=0, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveZ_2_By(double z=0, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveUBy(double u=0, double speed=std::numeric_limits<double>::quiet_NaN());
+    virtual bool moveJOGBy(double jog=0, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
     // free run
@@ -109,12 +115,14 @@ public slots:
     virtual bool validate_target_pos_y(double val);
     virtual bool validate_target_pos_z_1(double val);
     virtual bool validate_target_pos_z_2(double val);
+    virtual bool validate_target_pos_JOG(double val);
     virtual bool SetLimitsController();
     virtual bool GetLimitsController(std::vector <double> & limits);
     virtual int  GetfaultSateXAxis();
     virtual int  GetfaultSateYAxis();
     virtual int  GetfaultSateZ1Axis();
     virtual int  GetfaultSateZ2Axis();
+    virtual int  GetfaultSateJOGAxis();
 
 signals:
 
@@ -123,18 +131,20 @@ signals:
 private:
 
     HANDLE gantry;
-    const int X_axis = ACSC_AXIS_0;
-    const int Y_axis = ACSC_AXIS_1;
-    //AXIS 2 is y axis jog, AXIS 3 does not exists
+    const int X_axis   = ACSC_AXIS_0;
+    const int Y_axis   = ACSC_AXIS_1;
+    const int JOG_axis = ACSC_AXIS_2;
+    //AXIS 3 does not exists
     const int Z_axis = ACSC_AXIS_5;//I need the camera to stay on axis z1
     const int Z_2_axis = ACSC_AXIS_4;
     const int U_axis = ACSC_AXIS_6;
 
     const int TimeOut = 10000;//timeout in ms
 
-    double Home_coord[5]          = {0.,0.,0.,0.,0.};
-    double default_speed         = 15;
-    double default_angular_speed = 10;
+    //double Home_coord[5]          = {0.,0.,0.,0.,0.};
+    double Home_coord[6]          = {0.,0.,0.,0.,0.,0.};
+    double default_speed         = 10;
+    double default_angular_speed = 5;
 
     double x_min = -450.0;
     double x_max =  500.0;
@@ -144,6 +154,8 @@ private:
     double z_1_max =  90.0;
     double z_2_min =  -70.0;
     double z_2_max =  90.0;
+    double JOG_min =  -3.0;
+    double JOG_max =  3.0;
 
 };
 

@@ -8,7 +8,8 @@ ACSCMotionHandler::ACSCMotionHandler() :
     yAxisEnabled(false),
     zAxisEnabled(false),
     z_2_AxisEnabled(false),
-    uAxisEnabled(false)
+    uAxisEnabled(false),
+    JogAxisEnabled(false)
     {
     gantry = NULL;
 
@@ -104,8 +105,8 @@ bool ACSCMotionHandler::disconnectGantry()
 //------------------------------------------
 bool ACSCMotionHandler::stop(){
     qInfo("stopping...");
-    int Axes[6] = {X_axis,Y_axis,Z_axis,
-                         Z_2_axis,U_axis,-1};
+    int Axes[7] = {X_axis,Y_axis,Z_axis,
+                         Z_2_axis,U_axis,JOG_axis,-1};
     if (acsc_BreakM(gantry,Axes,ACSC_SYNCHRONOUS) != 0) { //stop here
         qInfo("stop");
         return true;
@@ -136,8 +137,8 @@ bool ACSCMotionHandler::enableAxes(bool flag)
 {
     if (flag) {
         qInfo("enabling axes...");
-        int Axes[6] = {X_axis,Y_axis,Z_axis,
-                             Z_2_axis,U_axis,-1};
+        int Axes[7] = {X_axis,Y_axis,Z_axis,
+                             Z_2_axis,U_axis,JOG_axis,-1};
         if (acsc_EnableM(gantry,Axes,ACSC_SYNCHRONOUS)) { //enable all axes here
             qInfo("axes enabled");
             return true;
@@ -306,6 +307,35 @@ bool ACSCMotionHandler::enableUAxis(bool flag)
 }
 
 //------------------------------------------
+bool ACSCMotionHandler::enableJOGAxis(bool flag)
+{
+    if (flag) {
+        qInfo("enabling JOG axis...");
+        if (acsc_Enable(gantry,U_axis,ACSC_SYNCHRONOUS)) { //enable u axis here
+            qInfo("JOG axis enabled");
+            uAxisEnabled=true;
+            return true;
+        } else {
+            qInfo("Error initiating axis JOG: %d ",acsc_GetLastError());
+            qInfo("could not enable JOG axis");
+            return false;
+        }
+    } else {
+        qInfo("disabling JOG axis...");
+        if (acsc_Disable(gantry,U_axis,ACSC_SYNCHRONOUS)) {
+            qInfo("JOG axis disabled");
+            uAxisEnabled=false;
+            return true;
+        } else {
+            qInfo("Error disabling axis JOG: %d ",acsc_GetLastError());
+            qInfo("could not disable JOG axis");
+            return false;
+        }
+    }
+    return true;
+}
+
+//------------------------------------------
 bool ACSCMotionHandler::disableAxes()
 {
     return enableAxes(false);
@@ -339,6 +369,12 @@ bool ACSCMotionHandler::disableZ_2_Axis()
 bool ACSCMotionHandler::disableUAxis()
 {
     return enableUAxis(false);
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::disableJOGAxis()
+{
+    return enableJOGAxis(false);
 }
 
 //******************************************
@@ -451,6 +487,16 @@ int ACSCMotionHandler::GetfaultSateZ2Axis(){
     return fault_state;
 };
 
+int ACSCMotionHandler::GetfaultSateJOGAxis(){
+    std::string temp = "FAULT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    int fault_state = 1;
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_2,ACSC_AXIS_2,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
+        qWarning("Error get fault JOG axis: %d ",acsc_GetLastError());
+    return fault_state;
+};
+
 //******************************************
 // home axes
 
@@ -504,6 +550,13 @@ bool ACSCMotionHandler::homeU() {
     return true;
 }
 
+//------------------------------------------
+bool ACSCMotionHandler::homeJOG() {
+    qInfo("homing u axis...");
+    moveUTo(Home_coord[5],1);
+    return true;
+}
+
 //******************************************
 // absolute motion
 // NOTE units in mm, mm/s and deg/s
@@ -527,7 +580,6 @@ bool ACSCMotionHandler::moveTo(double positions[4], double speed)
     moveYTo(positions[1],speed);
     moveZTo(positions[2],speed);
     moveZ_2_To(positions[3],speed);
-    //qInfo("...");
     return true;
 }
 
@@ -552,8 +604,6 @@ bool ACSCMotionHandler::moveXTo(double x, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -576,8 +626,6 @@ bool ACSCMotionHandler::moveYTo(double y, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -600,8 +648,6 @@ bool ACSCMotionHandler::moveZTo(double z, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -624,8 +670,6 @@ bool ACSCMotionHandler::moveZ_2_To(double z, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -647,6 +691,28 @@ bool ACSCMotionHandler::moveUTo(double u, double speed) {
     }
     emit updatePositions_s();
     return true;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::moveJOGTo(double jog, double speed) {
+    //validate target position
+    if(!validate_target_pos_JOG(jog)) //understand what are reasonable limits
+        return false;
+    qInfo("moving JOG axis to %.3f mm at %.3f mm/s speed",jog, speed);
+    if(acsc_SetVelocity(gantry,JOG_axis,speed,ACSC_SYNCHRONOUS) == 0)
+        qWarning("Error gantry, setting speed JOG axis: %d ",acsc_GetLastError());
+    if (acsc_ToPoint(gantry,0,JOG_axis,jog,ACSC_SYNCHRONOUS) != 0) { //move to destination here
+        if(acsc_WaitMotionEnd(gantry,JOG_axis,TimeOut) == 0)
+            qWarning("Error gantry, waiting motion JOG axis to end: %d ",acsc_GetLastError());//wait
+        qInfo("moved JOG axis to destination");
+        emit updatePositions_s();
+        return true;
+    } else {
+        qWarning("Error gantry, motion JOG axis: %d ",acsc_GetLastError());
+        qWarning("could not move JOG axis to destination");
+        emit updatePositions_s();
+        return false;
+    }
 }
 
 //******************************************
@@ -698,8 +764,6 @@ bool ACSCMotionHandler::moveXBy(double x, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -723,8 +787,6 @@ bool ACSCMotionHandler::moveYBy(double y, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -748,8 +810,6 @@ bool ACSCMotionHandler::moveZBy(double z, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -773,8 +833,6 @@ bool ACSCMotionHandler::moveZ_2_By(double z, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -794,8 +852,29 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
+}
+
+//------------------------------------------
+bool ACSCMotionHandler::moveJOGBy(double jog, double speed) {
+    std::vector <double> pos_t = whereAmI(0);
+    //validate target position
+    if(!validate_target_pos_JOG(jog+pos_t[5]))
+        return false;
+    qInfo("moving z axis to %.3f mm at %.3f mm/s speed", jog, speed);
+    if(acsc_SetVelocity(gantry,JOG_axis,speed,ACSC_SYNCHRONOUS) == 0)
+        qWarning("Error gantry, setting speed JOG axis: %d ",acsc_GetLastError());
+    if (acsc_ToPoint(gantry,ACSC_AMF_RELATIVE,JOG_axis,jog,ACSC_SYNCHRONOUS) != 0) { //move to destination here
+        if(acsc_WaitMotionEnd(gantry,JOG_axis,TimeOut) == 0)
+            qWarning("Error gantry, waiting motion JOG axis to end: %d ",acsc_GetLastError());//wait
+        qInfo("moved JOG axis to destination");
+        emit updatePositions_s();
+        return true;
+    } else {
+        qWarning("Error gantry, motion JOG axis: %d ",acsc_GetLastError());
+        qWarning("could not move JOG axis to destination");
+        emit updatePositions_s();
+        return false;
+    }
 }
 
 //******************************************
@@ -816,7 +895,6 @@ bool ACSCMotionHandler::runX(double direction, double speed)
         qWarning("Could not free run along X axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -956,7 +1034,7 @@ bool ACSCMotionHandler::endRunU()
 //******************************************
 //gantry current position
 std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
-    std::vector<double> position = {-99990.0,-99990.0,-99990.0,-99990.0,-99990.0};
+    std::vector<double> position = {-99990.0,-99990.0,-99990.0,-99990.0,-99990.0,-99990.0};
     double position_tmp = -99999.9;
     if(!gantryConnected)
         return position;
@@ -984,6 +1062,9 @@ std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
         if(acsc_GetFPosition(gantry,Z_2_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
             qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
         position[4] = position_tmp;
+        if(acsc_GetFPosition(gantry,JOG_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
+            qWarning("Error get position JOG axis: %d ",acsc_GetLastError());
+        position[5] = position_tmp;
     } else if(ific_value == 1){
         std::string temp = "APOS";
         char * tab = new char [temp.length()+1];
@@ -1007,6 +1088,10 @@ std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
         if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
         position[4] = position_tmp;
+
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_2,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
+            qWarning("Error get position JOG axis: %d ",acsc_GetLastError());
+        position[5] = position_tmp;
     }
     return position;
 }
@@ -1078,6 +1163,19 @@ bool ACSCMotionHandler::getUAxisState(){
     return uAxisEnabled;
 }
 
+//------------------------------------------
+bool ACSCMotionHandler::getJOGAxisState(){
+    int State;
+    if(!gantryConnected)
+        return false;
+    if(!acsc_GetMotorState(gantry,JOG_axis,&State,ACSC_SYNCHRONOUS)){
+        qWarning("Error get JOG axis state: %d ",acsc_GetLastError());
+    }else{
+        JogAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+    }
+    return JogAxisEnabled;
+}
+
 //******************************************
 // Safety limits for movement
 bool ACSCMotionHandler::validate_target_pos_x(double val){
@@ -1112,6 +1210,16 @@ bool ACSCMotionHandler::validate_target_pos_z_1(double val){
 bool ACSCMotionHandler::validate_target_pos_z_2(double val){
     if(val < z_2_min || val > z_2_max){
         qWarning("ERROR!! Target Z2 position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
+}
+
+bool ACSCMotionHandler::validate_target_pos_JOG(double val){
+    if(val < JOG_min || val > JOG_max){
+        qWarning("ERROR!! Target JOG position is NOT valid, aborting motion.");
         return false;
     } else {
         //add control on step
