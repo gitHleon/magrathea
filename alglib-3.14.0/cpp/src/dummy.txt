@@ -1,0 +1,37 @@
+ El volumen de la unidad C es Windows
+ El n£mero de serie del volumen es: E424-D5FD
+
+ Directorio de C:\Users\Silicio\WORK\Opencv_Qt_proj\alglib-3.14.0\cpp\src
+
+06/02/2019  09:10    <DIR>          .
+06/02/2019  09:10    <DIR>          ..
+06/02/2019  09:07           476.602 alglibinternal.cpp
+06/02/2019  09:07            43.201 alglibinternal.h
+06/02/2019  09:07           293.387 alglibmisc.cpp
+06/02/2019  09:07            79.508 alglibmisc.h
+06/02/2019  09:07           358.979 ap.cpp
+06/02/2019  09:07           128.312 ap.h
+06/02/2019  09:07         1.681.151 dataanalysis.cpp
+06/02/2019  09:07           377.380 dataanalysis.h
+06/02/2019  09:07            46.564 diffequations.cpp
+06/02/2019  09:07            10.426 diffequations.h
+06/02/2019  09:10                 0 dummy.txt
+06/02/2019  09:07           127.736 fasttransforms.cpp
+06/02/2019  09:07            27.683 fasttransforms.h
+06/02/2019  09:07           149.744 integration.cpp
+06/02/2019  09:07            33.662 integration.h
+06/02/2019  09:07         2.012.907 interpolation.cpp
+06/02/2019  09:07           404.428 interpolation.h
+06/02/2019  09:07         1.708.453 linalg.cpp
+06/02/2019  09:07           333.418 linalg.h
+06/02/2019  09:07         1.897.952 optimization.cpp
+06/02/2019  09:07           352.358 optimization.h
+06/02/2019  09:07           488.533 solvers.cpp
+06/02/2019  09:07           148.324 solvers.h
+06/02/2019  09:07           318.179 specialfunctions.cpp
+06/02/2019  09:07            73.568 specialfunctions.h
+06/02/2019  09:07           610.576 statistics.cpp
+06/02/2019  09:07            56.376 statistics.h
+06/02/2019  09:07                 4 stdafx.h
+              28 archivos     12.239.411 bytes
+               2 dirs  67.642.257.408 bytes libres

@@ -28,6 +28,7 @@
 #endif
 #include <QTextEdit>
 #include <vector>
+#include <fstream>
 
 #ifndef SLEEPER_CLASS
 #define SLEEPER_CLASS
