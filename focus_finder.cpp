@@ -57,20 +57,20 @@ void Focus_finder::addInfo(cv::Mat &image,const std::string &algo_name, int star
     //int text_thikness = 2;
 
     int window_size = image.rows;
-    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
-    cv::Size text_size = cv::getTextSize(algo_name, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
+    cv::Size text_size = cv::getTextSize(algo_name, cv::FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
     QTime now = QTime::currentTime();
     QString time_now = now.toString("hhmmss");
     std::string time_now_str = time_now.toLocal8Bit().constData();
     timestamp = time_now_str;
     start_x += text_size.width;
-    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-    cv::Size time_size = cv::getTextSize(time_now_str, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+    cv::Size time_size = cv::getTextSize(time_now_str, cv::FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
     start_x += time_size.width;
     for(unsigned int i=0;i<values.size();i++){
         auto s = std::to_string(values.at(i));
-        cv::putText(image,s,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-        cv::Size s_size = cv::getTextSize(s, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+        cv::putText(image,s,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+        cv::Size s_size = cv::getTextSize(s, cv::FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
         start_x += s_size.width;
     }
 }

@@ -234,8 +234,10 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
     connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
-    connect(ui->cap_and_move_button,SIGNAL(clicked(bool)),this,SLOT(capture_fid_and_move()));
     connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
+    connect(ui->button_measure_30,SIGNAL(clicked(bool)),this,SLOT(loop_find_circles()));
+    connect(ui->button_measure_1_well,SIGNAL(clicked(bool)),this,SLOT(loop_fid_finder()));
+
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -285,10 +287,10 @@ Magrathea::Magrathea(QWidget *parent) :
     //test
     connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
-    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_fid_finder()));
+    connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test_images()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
-    //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
-    connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
+    connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
+    connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
 }
 
 //******************************************
@@ -337,6 +339,8 @@ void Magrathea::updatePosition(){
     led_label(ui->label_16, current);
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
     //reading fault state for each axis
+
+    //return;
 
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
     unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
@@ -435,7 +439,7 @@ void Magrathea::FocusAlgoTest_Func(){
   std::vector<double> std_dev_value;
   for(int i=0;i<21;i++){
     file_name = address + Images[i] + ".tif";
-    mat_mat = cv::imread( file_name, CV_LOAD_IMAGE_COLOR);
+    mat_mat = cv::imread( file_name, cv::IMREAD_COLOR);
     const int kernel_size = ( (mat_mat.rows > 1000 && mat_mat.cols > 1000) ? 11 : 5);
     FocusFinder->Set_ksize(kernel_size);
     FocusFinder->Set_color_int(ui->ColorBox->value());
@@ -454,7 +458,7 @@ void Magrathea::FocusAlgoTest_Func(){
     }
     ///draw histogram
     /// Establish the number of bins
-    cv::Mat mat_mat_g = cv::imread( file_name, CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat mat_mat_g = cv::imread( file_name, cv::IMREAD_COLOR);
     int histSize = 256;
 
     /// Set the ranges ( for B,G,R) )
@@ -471,7 +475,7 @@ void Magrathea::FocusAlgoTest_Func(){
     int hist_w = 512; int hist_h = 400;
     int bin_w = cvRound( (double) hist_w/histSize );
     cv::Mat histImage( hist_h, hist_w, CV_8UC1, cv::Scalar(0) );
-    normalize(g_hist, g_hist, 0, histImage.rows, CV_MINMAX, -1, cv::Mat() );
+    normalize(g_hist, g_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
 
     /// Draw for each channel
     for( int i = 1; i < histSize; i++ )
@@ -481,7 +485,7 @@ void Magrathea::FocusAlgoTest_Func(){
               cv::Scalar(255), 2, 8, 0  );
     }
     /// Display
-    cv::namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+    cv::namedWindow("calcHist Demo", cv::WINDOW_AUTOSIZE );
     cv::imshow("calcHist Demo", histImage );
     //cv::imwrite("EXPORT/"+Images[i]+"_hist.jpg",histImage);
   }
@@ -543,18 +547,18 @@ bool Magrathea::focusButtonClicked()
         //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     //veryfing that the setting of the camera is optimal
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    cap.set(CV_CAP_PROP_GAIN, 4.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    cap.set(cv::CAP_PROP_GAIN, 4.0);
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     FocusFinder->Set_camera(cap);
@@ -625,50 +629,50 @@ void Magrathea::Camera_test(){
         return;
     }
 
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));//https://www.fourcc.org/yuv.php
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
 
     //cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
     //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
 
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    qInfo("cap.get(CV_CAP_PROP_POS_MSEC);      : %5.5f",cap.get(CV_CAP_PROP_POS_MSEC));
-    qInfo("cap.get(CV_CAP_PROP_POS_FRAMES );   : %5.5f",cap.get(CV_CAP_PROP_POS_FRAMES ));
-    qInfo("cap.get(CV_CAP_PROP_POS_AVI_RATIO); : %5.5f",cap.get(CV_CAP_PROP_POS_AVI_RATIO));
-    qInfo("cap.get(CV_CAP_PROP_FRAME_WIDTH );  : %5.5f",cap.get(CV_CAP_PROP_FRAME_WIDTH ));
-    qInfo("cap.get(CV_CAP_PROP_FRAME_HEIGHT);  : %5.5f",cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-    qInfo("cap.get(CV_CAP_PROP_FPS );          : %5.5f",cap.get(CV_CAP_PROP_FPS ));
-    qInfo("cap.get(CV_CAP_PROP_FOURCC);        : %5.5f",cap.get(CV_CAP_PROP_FOURCC));
-    qInfo("cap.get(CV_CAP_PROP_FRAME_COUNT );  : %5.5f",cap.get(CV_CAP_PROP_FRAME_COUNT ));
-    qInfo("cap.get(CV_CAP_PROP_FORMAT );       : %5.5f",cap.get(CV_CAP_PROP_FORMAT ));
-    qInfo("cap.get(CV_CAP_PROP_MODE );         : %5.5f",cap.get(CV_CAP_PROP_MODE ));
-    qInfo("cap.get(CV_CAP_PROP_BRIGHTNESS);    : %5.5f",cap.get(CV_CAP_PROP_BRIGHTNESS));
-    qInfo("cap.get(CV_CAP_PROP_CONTRAST);      : %5.5f",cap.get(CV_CAP_PROP_CONTRAST));
-    qInfo("cap.get(CV_CAP_PROP_SATURATION);    : %5.5f",cap.get(CV_CAP_PROP_SATURATION));
-    qInfo("cap.get(CV_CAP_PROP_HUE);           : %5.5f",cap.get(CV_CAP_PROP_HUE));
-    qInfo("cap.get(CV_CAP_PROP_GAIN);          : %5.5f",cap.get(CV_CAP_PROP_GAIN));
-    qInfo("cap.get(CV_CAP_PROP_GAMMA);         : %5.5f",cap.get(CV_CAP_PROP_GAMMA));
-    qInfo("cap.get(CV_CAP_PROP_EXPOSURE);      : %5.5f",cap.get(CV_CAP_PROP_EXPOSURE));
-    qInfo("cap.get(CV_CAP_PROP_CONVERT_RGB);   : %5.5f",cap.get(CV_CAP_PROP_CONVERT_RGB));
-    qInfo("cap.get(CV_CAP_PROP_RECTIFICATION); : %5.5f",cap.get(CV_CAP_PROP_RECTIFICATION));
-    qInfo("cap.get(CV_CAP_PROP_ISO_SPEED );    : %5.5f",cap.get(CV_CAP_PROP_ISO_SPEED ));
-    qInfo("cap.get(CV_CAP_PROP_BUFFERSIZE );   : %5.5f",cap.get(CV_CAP_PROP_BUFFERSIZE ));
+    qInfo("cap.get(CV_CAP_PROP_POS_MSEC);      : %5.5f",cap.get(cv::CAP_PROP_POS_MSEC));
+    qInfo("cap.get(CV_CAP_PROP_POS_FRAMES );   : %5.5f",cap.get(cv::CAP_PROP_POS_FRAMES ));
+    qInfo("cap.get(CV_CAP_PROP_POS_AVI_RATIO); : %5.5f",cap.get(cv::CAP_PROP_POS_AVI_RATIO));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_WIDTH );  : %5.5f",cap.get(cv::CAP_PROP_FRAME_WIDTH ));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_HEIGHT);  : %5.5f",cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    qInfo("cap.get(CV_CAP_PROP_FPS );          : %5.5f",cap.get(cv::CAP_PROP_FPS ));
+    qInfo("cap.get(CV_CAP_PROP_FOURCC);        : %5.5f",cap.get(cv::CAP_PROP_FOURCC));
+    qInfo("cap.get(CV_CAP_PROP_FRAME_COUNT );  : %5.5f",cap.get(cv::CAP_PROP_FRAME_COUNT ));
+    qInfo("cap.get(CV_CAP_PROP_FORMAT );       : %5.5f",cap.get(cv::CAP_PROP_FORMAT ));
+    qInfo("cap.get(CV_CAP_PROP_MODE );         : %5.5f",cap.get(cv::CAP_PROP_MODE ));
+    qInfo("cap.get(CV_CAP_PROP_BRIGHTNESS);    : %5.5f",cap.get(cv::CAP_PROP_BRIGHTNESS));
+    qInfo("cap.get(CV_CAP_PROP_CONTRAST);      : %5.5f",cap.get(cv::CAP_PROP_CONTRAST));
+    qInfo("cap.get(CV_CAP_PROP_SATURATION);    : %5.5f",cap.get(cv::CAP_PROP_SATURATION));
+    qInfo("cap.get(CV_CAP_PROP_HUE);           : %5.5f",cap.get(cv::CAP_PROP_HUE));
+    qInfo("cap.get(CV_CAP_PROP_GAIN);          : %5.5f",cap.get(cv::CAP_PROP_GAIN));
+    qInfo("cap.get(CV_CAP_PROP_GAMMA);         : %5.5f",cap.get(cv::CAP_PROP_GAMMA));
+    qInfo("cap.get(CV_CAP_PROP_EXPOSURE);      : %5.5f",cap.get(cv::CAP_PROP_EXPOSURE));
+    qInfo("cap.get(CV_CAP_PROP_CONVERT_RGB);   : %5.5f",cap.get(cv::CAP_PROP_CONVERT_RGB));
+    qInfo("cap.get(CV_CAP_PROP_RECTIFICATION); : %5.5f",cap.get(cv::CAP_PROP_RECTIFICATION));
+    qInfo("cap.get(CV_CAP_PROP_ISO_SPEED );    : %5.5f",cap.get(cv::CAP_PROP_ISO_SPEED ));
+    qInfo("cap.get(CV_CAP_PROP_BUFFERSIZE );   : %5.5f",cap.get(cv::CAP_PROP_BUFFERSIZE ));
 
-    cv::namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
+    cv::namedWindow("MyVideo", cv::WINDOW_AUTOSIZE); //create a window called "MyVideo"
     bool bEnd = false;
     int img = 10;
     while (!bEnd && img > 0)
@@ -713,12 +717,12 @@ void Magrathea::VignetteButton_clicked(){
     if (!cap.isOpened()){
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 5.0);
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 5.0);
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     VerticalAlignmentTool * tool = new VerticalAlignmentTool(this);
     tool->Set_camera(cap);
@@ -752,17 +756,17 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     if(debug)
         qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     if(debug)
         qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
@@ -806,14 +810,14 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     };
 
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
-            ,CV_LOAD_IMAGE_COLOR);
+            ,cv::IMREAD_COLOR);
 
     std::string tmp_filename = "";
     bool success = false;
 
     if(from_file){
         //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
-        std::string address = "D:/Gantry/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
+        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/Calibration_plate_measures/pos_5/";
         std::string Images[] = {
 //            "003.jpg",
 //            "004.jpg",
@@ -828,14 +832,14 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 //            "013.jpg",
 //            "014.jpg",
 //            "015.jpg",
-            "016.jpg",
-            "017.jpg"
+            "Circles_0_2_0.jpg",
+            //"017.jpg"
             //"chip_1_1_pos_1.TIF"
         };
 
         tmp_filename = Images[ui->spinBox_input->value()];
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
-                ,CV_LOAD_IMAGE_COLOR);
+                ,cv::IMREAD_COLOR);
         Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
     }else{
         bool bSuccess = cap.read(mat_from_camera);
@@ -848,25 +852,20 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     }
     qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
 
-    if(input==1 || input == 0){
+    if(input == 1 || input == 0){
         bool invalid_match = true;
-        //int ii = 0;
         //here you can apply condition on the found match to evaluate if it is good or bad
-        //while(invalid_match){
-            cv::Mat output_H;
-            success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,ui->spinBox_input->value(),
-                                      ui->chip_number_spinBox->value(),timestamp,ui->filter_spinBox->value()/*dummy_temp*/,output_H);
-            double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
-            double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-//            if( ( fabs(H_1_1/H_1_2) < 0.26 ) && (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 1.05 && sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 0.95) )
-//                invalid_match = false;
-            //ii++;
-            //if(ii> 1)
-            //    invalid_match = false;
-            std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
-        //}//while invalid match
-    } else if(input == 2){
-        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value());
+        cv::Mat output_H;
+        int fail_code = 0;
+        success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,timestamp,fail_code,ui->spinBox_input->value(),
+                                  ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
+        double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
+        double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
+        //add matched fiducial size control
+        std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
+    } else {
+        bool do_fit = ((input == 2) ? false : true);//do fit when inputis different than 2
+        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),do_fit);
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
@@ -893,7 +892,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    double camera_angle = 0.886;
+    double camera_angle = 0.740;
     double target_x_short = distance_x*0.001*cos(camera_angle) + distance_y*0.001*sin(camera_angle);
     double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
@@ -931,19 +930,19 @@ void Magrathea::calibrationCaller(int input){
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
 
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    cap.set(CV_CAP_PROP_GAIN, 363.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', '8', '0', '0'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    cap.set(cv::CAP_PROP_GAIN, 363.0);
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cv::Mat mat_from_camera;
@@ -961,7 +960,7 @@ void Magrathea::calibrationCaller(int input){
                                   "C:/Temporary_files/image_007_600_60_15_dan_rot_min20.png"
                                  };
         calibrator->SetImage(Images[2]
-                ,CV_LOAD_IMAGE_COLOR);
+                ,cv::IMREAD_COLOR);
     }else{
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -1323,12 +1322,12 @@ void Magrathea::color_test(){
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
 
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
     cv::Mat input;
@@ -1376,7 +1375,7 @@ bool Magrathea::loop_test(){
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double camera_angle = 0.886;
+            double camera_angle = 0.740;
             double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
             double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
@@ -1390,19 +1389,91 @@ bool Magrathea::loop_test(){
     return true;
 }
 
-bool Magrathea::loop_fid_finder(){
+bool Magrathea::loop_find_circles(){
     //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
-    //and move to the fiducial position
-    for(int i=0;i<3;i++){//set appropriate value of the loop limit
-        std::cout<<"It "<<i<<std::endl;
+    for(int j=0;j<30;j++){//set appropriate value of the loop limit
+        ui->chip_number_spinBox->setValue(j);
+        std::cout<<"j "<<j<<std::endl;
         std::vector <double> distances;
         if(!FiducialFinderCaller(2,distances))
         {
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double camera_angle = 0.886;
+    }
+    return true;
+}
+
+bool Magrathea::loop_test_images(){
+    //run fiducial finding algo automatically
+    cv::destroyAllWindows();
+    std::string timestamp = "";
+    std::string address_images = "C:/Users/Silicio/cernbox/Gantry_2018_BIG/Fiducial_chip_images_5_5_20190218/";
+    std::string address_fiducial = "C:/Users/Silicio/cernbox/Gantry_2018_BIG/Templates_5_5/";
+    std::string Images_fiducial[] = {
+        address_fiducial + "ATLAS_E.jpg",
+        address_fiducial + "ATLAS_F.jpg",
+        address_fiducial + "ATLAS_G.jpg",
+        address_fiducial + "ATLAS_H.jpg",
+        address_fiducial + "ATLAS_I.jpg"
+    };
+    for(int i=0;i<34;i++){//chip number
+        for(int j=0;j<5;j++){//chip row (i.e. fiducial type)
+            for(int m=0;m<8;m++){//chip column
+                std::cout<<"i "<<i<<" ; j "<<j<<" ; m "<<m<<std::endl;
+                cv::destroyAllWindows();
+                FiducialFinder * Ffinder = new FiducialFinder(this);
+                Ffinder->Set_calibration(1.);
+                Ffinder->Set_log(outputLogTextEdit);
+                Ffinder->SetImageFiducial(Images_fiducial[j]
+                        ,cv::IMREAD_COLOR);
+                std::string one     = std::to_string(i);
+                std::string two     = std::to_string(j);
+                std::string three   = std::to_string(m);
+                std::string image_address = "Image_"+one+"_"+two+"_"+three+"_.jpg";
+                Ffinder->SetImage(address_images + image_address,cv::IMREAD_COLOR);
+                Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
+                cv::Mat output_H;
+                double distance_x = 0;
+                double distance_y = 0;
+                int fail_code = 0;
+                //fix input values
+                bool success = Ffinder->Find_F(0,distance_x,distance_y,timestamp,fail_code,
+                                               i,j,m,output_H);
+
+                std::string file_name = (success ? "output_success" : "output_fail");
+                file_name += ("_" +two+".txt");
+                std::ofstream ofs (file_name, std::ofstream::app);
+                ofs <<i<<" "<<j<<" "<<m<<" "<<timestamp<<" "<<fail_code<<" "<<distance_x<<" "<<distance_y<<std::endl;
+                ofs.close();
+                delete Ffinder;
+                //                double camera_angle   = 0.886; //to be measured
+                //                double target_x_short = distance_y*cos(camera_angle) + distance_x*sin(camera_angle);
+                //                double target_y_short = distance_y*sin(camera_angle) - distance_x*cos(camera_angle);
+                //double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
+                //double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+                //ATTENTION! distances[0] is cols, distances[1] is rows of the image
+            }
+        }
+    }
+    return true;
+}
+
+bool Magrathea::loop_fid_finder(){
+    //mMotionHandler->SetLimitsController();
+    //run fiducial finding algo automatically
+    //and move to the fiducial position
+    for(int i=0;i<4;i++){//set appropriate value of the loop limit
+        std::cout<<"It "<<i<<std::endl;
+        std::vector <double> distances;
+        int input = ((i==3) ? 3 : 2);
+        if(!FiducialFinderCaller(input,distances))
+        {
+            std::cout<<"FAIL!!"<<std::endl;
+            return false;
+        }
+        double camera_angle = 0.740;
         double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
         double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
@@ -1594,4 +1665,12 @@ bool Magrathea::fiducial_chip_measure(){
         }
     }
     return true;
+}
+
+int Magrathea::FitTestButtonClick(){
+
+    FiducialFinder * Ffinder = new FiducialFinder(this);
+    Ffinder->Set_log(outputLogTextEdit);
+    Ffinder->dumb_test();
+    return 0;
 }

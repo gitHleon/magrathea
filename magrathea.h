@@ -56,6 +56,7 @@ private slots:
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
     bool CVCaptureButtonClicked(std::string &timestamp);
+    bool loop_find_circles();
 
     //gantry
     void connectGantryBoxClicked(bool checked);
@@ -75,16 +76,18 @@ private slots:
     void color_test();
     void destroy_all();
     bool loop_test();
+    bool loop_test_images();
     void createTemplate_F();
     bool calibration_plate_measure();
     bool fiducial_chip_measure();
+    int FitTestButtonClick();
 
 private:
     Ui::Magrathea *ui;
 
     cv::Mat sub_frame;
 
-    double mCalibration = 10.0563;//3.43;//4.5; //[px/um]
+    double mCalibration = 10.035;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;

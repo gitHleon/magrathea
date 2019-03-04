@@ -1,7 +1,32 @@
 #include "Fiducial_finder.h"
 
+void function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
+{
+    //
+    // this callback calculates chi square function for square of circles
+    // We will have 8+4+4 variables, 8 for the points coordinates and 4 for the paremeters we want to fit.
+    // Legend of the valiables : x[0], x[1], etc.. => x_1, y_1, x_2, y_2, etc.. coordinates of the points of the image;
+    // variables x[8] , ... ,  x[11] are the score of the circles, this are used as weights to give more importance to good circles (i.e. the one with high score)
+    // variables x[12], ... ,  x[15] are the fit prameters
+    double calibration_value = 10.5; //[px/um]
+    //double one_over_sigma_square = 1./(5*calibration_value); //error of 2 um, calibration is 10 px / um and measures are in pixels
+    double real_side_size = 50 * calibration_value;
+    double real_side_size_err = real_side_size*0.2;
+    func =
+              pow(x[0]-(x[12]-(x[15]/sqrt(2))*cos(x[14]+M_PI/4)),2)*pow(x[8],2)+pow(x[1]-(x[13]-(x[15]/sqrt(2))*sin(x[14]+M_PI/4)),2)*pow(x[8],2)
+            + pow(x[2]-(x[12]-(x[15]/sqrt(2))*cos(M_PI/4-x[14])),2)*pow(x[9],2)+pow(x[3]-(x[13]+(x[15]/sqrt(2))*sin(M_PI/4-x[14])),2)*pow(x[9],2)
+            + pow(x[4]-(x[12]+(x[15]/sqrt(2))*cos(M_PI/4+x[14])),2)*pow(x[10],2)+pow(x[5]-(x[13]+(x[15]/sqrt(2))*sin(M_PI/4+x[14])),2)*pow(x[10],2)
+            + pow(x[6]-(x[12]+(x[15]/sqrt(2))*cos(M_PI/4-x[14])),2)*pow(x[11],2)+pow(x[7]-(x[13]-(x[15]/sqrt(2))*sin(M_PI/4-x[14])),2)*pow(x[11],2)
+            +(pow(x[15]-real_side_size,2)/(real_side_size_err*real_side_size))
+            ;
+}
+
 bool Distance_sorter(cv::DMatch m_1,cv::DMatch m_2){
     return m_1.distance < m_2.distance;
+}
+
+bool Point_sorter(cv::Point2d m_1,cv::Point2d m_2){
+    return m_1.x < m_2.x;
 }
 
 std::string type2str(int type);
@@ -104,7 +129,7 @@ cv::Mat FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max
     matrices.push_back(input_mat);
     for(unsigned int i=1;i<(steps-1);i++){
         cv::Mat temp_thr;
-        cv::threshold(input_mat,temp_thr,threshold_steps.at(i),255,CV_THRESH_TOZERO);
+        cv::threshold(input_mat,temp_thr,threshold_steps.at(i),255,cv::THRESH_TOZERO);
         matrices.push_back(temp_thr);
     }
     matrices.push_back(cv::Mat::zeros(input_mat.rows,input_mat.cols,input_mat.type()));
@@ -140,22 +165,21 @@ void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int st
 
     int window_size = image.rows;
     std::string um_str = " 50um";
-    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
-    cv::Size text_size = cv::getTextSize(algo_name, CV_FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
+    cv::Size text_size = cv::getTextSize(algo_name, cv::FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
     QTime now = QTime::currentTime();
     QString time_now = now.toString("hhmmss");
     std::string time_now_str = time_now.toLocal8Bit().constData();
     timestamp = time_now_str;
     start_x += text_size.width;
-    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-    cv::Size time_size = cv::getTextSize(time_now_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+    cv::Size time_size = cv::getTextSize(time_now_str, cv::FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
     start_x += time_size.width;
-    cv::putText(image,um_str,cv::Point(start_x,window_size-start_y), CV_FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-    cv::Size um_size = cv::getTextSize(um_str, CV_FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    cv::putText(image,um_str,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
+    cv::Size um_size = cv::getTextSize(um_str, cv::FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
     start_x += um_size.width;
     cv::line(image,cv::Point(start_x,window_size-start_y),cv::Point(start_x+(50*Calibration),window_size-start_y),cv::Scalar(255,255,255),text_thikness);
 }
-
 
 bool FiducialFinder::Is_equal(const double &one, const double &two){
     //function needed when searching for fiducial not using SURF
@@ -187,16 +211,19 @@ bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, c
     }
 }
 
-void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Centers, std::vector<std::vector<unsigned int> > &Squares, std::vector<std::vector<unsigned int> > &Triangles){
+void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Vec4f> &Circles, std::vector<std::vector<unsigned int> > &Squares, std::vector<std::vector<unsigned int> > &Triangles){
     //function needed when searching for fiducial not using SURF
     int Iteration = 0;
     Squares.clear();
     Triangles.clear();
-    unsigned int num_points = Centers.size();
+    unsigned int num_points = Circles.size();
     for(unsigned int i=0;i<num_points;i++){
         for(unsigned int j=i+1;j<num_points;j++){
             for(unsigned int k=j+1;k<num_points;k++){
-                if(Is_a_triangle(Centers.at(i),Centers.at(j),Centers.at(k))){
+                cv::Point point_i = cv::Point(Circles[i][0],Circles[i][1]);
+                cv::Point point_j = cv::Point(Circles[j][0],Circles[j][1]);
+                cv::Point point_k = cv::Point(Circles[k][0],Circles[k][1]);
+                if(Is_a_triangle(point_i,point_j,point_k)){
                     std::cout<<">> Tria True <<"<<std::endl;
                     std::vector <unsigned int> indeces (3);
                     indeces.at(0) = i;
@@ -205,8 +232,9 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Point> &Cente
                     Triangles.push_back(indeces);
                 }
                 for(unsigned int l=k+1;l<num_points;l++){
+                    cv::Point point_l = cv::Point(Circles[l][0],Circles[l][1]);
                     Iteration++;
-                    if(Is_a_square(Centers.at(i),Centers.at(j),Centers.at(k),Centers.at(l))){
+                    if(Is_a_square(point_i,point_j,point_k,point_l)){
                         std::cout<<">> True <<"<<std::endl;
                         std::vector <unsigned int> indeces (4);
                         indeces.at(0) = i;
@@ -315,7 +343,7 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
     return Out;
 }
 
-bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2){
+bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
     bool debug = false;
@@ -331,7 +359,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
 
         if(debug)
             cv::imshow("f. 0 image",image);
-        const int window_size = ( (image.cols > 2700 && image.rows > 2700) ? 2700 : 420);
+        const int window_size = ( (image.cols > 2600 && image.rows > 2600) ? 2600 : 420);
         const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
         if(window_size >= image.rows || window_size >= image.cols){
             log->append("Error!! Window size wrongly set!!");
@@ -369,7 +397,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             if(debug)
                 cv::imshow("1 blur",image_gray);
 
-            cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+            cv::threshold(image_gray,image_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
             if(debug)
                 cv::imshow("1.1 blur+thr",image_gray);
 
@@ -378,22 +406,26 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             if(debug)
                 cv::imshow("1.2 blur+thr+close",image_gray);
 
-            cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+            cv::adaptiveThreshold(image_gray,image_gray,255,cv::ADAPTIVE_THRESH_GAUSSIAN_C,cv::THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
 
             if(debug)
                 cv::imshow("2 threshold",image_gray);
 
+            if(debug){
+                std::string ty =  type2str( image_gray.type() );
+                std::cout<< ty<<std::endl;
+            }
             //------
-
+            //return true;
             //Size of dot: diameter = 20 um
             //double Calibration; //[px/um]
-            int min_radius = 14*0.5*Calibration; //[px] //14
-            int max_radius = 30*0.5*Calibration; //[px] //33
+            int min_radius = 14*0.5*Calibration; //[px]
+            int max_radius = 30*0.5*Calibration; //[px]
             int minDist = min_radius*4; //[px]
             int hough_threshold = min_radius*0.2; //[px] 36
             if(debug)
                 std::cout<<">> calibration "<<Calibration<<std::endl;
-            std::vector<cv::Vec3i> circles;
+            std::vector<cv::Vec4f> circles;
             circles.clear();
 
             //    for(int iterations = 0;;iterations++){
@@ -402,43 +434,59 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             //            if(debug)
             //                cv::imshow("contrast",image_gray);
             //        }
-
-        cv::HoughCircles(image_gray, circles, CV_HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius); //image_gray
+        cv::HoughCircles(image_gray, circles, cv::HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius);
         if(debug)
             std::cout<<">> circles "<<circles.size()<<std::endl;
-        std::vector <cv::Point> Centers (circles.size());
-        cv::Mat RoiImage_out = RoiImage.clone();
+        std::vector <cv::Point2f> Centers (circles.size());
+        cv::Mat RoiImage_out     = RoiImage.clone();
+        cv::Mat RoiImage_out_fit = RoiImage.clone();
         for( size_t i = 0; i < circles.size(); i++ ){
             Centers[i].x = circles[i][0];
             Centers[i].y = circles[i][1];
-            cv::Point center(circles[i][0], circles[i][1]);
-            int radius = circles[i][2];
+            cv::Point2f center(circles[i][0], circles[i][1]);
+            auto radius = circles[i][2];
+            auto vote   = circles[i][3];
             if(debug)
-                std::cout<<" radius "<<radius<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<<std::endl;
+                std::cout<<" radius "<<radius<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<< " vote : "<<vote<<std::endl;
             // circle center
             cv::circle(RoiImage_out, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+            cv::circle(RoiImage_out_fit, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
             // circle outline
             cv::circle(RoiImage_out, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+            cv::circle(RoiImage_out_fit, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
         }
         if(debug)
-            for( size_t i = 0; i < Centers.size(); i++ ){
-                std::cout<<" CX "<<Centers[i].x<<" CY "<<Centers[i].y<<std::endl;
-                std::cout<<" norm "<<cv::norm(Centers.at(i)-Centers.at((i+1)%Centers.size())) <<" CXX "<<Centers[(i+1)%4].x<<" CYY "<<Centers[(i+1)%4].y<<std::endl;
+            for( size_t i = 0; i < circles.size(); i++ ){
+                std::cout<<" CX "<<circles[i][0]<<" CY "<<circles[i][1]<<std::endl;
+                cv::Point point_A = cv::Point2f(circles[i][0],circles[i][1]);
+                cv::Point point_B = cv::Point2f(circles[(i+1)%Centers.size()][0],circles[(i+1)%Centers.size()][1]);
+                std::cout<<" OLD norm "<<cv::norm(Centers.at(i)-Centers.at((i+1)%Centers.size())) <<" CXX "<<Centers[(i+1)%4].x<<" CYY "<<Centers[(i+1)%4].y<<std::endl;
+                std::cout<<" NEW norm "<<cv::norm(point_A-point_B) <<" CXX "<<point_B.x<<" CYY "<<point_B.y<<std::endl;
             }
 
         std::vector <std::vector <unsigned int> > Squares(0);
         std::vector <std::vector <unsigned int> > Triangles(0);
 
-        Find_SquareAndTriangles(Centers,Squares,Triangles);
+        Find_SquareAndTriangles(circles,Squares,Triangles);
         if(debug)
             std::cout<<"Squares.size() "<<Squares.size()<<std::endl;
         //cv::circle(RoiImage_out, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
+        //define square center variables, to be used later in the fit
+        double square_center_x = 0.;
+        double square_center_y = 0.;
         for( size_t i = 0; i < Squares.size(); i++ ){
-            for( int j = 0; j < 4; j++ )
-                cv::line(RoiImage_out, Centers.at(Squares[i][j]), Centers.at(Squares[i][(j+1)%4]), cv::Scalar(0,255,0), 2, 8);
+            for( unsigned int j = 0; j < 4; j++ ){
+                cv::Point point_A = cv::Point2f(circles[Squares[i][j]][0],circles[Squares[i][j]][1]);
+                cv::Point point_B = cv::Point2f(circles[Squares[i][(j+1)%4]][0],circles[Squares[i][(j+1)%4]][1]);
+                cv::line(RoiImage_out, point_A, point_B, cv::Scalar(0,255,0), 2, 8);
+            }
 
-            cv::Point square_center = Square_center(Centers.at(Squares.at(i).at(0)),Centers.at(Squares.at(i).at(1)),
-                                                    Centers.at(Squares.at(i).at(2)),Centers.at(Squares.at(i).at(3)));
+            //            cv::Point square_center = Square_center(Centers.at(Squares.at(i).at(0)),Centers.at(Squares.at(i).at(1)),
+            //                                                    Centers.at(Squares.at(i).at(2)),Centers.at(Squares.at(i).at(3)));
+            cv::Point square_center = Square_center(cv::Point2f(circles[Squares.at(i).at(0)][0],circles[Squares.at(i).at(0)][1]),
+                    cv::Point2f(circles[Squares.at(i).at(1)][0],circles[Squares.at(i).at(1)][1]),
+                    cv::Point2f(circles[Squares.at(i).at(2)][0],circles[Squares.at(i).at(2)][1]),
+                    cv::Point2f(circles[Squares.at(i).at(3)][0],circles[Squares.at(i).at(3)][1]) );
             cv::circle(RoiImage_out, square_center, 3, cv::Scalar(255,0,0), -1, 8, 0 );
             cv::circle(RoiImage_out, square_center, 50*Calibration, cv::Scalar(255,0,0), 3, 8, 0 );
             if(Squares.size() == 1){
@@ -451,6 +499,9 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                     ofs << input_1 <<" "<<input_2<<" "<< square_center.x <<" "<<square_center.y<<std::endl;
                     ofs.close();
                 }
+                std::cout<<"pre fit : "<< square_center.x <<" "<<square_center.y<<std::endl;
+                square_center_x = square_center.x;
+                square_center_y = square_center.y;
             }
         }
 
@@ -459,23 +510,225 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         std::string dummy = std::to_string(iterations);
         std::string one   = std::to_string(input_1);
         std::string two   = std::to_string(input_2);
+        cv::imwrite("EXPORT/Circles_ORIGINAL_"+one+"_"+two+"_"+dummy+".jpg",image);
         cv::imwrite("EXPORT/Circles_"+one+"_"+two+"_"+dummy+".jpg",RoiImage_out);
-        if(Squares.size() == 1)
+        if(!fit && Squares.size() == 1){
             return true;
+        }else if(fit && Squares.size() == 1){
+
+            //1.reorder the points of the square
+            std::vector<cv::Vec4d > input;
+            std::vector<cv::Vec4d> output;
+            input.clear();
+            for(unsigned int j = 0; j < 4; j++ )
+                input.push_back(circles[Squares.at(0).at(j)]);
+            output = OrderSquare(input);
+            for(unsigned int j = 0; j < 4; j++ )
+            {
+                std::cout<<output[j][0]<<" "<<output[j][1]<<" "<<output[(j+1)%4][0]<<" "<<output[(j+1)%4][1]<<" "<<std::endl;
+            }
+            //2.minimize the chi square
+            //http://www.alglib.net/translator/man/manual.cpp.html#example_minbleic_d_2
+            alglib::real_1d_array starting_value_variables ;//starting point to be set for all 12 variables
+            alglib::real_2d_array limiting_conditions ;//= "[[1,0,2],[1,1,6]]";//limiting conditions for all 12 variables
+            alglib::integer_1d_array conditions_relation ;//= "[1,1]";//limiting operator for conditions for all 12 var.
+            alglib::real_1d_array variables_range ;
+            //define theta and L variable to used in the fit
+            double theta = 0.01;
+            double side = 50*Calibration; //side is approximately 50 um
+            double x_1[] = {output[0][0],output[0][1],
+                            output[1][0],output[1][1],
+                            output[2][0],output[2][1],
+                            output[3][0],output[3][1],
+                            output[0][3],
+                            output[1][3],
+                            output[2][3],
+                            output[3][3],
+                            square_center_x,
+                            square_center_y,
+                            theta,
+                            side};
+            starting_value_variables.setcontent(16,x_1);
+            printf("%s\n", starting_value_variables.tostring(16).c_str());
+            //setting the boundry condition for the fit
+            //first 8 conditions are the coordinates of the centers of the circles
+            //for sysntaxis look here:
+            //http://www.alglib.net/translator/man/manual.cpp.html#example_minbleic_d_2
+            double c_1[] = {
+                1,0,0,0,0,  0,0,0,0,0, 0,0,0,0,0, 0, output[0][0],
+                0,1,0,0,0,  0,0,0,0,0, 0,0,0,0,0, 0, output[0][1],
+                0,0,1,0,0,  0,0,0,0,0, 0,0,0,0,0, 0, output[1][0],
+                0,0,0,1,0,  0,0,0,0,0, 0,0,0,0,0, 0, output[1][1],
+                0,0,0,0,1,  0,0,0,0,0, 0,0,0,0,0, 0, output[2][0],
+
+                0,0,0,0,0,  1,0,0,0,0, 0,0,0,0,0, 0, output[2][1],
+                0,0,0,0,0,  0,1,0,0,0, 0,0,0,0,0, 0, output[3][0],
+                0,0,0,0,0,  0,0,1,0,0, 0,0,0,0,0, 0, output[3][1],
+                0,0,0,0,0,  0,0,0,1,0, 0,0,0,0,0, 0, output[0][3],
+                0,0,0,0,0,  0,0,0,0,1, 0,0,0,0,0, 0, output[1][3],
+
+                0,0,0,0,0,  0,0,0,0,0, 1,0,0,0,0, 0, output[2][3],
+                0,0,0,0,0,  0,0,0,0,0, 0,1,0,0,0, 0, output[3][3],
+            };
+            limiting_conditions.setcontent(12,17,c_1);
+
+            int ct_1[] = {
+                0,0,0,0,0,  0,0,0,0,0, 0,0
+            };
+            conditions_relation.setcontent(12,ct_1);
+
+            double s_1[] = {
+                1*Calibration,
+                1*Calibration,
+                1*Calibration,
+                1*Calibration,
+                1*Calibration,
+
+                1*Calibration,
+                1*Calibration,
+                1*Calibration,
+
+                1*Calibration,
+                1*Calibration,
+                1*Calibration,
+                1*Calibration,
+
+                1*Calibration,
+                1*Calibration,
+                theta*0.1,
+                side*0.1};
+            variables_range.setcontent(16,s_1);
+
+            //use setcontent function to fill the arrays properly
+            //http://www.alglib.net/translator/man/manual.cpp.html#gs_datatypes
+            //
+            // These variables define stopping conditions for the optimizer.
+            //
+            // We use very simple condition - |g|<=epsg
+            //
+            double diffstep = 1.0e-6;
+            double epsg = 0.000001;
+            double epsf = 0;
+            double epsx = 0;
+            alglib::ae_int_t maxits = 0;
+
+            //
+            // Now we are ready to actually optimize something:
+            // * first we create optimizer
+            // * we add linear constraints
+            // * we tune stopping conditions
+            // * and, finally, optimize and obtain results...
+            //
+
+            alglib::minbleicstate state;
+            alglib::minbleicreport rep;
+            minbleiccreatef(starting_value_variables, diffstep,state);
+            minbleicsetlc(state, limiting_conditions, conditions_relation);
+            minbleicsetcond(state, epsg, epsf, epsx, maxits);
+            minbleicsetscale(state,variables_range);
+            alglib::minbleicoptimize(state, function_ChiSquare);
+            minbleicresults(state, starting_value_variables, rep);
+            //
+            // ...and evaluate these results
+            //
+            printf("%d\n", int(rep.terminationtype));
+            printf("%s\n", starting_value_variables.tostring(16).c_str());
+            //2.1 check that the convergence is good
+            if (int(rep.terminationtype) < 0){
+                qWarning("fit of square failed!!");
+                return false;
+            }
+            //3 evaluate the center of the new square
+
+//            double fitted_square_center_x = 0.;
+//            double fitted_square_center_y = 0.;
+            double fitted_square_center_x = starting_value_variables[12];
+            double fitted_square_center_y = starting_value_variables[13];
+            std::cout<<" "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
+            if(print_raw){
+                std::string file_name = "output_raw_POSTFIT.txt";
+                std::ofstream ofs (file_name, std::ofstream::app);
+                ofs << input_1 <<" "<<input_2<<" "<< fitted_square_center_x <<" "<<fitted_square_center_y<<std::endl;
+                ofs.close();
+            }
+
+            X_distance = (fitted_square_center_x - RoiImage_out.cols/2)*(1./Calibration); //[um]
+            Y_distance = (fitted_square_center_y - RoiImage_out.rows/2)*(1./Calibration); //[um]
+
+            //0.5 added for rounding when converting from double to int
+            cv::circle(RoiImage_out_fit, cv::Point(square_center_x+0.5,square_center_y+0.5), 3, cv::Scalar(255,0,0), -1, 8, 0 );
+            cv::circle(RoiImage_out_fit, cv::Point(square_center_x+0.5,square_center_y+0.5), 5*Calibration, cv::Scalar(255,0,0), 2, 8, 0 );
+            cv::circle(RoiImage_out_fit, cv::Point(fitted_square_center_x+0.5,fitted_square_center_y+0.5), 3, cv::Scalar(0,0,255), -1, 8, 0 );
+            cv::imwrite("EXPORT/Circles_FIT_"+one+"_"+two+"_"+dummy+".jpg",RoiImage_out_fit);
+            return true;
+        }
+
         if(iterations>2)
             break;
-    }
-
-    return false;
+        }
+        return false;
 }
 
+std::vector<cv::Vec4d>  FiducialFinder::OrderSquare(const std::vector<cv::Vec4d> &input){
+    std::vector<cv::Vec4d>  output(4);
+    //I am assuming it is a square
+    if(input.size()!=4){
+        qWarning("Error in square reordering size.");
+        return output;
+    }
+    double X_coord = input[0][0] + input[1][0] + input[2][0] + input[3][0];
+    X_coord /= 4;
+    double Y_coord = input[0][1] + input[1][1] + input[2][1] + input[3][1];
+    Y_coord /= 4;
+
+    cv::Vec2d p_0 = {input[0][0],input[0][1]};
+    cv::Vec2d p_1 = {input[1][0],input[1][1]};
+    cv::Vec2d p_2 = {input[2][0],input[2][1]};
+    cv::Vec2d p_3 = {input[3][0],input[3][1]};
+    for(unsigned int i=0;i<4;i++){
+        if(input[i][0] < X_coord && input[i][1]<Y_coord)
+            output.at(0) = input.at(i);
+        else if(input[i][0] < X_coord && input[i][1]>Y_coord)
+            output.at(1) = input.at(i);
+        else if (input[i][0] > X_coord && input[i][1]>Y_coord)
+            output.at(2) = input.at(i);
+        else if(input[i][0] > X_coord && input[i][1]<Y_coord)
+            output.at(3) = input.at(i);
+    }
+    if(cv::norm(p_0,p_1) >= cv::norm(p_0,p_2))
+        if(cv::norm(p_0,p_1) >= cv::norm(p_0,p_3)){
+            output.push_back(input[2]);
+            output.push_back(input[1]);//this is the opposite corner
+            output.push_back(input[3]);
+        }else{
+            output.push_back(input[2]);
+            output.push_back(input[3]);//this is the opposite corner
+            output.push_back(input[1]);
+        }
+    else
+        if(cv::norm(p_0,p_2) >= cv::norm(p_0,p_3)){
+            output.push_back(input[1]);
+            output.push_back(input[2]);//this is the opposite corner
+            output.push_back(input[3]);
+        }else{
+            output.push_back(input[1]);
+            output.push_back(input[3]);//this is the opposite corner
+            output.push_back(input[2]);
+        }
+    return output;
+}
+
+
 bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, double &Y_distance,
-                            const int &temp_input, const int &temp_input_2, std::string &timestamp, int dummy_temp,
+                            std::string &timestamp,
+                            int &fail_code,
+                            const int &input_1, const int &input_2, const int &input_3,
                             cv::Mat &transform_out){
     //main function for finding fiducials
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
-    bool debug = true;
+    bool debug = false;
+    fail_code = 0;
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
@@ -488,7 +741,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     int center_cols = image.cols/2;
     if(debug)
         cv::imshow("f. 0 image",image);
-    const int window_size = ( (image.cols > 2700 && image.rows > 2700) ? 2700 : 420);
+    const int window_size = ( (image.cols > 2000 && image.rows > 2000) ? 2000 : 420);
     const int kernel_size = ( (image.cols > 2000 && image.rows > 2000) ? 15 : 5);
     if(window_size >= image.rows || window_size >= image.cols){
         log->append("Error!! Window size wrongly set!!");
@@ -604,8 +857,8 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     if(debug)
         cv::imshow("1.f blur",image_F_gray);
 
-    cv::threshold(image_gray,image_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
-    cv::threshold(image_F_gray,image_F_gray,0,255,CV_THRESH_BINARY | CV_THRESH_OTSU );
+    cv::threshold(image_gray,image_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
+    cv::threshold(image_F_gray,image_F_gray,0,255,cv::THRESH_BINARY | cv::THRESH_OTSU );
     if(debug)
         cv::imshow("1.1 blur+thr",image_gray);
     if(debug)
@@ -625,13 +878,12 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     //        cv::imshow("0.2.1 threshold+blur",image_gray);
     //        cv::imshow("0.2.1.f threshold+blur",image_F_gray);
 
-    cv::adaptiveThreshold(image_F_gray,image_F_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
-    cv::adaptiveThreshold(image_gray,image_gray,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C,CV_THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+    cv::adaptiveThreshold(image_F_gray,image_F_gray,255,cv::ADAPTIVE_THRESH_GAUSSIAN_C,cv::THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
+    cv::adaptiveThreshold(image_gray,image_gray,255,cv::ADAPTIVE_THRESH_GAUSSIAN_C,cv::THRESH_BINARY_INV,kernel_size,2); //CV_THRESH_BINARY
     if(debug){
         cv::imshow("2 threshold",image_gray);
         cv::imshow("2.f threshold",image_F_gray);
     }
-    std::cout<<"ok a"<<std::endl;
     cv::Ptr <cv::Feature2D> detector;
     //const int DescriptorAlgorithm = ui->algorithm_box->value();//set as input to the function
     std::string algo_name = "none";
@@ -660,13 +912,13 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         //cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
         cv::aruco::detectMarkers(RoiImage, dictionary, markerCorners, markerIds);
         cv::Mat outputImage = RoiImage.clone();
-        auto s     = std::to_string(temp_input);
-        auto chip  = std::to_string(temp_input_2);
+        auto s     = std::to_string(input_1);
+        auto chip  = std::to_string(input_2);
         auto match = std::to_string(markerCorners.size());
         if(markerCorners.size()!=1){
             X_distance = 800000+markerCorners.size();
             Y_distance = 800000+markerCorners.size();
-            cv::putText(outputImage,"fail"+match,cv::Point(30,window_size-4), CV_FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
+            cv::putText(outputImage,"fail"+match,cv::Point(30,window_size-4),cv::FONT_HERSHEY_PLAIN,4,cv::Scalar(255,255,255),3);
         }else{
             cv::aruco::drawDetectedMarkers(outputImage, markerCorners, markerIds);
             cv::Point F_center = Square_center(markerCorners.at(0).at(0),markerCorners.at(0).at(1),
@@ -688,7 +940,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }else{
         qWarning("Error!! DescriptorAlgorithm not set properly!!");
         return false;}
-    std::cout<<"ok aa"<<std::endl;
     std::vector<cv::KeyPoint> keypoints_F(0);
     std::vector<cv::KeyPoint> keypoints_image(0);
     keypoints_F.clear();
@@ -699,7 +950,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     cv::Mat descriptorImage;
     cv::Mat descriptorFiducial;
     if(DescriptorAlgorithm != 4){
-        std::cout<<"ok aaa"<<std::endl;
         detector->detectAndCompute(image_gray,cv::Mat(),keypoints_image,descriptorImage,false);
         detector->detectAndCompute(image_F_gray,cv::Mat(),keypoints_F,descriptorFiducial,false);
     }else{
@@ -710,7 +960,6 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         descriptor_extractor->compute(image_gray,keypoints_image,descriptorImage);
         descriptor_extractor->compute(image_F_gray,keypoints_F,descriptorFiducial);
     }
-    std::cout<<"ok 0"<<std::endl;
     qInfo("Fiducial keypoints %i",keypoints_F.size());
     qInfo("Image    keypoints %i",keypoints_image.size());
 
@@ -724,7 +973,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
         matcher->knnMatch(descriptorFiducial,descriptorImage,matches_2,2,cv::Mat(),false);
     }else{
-        log->append("Star, Surf, Sift matching");
+        qInfo("Star, Surf, Sift matching");
         if(flann_true){//flann is NOT working
             int FLANN_INDEX_KDTREE = 0;
             cv::Ptr<cv::flann::IndexParams> index_params;
@@ -739,7 +988,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
         }
     }
     std::vector<cv::DMatch> SortedMatches;
-    const double Lowe_ratio = 0.7; //loose: 0.9, tight: 0.7
+    const float Lowe_ratio = 0.7; //loose: 0.9, tight: 0.7
     if(DescriptorAlgorithm == 2){//ORB
         SortedMatches = matches;
         sort(SortedMatches.begin(),SortedMatches.end(),Distance_sorter);
@@ -753,12 +1002,10 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }
 
     //debug
-    std::cout<<"ok 00"<<std::endl;
     cv::Mat test_1;
     cv::Mat test_2;
     cv::drawKeypoints(image_gray,keypoints_image,test_1,cv::Scalar(0,0,255));
     cv::drawKeypoints(image_F_gray,keypoints_F,test_2,cv::Scalar(0,0,255));
-    std::cout<<"ok 1"<<std::endl;
     if(debug)
         cv::imshow("3. keypoints image",test_1);
     if(debug)
@@ -832,15 +1079,17 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     }
     //putting labels on output image
     std::string time_now_str = "";
-    int start_x = 15;
-    int start_y = 5;
-    std::cout<<"ok 1x"<<std::endl;
-    addInfo(RoiImage,algo_name,start_x,start_y,3,2,time_now_str);
-    std::cout<<"ok 2x"<<std::endl;
-    std::string s     = std::to_string(temp_input);
-    std::string chip  = std::to_string(temp_input_2);
+//    int start_x = 15;
+//    int start_y = 5;
+//    std::cout<<"ok 1x"<<std::endl;
+//    addInfo(RoiImage,algo_name,start_x,start_y,3,2,time_now_str);
+//    std::cout<<"ok 2x"<<std::endl;
+    std::string one      = std::to_string(input_1);
+    std::string two      = std::to_string(input_2);
+    std::string three    = std::to_string(input_3);
+    std::string result_s = "";
     //cv::imwrite("EXPORT/"+chip+"_"+s+"_"+time_now_str+".jpg",output_mat);
-    cv::imwrite("EXPORT/"+algo_name+"_"+chip+"_"+s+"_"+time_now_str+".jpg",RoiImage);
+    //cv::imwrite("EXPORT/"+algo_name+"_"+one+"_"+two+"_"+three+".jpg",RoiImage);
     //cv::imwrite("EXPORT/"+algo_name+"_"+chip+"_"+s+".jpg",RoiImage);
     //cv::imwrite("EXPORT/"+algo_name+"_match_"+chip+"_"+s+"_"+time_now_str+".jpg",result);
 
@@ -853,27 +1102,60 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     descriptor_extractor.release();
     matcher.release();
     detector.release();
-    return true;
+
+    double H_1_1 = cv::Scalar(H.at<double>(0,0)).val[0];
+    double H_1_2 = cv::Scalar(H.at<double>(0,1)).val[0];
+    if( (sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) > 1.05 || sqrt(H_1_1*H_1_1 + H_1_2*H_1_2) < 0.95) )
+        fail_code = 1; //control on the scale of the fiducial, which should be close to 1
+
+    if((abs(F_center.x - ROIcenter_cols) > image_F_gray.cols/3) || (abs(F_center.y - ROIcenter_rows) > image_F_gray.rows/3))
+        fail_code = 2;
+
+    if(fail_code != 0){
+        result_s = "FAIL";
+        cv::imwrite("EXPORT/"+algo_name+"_"+one+"_"+two+"_"+three+"_"+result_s+".jpg",RoiImage);
+        return false;
+    }else{
+        result_s = "SUCCES";
+        cv::imwrite("EXPORT/"+algo_name+"_"+one+"_"+two+"_"+three+"_"+result_s+".jpg",RoiImage);
+        return true;
+    }
+
+}
+
+void function1_func(const alglib::real_1d_array &x, double &func, void *ptr)
+{
+    //
+    // this callback calculates f(x0,x1) = 100*(x0+3)^4 + (x1-3)^4
+    //
+    func = 100*pow(x[0]+3,4) + pow(x[1]-3,4);
 }
 
 
+int FiducialFinder::dumb_test()
+{
+    //
+    // This example demonstrates minimization of f(x,y) = 100*(x+3)^4+(y-3)^4
+    // using numerical differentiation to calculate gradient.
+    //
+    alglib::real_1d_array x = "[0,0]";
+    double epsg = 0.0000000001;
+    double epsf = 0;
+    double epsx = 0;
+    double diffstep = 1.0e-6;
+    alglib::ae_int_t maxits = 0;
+    alglib::minlbfgsstate state;
+    alglib::minlbfgsreport rep;
 
+    alglib::minlbfgscreatef(1, x, diffstep, state);
+    alglib::minlbfgssetcond(state, epsg, epsf, epsx, maxits);
+    alglib::minlbfgsoptimize(state, function1_func);
+    alglib::minlbfgsresults(state, x, rep);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    printf("%d\n", int(rep.terminationtype)); // EXPECTED: 4
+    printf("%s\n", x.tostring(2).c_str()); // EXPECTED: [-3,3]
+    return 0;
+}
 
 
 
