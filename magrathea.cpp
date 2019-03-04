@@ -289,7 +289,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
     connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test_images()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
-    connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
+    //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
+    connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
     connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
 }
 
@@ -508,18 +509,18 @@ bool Magrathea::CVCaptureButtonClicked(std::string &timestamp){
         //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     //veryfing that the setting of the camera is optimal
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(CV_CAP_PROP_FPS, 4.0);
-    cap.set(CV_CAP_PROP_GAIN, 4.0);
-    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 4.0);
+    cap.set(cv::CAP_PROP_GAIN, 4.0);
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cv::Mat mat_from_camera;
     if (!cap.read(mat_from_camera)){ //if not success
@@ -1668,7 +1669,6 @@ bool Magrathea::fiducial_chip_measure(){
 }
 
 int Magrathea::FitTestButtonClick(){
-
     FiducialFinder * Ffinder = new FiducialFinder(this);
     Ffinder->Set_log(outputLogTextEdit);
     Ffinder->dumb_test();
