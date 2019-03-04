@@ -689,8 +689,6 @@ bool ACSCMotionHandler::moveUTo(double u, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------

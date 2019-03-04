@@ -7,7 +7,8 @@ MotionHandler::MotionHandler() :
     xAxisEnabled(false),
     yAxisEnabled(false),
     zAxisEnabled(false),
-    uAxisEnabled(false)
+    uAxisEnabled(false),
+    JogAxisEnabled(false)
     {}
 
 //******************************************
@@ -40,7 +41,6 @@ bool MotionHandler::connectGantry(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -59,7 +59,6 @@ bool MotionHandler::stop(){
         qWarning("could not stop");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -73,7 +72,7 @@ bool MotionHandler::acknowledgeMotionFaultGantry()
         qWarning("could not reset errors");
         return false;
     }
-    return true;}
+}
 
 //------------------------------------------
 bool MotionHandler::enableAxes(bool flag)
@@ -97,7 +96,6 @@ bool MotionHandler::enableAxes(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -124,7 +122,6 @@ bool MotionHandler::enableXAxis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -151,7 +148,6 @@ bool MotionHandler::enableYAxis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -178,7 +174,6 @@ bool MotionHandler::enableZAxis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -205,7 +200,6 @@ bool MotionHandler::enableZ_2_Axis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -232,7 +226,32 @@ bool MotionHandler::enableUAxis(bool flag)
             return false;
         }
     }
-    return true;
+}
+
+//------------------------------------------
+bool MotionHandler::enableJOGAxis(bool flag)
+{
+    if (flag) {
+        qInfo("enabling jog axis...");
+        if (true) { //enable jog axis here
+            qInfo("jog axis enabled");
+            JogAxisEnabled=true;
+            return true;
+        } else {
+            qInfo("could not enable jog axis");
+            return false;
+        }
+    } else {
+        qInfo("disabling jog axis...");
+        if (true) { //disable jog axis here
+            qInfo("jog axis disabled");
+            JogAxisEnabled=false;
+            return true;
+        } else {
+            qInfo("could not disable jog axis");
+            return false;
+        }
+    }
 }
 
 //------------------------------------------
@@ -269,6 +288,12 @@ bool MotionHandler::disableZ_2_Axis()
 bool MotionHandler::disableUAxis()
 {
     return enableUAxis(false);
+}
+
+//------------------------------------------
+bool MotionHandler::disableJOGAxis()
+{
+    return enableJOGAxis(false);
 }
 
 //******************************************
@@ -308,6 +333,10 @@ int  MotionHandler::GetfaultSateZ2Axis(){
  return 1;
 };
 
+int  MotionHandler::GetfaultSateJOGAxis(){
+ qInfo("Info on JOG axis.");
+ return 1;
+};
 //******************************************
 //Get Axis states
 //------------------------------------------
@@ -335,6 +364,11 @@ bool MotionHandler::getUAxisState(){
     return uAxisEnabled;
 }
 
+//------------------------------------------
+bool MotionHandler::getJOGAxisState(){
+    return JogAxisEnabled;
+}
+
 //******************************************
 // home axes
 
@@ -348,7 +382,6 @@ bool MotionHandler::home() {
         qWarning("could not home axes");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -361,7 +394,6 @@ bool MotionHandler::homeX() {
         qWarning("could not home x axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -374,7 +406,6 @@ bool MotionHandler::homeY() {
         qWarning("could not home y axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -387,7 +418,6 @@ bool MotionHandler::homeZ() {
         qWarning("could not home z axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -400,7 +430,6 @@ bool MotionHandler::homeZ_2() {
         qWarning("could not home z 2 axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -413,7 +442,18 @@ bool MotionHandler::homeU() {
         qWarning("could not home u axis");
         return false;
     }
-    return true;
+}
+
+//------------------------------------------
+bool MotionHandler::homeJOG() {
+    qInfo("homing jog axis...");
+    if (true) { //home jog axis here
+        qInfo("jog axis homed");
+        return true;
+    } else {
+        qWarning("could not home jog axis");
+        return false;
+    }
 }
 
 //******************************************
@@ -431,7 +471,6 @@ bool MotionHandler::moveTo(double x, double y, double z, double speed)
         qWarning("could not move to destination");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -444,7 +483,6 @@ bool MotionHandler::moveXTo(double x, double speed) {
         qWarning("could not move x axis to destination");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -457,7 +495,6 @@ bool MotionHandler::moveYTo(double y, double speed) {
         qWarning("could not move y axis to destination");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -470,7 +507,6 @@ bool MotionHandler::moveZTo(double z, double speed) {
         qWarning("could not move z axis to destination");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -483,7 +519,6 @@ bool MotionHandler::moveZ_2_To(double z, double speed) {
         qWarning("could not move z 2 axis to destination");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -496,7 +531,18 @@ bool MotionHandler::moveUTo(double u, double speed) {
         qWarning("could not move u axis to destination");
         return false;
     }
-    return true;
+}
+
+//------------------------------------------
+bool MotionHandler::moveJOGTo(double jog, double speed) {
+    qInfo("moving jog axis to %.3f mm at %.3f mm/s speed", jog, speed);
+    if (true) { //move to destination here
+        qInfo("moved jog axis to destination");
+        return true;
+    } else {
+        qWarning("could not move jog axis to destination");
+        return false;
+    }
 }
 
 //******************************************
@@ -514,7 +560,6 @@ bool MotionHandler::moveBy(double x, double y, double z, double speed)
         qWarning("could not move by step");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -527,7 +572,6 @@ bool MotionHandler::moveXBy(double x, double speed) {
         qWarning("could not move x axis by step");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -540,7 +584,6 @@ bool MotionHandler::moveYBy(double y, double speed) {
         qWarning("could not move y axis by step");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -553,7 +596,6 @@ bool MotionHandler::moveZBy(double z, double speed) {
         qWarning("could not move z axis by step");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -566,7 +608,6 @@ bool MotionHandler::moveZ_2_By(double z, double speed) {
         qWarning("could not move z 2 axis by step");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -579,9 +620,19 @@ bool MotionHandler::moveUBy(double u, double speed) {
         qWarning("could not move u axis by step");
         return false;
     }
-    return true;
 }
 
+//------------------------------------------
+bool MotionHandler::moveJOGBy(double z, double speed) {
+    qInfo("moving z 2 axis by %.3f mm at %.3f mm/s", z, speed);
+    if (true) { //move by step here
+        qInfo("moved z 2 axis by step");
+        return true;
+    } else {
+        qWarning("could not move z 2 axis by step");
+        return false;
+    }
+}
 
 //******************************************
 // free run
@@ -597,7 +648,6 @@ bool MotionHandler::runX(double direction, double speed)
         qWarning("could not free run along x axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -610,7 +660,6 @@ bool MotionHandler::endRunX()
         qWarning("could not stop free run along x axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -623,7 +672,6 @@ bool MotionHandler::runY(double direction, double speed)
         qWarning("could not free run along y axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -636,7 +684,6 @@ bool MotionHandler::endRunY()
         qWarning("could not stop free run along y axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -649,7 +696,6 @@ bool MotionHandler::runZ(double direction, double speed)
         qWarning("could not free run along z axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -662,7 +708,6 @@ bool MotionHandler::endRunZ()
         qWarning("could not stop free run along z axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -675,7 +720,6 @@ bool MotionHandler::runZ_2(double direction, double speed)
         qWarning("could not free run along z 2 axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -688,7 +732,6 @@ bool MotionHandler::endRunZ_2()
         qWarning("could not stop free run along z 2 axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -701,7 +744,6 @@ bool MotionHandler::runU(double direction, double speed)
         qWarning("could not free run along u axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -714,7 +756,6 @@ bool MotionHandler::endRunU()
         qWarning("could not stop free run along u axis");
         return false;
     }
-    return true;
 }
 
 //******************************************
@@ -779,5 +820,14 @@ bool MotionHandler::validate_target_pos(double x, double y, double z, double z_2
         qWarning("ERROR!! Target position is NOT valid, aborting motion.");
         return false;
     }
-    return true;
+}
+
+bool MotionHandler::validate_target_pos_JOG(double val){
+    if(val < JOG_min || val > JOG_max){
+        qWarning("ERROR!! Target JOG position is NOT valid, aborting motion.");
+        return false;
+    } else {
+        //add control on step
+        return true;
+    }
 }

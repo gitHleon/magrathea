@@ -16,6 +16,7 @@ public:
     bool zAxisEnabled;
     bool z_2_AxisEnabled;
     bool uAxisEnabled;
+    bool JogAxisEnabled;
 
 public slots:
 
@@ -40,12 +41,14 @@ public slots:
     virtual bool enableZAxis(bool flag=true);
     virtual bool enableZ_2_Axis(bool flag=true);
     virtual bool enableUAxis(bool flag=true);
+    virtual bool enableJOGAxis(bool flag=true);
     virtual bool disableAxes();
     virtual bool disableXAxis();
     virtual bool disableYAxis();
     virtual bool disableZAxis();
     virtual bool disableZ_2_Axis();
     virtual bool disableUAxis();
+    virtual bool disableJOGAxis();
 
     //******************************************
     // gantry current position
@@ -56,6 +59,7 @@ public slots:
     virtual bool getZAxisState();
     virtual bool getZ_2_AxisState();
     virtual bool getUAxisState();
+    virtual bool getJOGAxisState();
 
     //******************************************
     // home axes
@@ -65,6 +69,7 @@ public slots:
     virtual bool homeZ();
     virtual bool homeZ_2();
     virtual bool homeU();
+    virtual bool homeJOG();
 
     //******************************************
     // absolute motion
@@ -75,6 +80,7 @@ public slots:
     virtual bool moveZTo(double z, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveZ_2_To(double z, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveUTo(double u, double speed=std::numeric_limits<double>::quiet_NaN());
+    virtual bool moveJOGTo(double jog, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
     // motion relative to current location
@@ -85,6 +91,7 @@ public slots:
     virtual bool moveZBy(double z=0, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveZ_2_By(double z=0, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool moveUBy(double u=0, double speed=std::numeric_limits<double>::quiet_NaN());
+    virtual bool moveJOGBy(double jog=0, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
     // free run
@@ -106,12 +113,15 @@ public slots:
     virtual bool validate_target_pos_y(double val);
     virtual bool validate_target_pos_z_1(double val);
     virtual bool validate_target_pos_z_2(double val);
+    virtual bool validate_target_pos_JOG(double val);
     virtual bool SetLimitsController();
     virtual bool GetLimitsController(std::vector <double> & limits);
     virtual int  GetfaultSateXAxis();
     virtual int  GetfaultSateYAxis();
     virtual int  GetfaultSateZ1Axis();
     virtual int  GetfaultSateZ2Axis();
+    virtual int  GetfaultSateJOGAxis();
+
     //******************************************
     // default speeds
     // NOTE default unit is mm/s
@@ -134,5 +144,7 @@ private :
     double z_1_max =  90.0;
     double z_2_min =  -20.0;
     double z_2_max =  90.0;
+    double JOG_min =  -3.0;
+    double JOG_max =  3.0;
 
 };

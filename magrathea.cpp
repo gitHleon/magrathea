@@ -134,6 +134,12 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->uAxisPositionMoveDoubleSpinBox->setMaximum(360.0);
     ui->uAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->uAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
+    ui->JOGAxisPositionMoveDoubleSpinBox->setFont(font);
+    ui->JOGAxisPositionMoveDoubleSpinBox->setValue(0.0);
+    ui->JOGAxisPositionMoveDoubleSpinBox->setMinimum(-4.0);
+    ui->JOGAxisPositionMoveDoubleSpinBox->setMaximum(4.0);
+    ui->JOGAxisPositionMoveDoubleSpinBox->setDecimals(3);
+    ui->JOGAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
 
     //speed
     ui->xAxisSpeedDoubleSpinBox->setFont(font);
@@ -217,6 +223,7 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->zAxisPositionLine->setReadOnly(true);
     ui->z_2_AxisPositionLine->setReadOnly(true);
     ui->uAxisPositionLine->setReadOnly(true);
+    ui->JOGAxisPositionLine->setReadOnly(true);
 
     //------------------------------------------
     //connect signals and slots
@@ -250,6 +257,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->EnableButton_Z,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
     connect(ui->EnableButton_Z_2,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
     connect(ui->EnableButton_U,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
+    connect(ui->EnableButton_JOG,SIGNAL(clicked(bool)), this, SLOT(AxisEnableDisableButton()));
 
     //joystick
     connect(ui->freeRunRadioButton, SIGNAL(clicked(bool)), this, SLOT(enableJoystickFreeRun(bool)));
@@ -269,6 +277,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->zAxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
     connect(ui->z_2_AxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
     connect(ui->uAxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
+    connect(ui->JOGAxisPositionMoveButton, SIGNAL(clicked(bool)), this, SLOT(positionMove()));
 
     //step motion
     connect(ui->xAxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
@@ -312,6 +321,7 @@ void Magrathea::updatePosition(){
     ui->zAxisPositionLine->setText(QString::number(    pos_t[2], 'f', 3));
     ui->z_2_AxisPositionLine->setText(QString::number( pos_t[4], 'f', 3));
     ui->uAxisPositionLine->setText(QString::number(    pos_t[3], 'f', 3));
+    ui->JOGAxisPositionLine->setText(QString::number(  pos_t[5], 'f', 3));
     ui->xAxisPositionLine2->setText(QString::number(   pos_t[0], 'f', 3));
     ui->yAxisPositionLine2->setText(QString::number(   pos_t[1], 'f', 3));
     ui->zAxisPositionLine2->setText(QString::number(   pos_t[2], 'f', 3));
@@ -338,6 +348,10 @@ void Magrathea::updatePosition(){
     current =  mMotionHandler->getUAxisState();
     led_label(ui->label_16, current);
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
+
+    current =  mMotionHandler->getJOGAxisState();
+    led_label(ui->label_27, current);
+    ui->EnableButton_JOG->setText((current ? "Disable" : "Enable"));
     //reading fault state for each axis
 
     //return;
@@ -1205,6 +1219,8 @@ void Magrathea::positionMove()
         mMotionHandler->moveZ_2_To(ui->z_2_AxisPositionMoveDoubleSpinBox->value(), ui->z_2_AxisSpeedDoubleSpinBox->value());
     else if (sender() == ui->uAxisPositionMoveButton)
         mMotionHandler->moveUTo(ui->uAxisPositionMoveDoubleSpinBox->value(), ui->uAxisSpeedDoubleSpinBox->value());
+    else if (sender() == ui->uAxisPositionMoveButton)
+        mMotionHandler->moveJOGTo(ui->JOGAxisPositionMoveDoubleSpinBox->value(), 1);
     return;
 }
 
@@ -1262,10 +1278,13 @@ void Magrathea::AxisEnableDisableButton(){
         current = mMotionHandler->getUAxisState();
         mMotionHandler->enableUAxis(!current);
         ui->EnableButton_U->setText((current ? "Enable" : "Disable"));
+    }else if (sender() == ui->EnableButton_JOG){
+        current = mMotionHandler->getJOGAxisState();
+        mMotionHandler->enableJOGAxis(!current);
+        ui->EnableButton_JOG->setText((current ? "Enable" : "Disable"));
     }else
         qWarning("Warning! Improper use of function AxisEnableDisableButton.");
 }
-
 
 void Magrathea::led_label(QLabel *label, bool value){
     if(value){
