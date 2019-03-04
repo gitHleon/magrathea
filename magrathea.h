@@ -55,6 +55,7 @@ private slots:
     void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
+    bool CVCaptureButtonClicked(std::string &timestamp);
     bool loop_find_circles();
 
     //gantry
@@ -78,6 +79,7 @@ private slots:
     bool loop_test_images();
     void createTemplate_F();
     bool calibration_plate_measure();
+    bool fiducial_chip_measure();
     int FitTestButtonClick();
 
 private:

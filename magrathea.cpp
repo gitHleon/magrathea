@@ -484,7 +484,6 @@ void Magrathea::FocusAlgoTest_Func(){
               cv::Point( bin_w*(i), hist_h - cvRound(g_hist.at<float>(i)) ),
               cv::Scalar(255), 2, 8, 0  );
     }
-
     /// Display
     cv::namedWindow("calcHist Demo", cv::WINDOW_AUTOSIZE );
     cv::imshow("calcHist Demo", histImage );
@@ -499,6 +498,40 @@ void Magrathea::FocusAlgoTest_Func(){
   }
   qInfo("%5.1f",numerator/denominator);
   delete FocusFinder;
+}
+
+bool Magrathea::CVCaptureButtonClicked(std::string &timestamp){
+    mCamera->stop(); //closing QCamera
+
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return false;}
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    //veryfing that the setting of the camera is optimal
+    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
+    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(CV_CAP_PROP_FPS, 4.0);
+    cap.set(CV_CAP_PROP_GAIN, 4.0);
+    dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    cv::Mat mat_from_camera;
+    if (!cap.read(mat_from_camera)){ //if not success
+        qInfo("Cannot read a frame from video stream");
+        return false;
+    }
+
+    std::string one     = std::to_string(ui->spinBox_plate_position->value());
+    std::string two     = std::to_string(ui->chip_number_spinBox->value());
+    std::string three   = std::to_string(ui->spinBox_input->value());
+    cv::imwrite("EXPORT/Image_"+one+"_"+two+"_"+three+"_"+timestamp+".jpg",mat_from_camera);
+    return true;
 }
 
 bool Magrathea::focusButtonClicked()
@@ -1559,6 +1592,81 @@ bool Magrathea::calibration_plate_measure(){
     return true;
 }
 
+bool Magrathea::fiducial_chip_measure(){
+    //Function to take pictures of image from CNM
+    //Fpr questions : dmadaffa@cern.ch
+    cv::destroyAllWindows();
+
+    std::vector< std::vector<double> > points;
+    std::vector<double> temp_v;
+
+    temp_v.push_back(ui->point1_x_box->value());//gantry coord of point 1
+    temp_v.push_back(ui->point1_y_box->value());
+    points.push_back(temp_v);
+    temp_v.clear();
+
+    temp_v.push_back(ui->point2_x_box->value());//gantry coord of point 2
+    temp_v.push_back(ui->point2_y_box->value());
+    points.push_back(temp_v);
+    temp_v.clear();
+
+    double angle = atan((points[1][1]-points[0][1])/(points[1][0]-points[0][0]));
+    //these are measured points from which I get the angle of the calibration plate
+    //These are also used as starting point (i.e. origin of the frame of reference) for the calibration plate measure
+
+    double step_x = 0.5;
+    double step_y = 0.3;
+    double big_step_x = 4.72; //distance between the first fiducial of two adjiacent chips
+    double big_step_y = 4.5029;  //vertical distance between the first fiducial of two adjiacent chips
+    double speed  = 3.;
+    for(int m = 0; m<34;m++){//chip ID from 0 to 34
+        ui->spinBox_plate_position->setValue(m);
+        int working_m  = (m < 17) ? m : (m-17);
+        int second_row = (m < 17) ? 0 : 1;
+        double big_target_x = points[0][0] + big_step_x*working_m*cos(angle) - big_step_y*second_row*sin(angle);
+        double big_target_y = points[0][1] + big_step_x*working_m*sin(angle) + big_step_y*second_row*cos(angle);
+        std::cout<<m<<" BIG : target_x "<<big_target_x<<" target_y "<<big_target_y<<std::endl;
+        if(!mMotionHandler->moveXTo(big_target_x,speed))
+            return false;
+        if(!mMotionHandler->moveYTo(big_target_y,3.))
+            return false;
+        for(int i=0;i<12;i++){
+            ui->chip_number_spinBox->setValue(i);
+            for(int j=0;j<8;j++){
+                //              speed = (i!=0 && j==0) ? 6. : 3.;
+                ui->spinBox_input->setValue(j);
+                double target_x = big_target_x + step_x*j*cos(angle) - step_y*i*sin(angle);
+                double target_y = big_target_y + step_x*j*sin(angle) + step_y*i*cos(angle);
+                std::cout<<i<<" "<<j<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
+                if(!mMotionHandler->moveXTo(target_x,speed))
+                    return false;
+                if(!mMotionHandler->moveYTo(target_y,3.))
+                    return false;
+                if(!focusButtonClicked())
+                    return false;
+                std::string timestamp = "";
+                if(!CVCaptureButtonClicked(timestamp))
+                    return false;
+
+                auto one = std::to_string(ui->spinBox_plate_position->value());
+
+                std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+                std::string file_name = "Image_position_"+one+".txt";
+                std::ofstream ofs (file_name, std::ofstream::app);
+                ofs<<timestamp<<" "<<m<<" "<<i<<" "<<j<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
+                ofs.close();
+
+                std::vector <double> pos_t_2 = mMotionHandler->whereAmI(0);
+                std::string file_name_2 = "Image_position_"+one+"_other_var.txt";
+                std::ofstream ofs_2 (file_name_2, std::ofstream::app);
+                ofs_2<<timestamp<<" "<<m<<" "<<i<<" "<<j<<" "<<pos_t_2[0]<<" "<<pos_t_2[1]<<" "<<pos_t_2[4]<<std::endl;
+                ofs_2.close();
+            }
+        }
+    }
+    return true;
+}
+
 int Magrathea::FitTestButtonClick(){
 
     FiducialFinder * Ffinder = new FiducialFinder(this);
@@ -1566,5 +1674,3 @@ int Magrathea::FitTestButtonClick(){
     Ffinder->dumb_test();
     return 0;
 }
-
-
