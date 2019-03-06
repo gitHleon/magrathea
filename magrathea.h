@@ -55,7 +55,7 @@ private slots:
     void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
-    bool CVCaptureButtonClicked(std::string &timestamp);
+    bool CVCaptureButtonClicked();
     bool loop_find_circles();
 
     //gantry
@@ -87,7 +87,7 @@ private:
 
     cv::Mat sub_frame;
 
-    double mCalibration = 10.035;//3.43;//4.5; //[px/um]
+    double mCalibration = 3.62483; //SCT optics 10.035;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;

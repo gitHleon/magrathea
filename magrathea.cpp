@@ -501,37 +501,35 @@ void Magrathea::FocusAlgoTest_Func(){
   delete FocusFinder;
 }
 
-bool Magrathea::CVCaptureButtonClicked(std::string &timestamp){
+bool Magrathea::CVCaptureButtonClicked(){
     mCamera->stop(); //closing QCamera
-
+    std::cout<<" ok1 "<<std::endl;
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
     if (!cap.isOpened()){
         //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
-    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-
+    std::cout<<" ok2 "<<std::endl;
     //veryfing that the setting of the camera is optimal
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-    //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
-    cap.set(cv::CAP_PROP_GAIN, 4.0);
-    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-    qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    //cap.set(cv::CAP_PROP_GAIN, 4.0);
+    std::cout<<" ok3 "<<std::endl;
     cv::Mat mat_from_camera;
     if (!cap.read(mat_from_camera)){ //if not success
         qInfo("Cannot read a frame from video stream");
         return false;
     }
-
+    std::cout<<" ok4 "<<std::endl;
+    cap.release();
+    std::cout<<" ok4.1 "<<std::endl;
     std::string one     = std::to_string(ui->spinBox_plate_position->value());
     std::string two     = std::to_string(ui->chip_number_spinBox->value());
     std::string three   = std::to_string(ui->spinBox_input->value());
-    cv::imwrite("EXPORT/Image_"+one+"_"+two+"_"+three+"_"+timestamp+".jpg",mat_from_camera);
+    cv::imwrite("EXPORT/Image_"+one+"_"+two+"_"+three+".jpg",mat_from_camera);
+    std::cout<<" ok5 "<<std::endl;
     return true;
 }
 
@@ -557,7 +555,7 @@ bool Magrathea::focusButtonClicked()
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
-    cap.set(cv::CAP_PROP_GAIN, 4.0);
+    //cap.set(cv::CAP_PROP_GAIN, 4.0); ???
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
@@ -893,7 +891,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    double camera_angle = 0.740;
+    double camera_angle = 1.265;
     double target_x_short = distance_x*0.001*cos(camera_angle) + distance_y*0.001*sin(camera_angle);
     double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
@@ -941,7 +939,7 @@ void Magrathea::calibrationCaller(int input){
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
-    cap.set(cv::CAP_PROP_GAIN, 363.0);
+    //cap.set(cv::CAP_PROP_GAIN, 363.0); ????
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
@@ -1376,8 +1374,8 @@ bool Magrathea::loop_test(){
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double camera_angle = 0.740;
-            double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
+            double camera_angle = -1.265;
+            double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
             double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
             //std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
@@ -1449,11 +1447,6 @@ bool Magrathea::loop_test_images(){
                 ofs <<i<<" "<<j<<" "<<m<<" "<<timestamp<<" "<<fail_code<<" "<<distance_x<<" "<<distance_y<<std::endl;
                 ofs.close();
                 delete Ffinder;
-                //                double camera_angle   = 0.886; //to be measured
-                //                double target_x_short = distance_y*cos(camera_angle) + distance_x*sin(camera_angle);
-                //                double target_y_short = distance_y*sin(camera_angle) - distance_x*cos(camera_angle);
-                //double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
-                //double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
                 //ATTENTION! distances[0] is cols, distances[1] is rows of the image
             }
         }
@@ -1474,8 +1467,8 @@ bool Magrathea::loop_fid_finder(){
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double camera_angle = 0.740;
-        double target_x_short = distances[0]*cos(camera_angle) + distances[1]*sin(camera_angle);
+        double camera_angle = 1.265;
+        double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
         double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
@@ -1634,7 +1627,7 @@ bool Magrathea::fiducial_chip_measure(){
         for(int i=0;i<12;i++){
             ui->chip_number_spinBox->setValue(i);
             for(int j=0;j<8;j++){
-                //              speed = (i!=0 && j==0) ? 6. : 3.;
+                cv::destroyAllWindows();
                 ui->spinBox_input->setValue(j);
                 double target_x = big_target_x + step_x*j*cos(angle) - step_y*i*sin(angle);
                 double target_y = big_target_y + step_x*j*sin(angle) + step_y*i*cos(angle);
@@ -1645,8 +1638,8 @@ bool Magrathea::fiducial_chip_measure(){
                     return false;
                 if(!focusButtonClicked())
                     return false;
-                std::string timestamp = "";
-                if(!CVCaptureButtonClicked(timestamp))
+                std::cout<<" >> ok "<<i<<" "<<j<<std::endl;
+                if(!CVCaptureButtonClicked())
                     return false;
 
                 auto one = std::to_string(ui->spinBox_plate_position->value());
@@ -1654,13 +1647,13 @@ bool Magrathea::fiducial_chip_measure(){
                 std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
                 std::string file_name = "Image_position_"+one+".txt";
                 std::ofstream ofs (file_name, std::ofstream::app);
-                ofs<<timestamp<<" "<<m<<" "<<i<<" "<<j<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
+                ofs<<m<<" "<<i<<" "<<j<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
                 ofs.close();
 
                 std::vector <double> pos_t_2 = mMotionHandler->whereAmI(0);
                 std::string file_name_2 = "Image_position_"+one+"_other_var.txt";
                 std::ofstream ofs_2 (file_name_2, std::ofstream::app);
-                ofs_2<<timestamp<<" "<<m<<" "<<i<<" "<<j<<" "<<pos_t_2[0]<<" "<<pos_t_2[1]<<" "<<pos_t_2[4]<<std::endl;
+                ofs_2<<m<<" "<<i<<" "<<j<<" "<<pos_t_2[0]<<" "<<pos_t_2[1]<<" "<<pos_t_2[4]<<std::endl;
                 ofs_2.close();
             }
         }

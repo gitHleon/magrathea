@@ -133,7 +133,7 @@ void Focus_finder::eval_stddev_ROI(const cv::Mat &input_image, std::vector<doubl
 
 bool Focus_finder::find_focus(double &focus_height)
 {
-    const int figure_index = 0;
+    const int figure_index = 1;
     //Function that return the focus z coordinate
     //https://rechneronline.de/function-graphs/
     //http://doc.qt.io/qt-4.8/signalsandslots.html
