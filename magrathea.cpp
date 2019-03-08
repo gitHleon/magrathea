@@ -22,6 +22,7 @@
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
 #include <ACSCMotionHandler.h>
+#include <mvIMPACT_acquire.h>
 #endif
 
 std::string type2str(int type);
@@ -1689,3 +1690,170 @@ int Magrathea::FitTestButtonClick(){
     Ffinder->dumb_test();
     return 0;
 }
+
+//-----------------------------------------------------------------------------
+// the buffer we pass to the device driver must be aligned according to its requirements
+// As we can't allocate aligned heap memory we will align it 'by hand'
+class UserSuppliedHeapBuffer
+//-----------------------------------------------------------------------------
+        //http://www.cplusplus.com/reference/memory/align/
+        //https://en.cppreference.com/w/c/language/object
+        //https://www.matrix-vision.com/manuals/SDK_CPP/CaptureToUserMemory_8cpp-example.html
+{
+    std::unique_ptr<char[]> pBuf_;
+    void * pt = pBuf_;
+    int bufSize_;
+    int alignment_;
+    std::size_t space = reinterpret_cast<UINT_PTR>( pBuf_.get() );
+public:
+    explicit UserSuppliedHeapBuffer( int bufSize, int alignment ) : pBuf_(), bufSize_( bufSize ), alignment_( alignment )
+    {
+        if( bufSize_ > 0 )
+        {
+            pBuf_ = std::unique_ptr<char[]>( new char[bufSize_ + alignment_] );
+        }
+    }
+    char* getPtr( void )
+    {
+        if( alignment_ <= 1 )
+        {
+            return pBuf_.get();
+        }
+        return reinterpret_cast<char*>( std::align( reinterpret_cast<UINT_PTR>( pBuf_.get() ), static_cast<UINT_PTR>( alignment_ ),  , space ) );
+    }
+    int getSize( void ) const
+    {
+        return bufSize_;
+    }
+};
+
+typedef std::vector<std::shared_ptr<UserSuppliedHeapBuffer>> CaptureBufferContainer;
+//-----------------------------------------------------------------------------
+struct CaptureParameter
+//-----------------------------------------------------------------------------
+{
+    Device* pDev;
+#ifdef USE_DISPLAY
+    shared_ptr<ImageDisplayWindow> pDisplayWindow;
+#endif // #ifdef USE_DISPLAY
+#ifdef BUILD_WITH_OPENCV_SUPPORT
+    std::string             openCVDisplayTitle;
+    std::string             openCVResultDisplayTitle;
+#endif // #ifdef BUILD_WITH_OPENCV_SUPPORT
+    FunctionInterface       fi;
+    ImageRequestControl     irc;
+    Statistics              statistics;
+    bool                    boUserSuppliedMemoryUsed;
+    bool                    boAlwaysUseNewUserSuppliedBuffers;
+    int                     bufferSize;
+    int                     bufferAlignment;
+    int                     bufferPitch;
+    CaptureBufferContainer  buffers;
+    explicit CaptureParameter( Device* p ) : pDev{p}, fi{p}, irc{p}, statistics{p}, boUserSuppliedMemoryUsed{false},
+        boAlwaysUseNewUserSuppliedBuffers{false}, bufferSize{0}, bufferAlignment{0}, bufferPitch{0}, buffers()
+    {
+#ifdef USE_DISPLAY
+        // IMPORTANT: It's NOT save to create multiple display windows in multiple threads!!!
+        pDisplayWindow = make_shared<ImageDisplayWindow>( "mvIMPACT_acquire sample, Device " + pDev->serial.read() );
+#endif // #ifdef USE_DISPLAY
+#ifdef BUILD_WITH_OPENCV_SUPPORT
+        openCVDisplayTitle = string( "mvIMPACT_acquire sample, Device " + pDev->serial.read() + ", OpenCV display" );
+        openCVResultDisplayTitle = openCVDisplayTitle + "(Result)";
+#endif // #ifdef BUILD_WITH_OPENCV_SUPPORT
+    }
+    CaptureParameter( const CaptureParameter& src ) = delete;
+    CaptureParameter& operator=( const CaptureParameter& rhs ) = delete;
+};
+
+int Magrathea::camera_read_test(CaptureParameter* pCaptureParameter, Request* pRequest ){
+    int openCVDataType = CV_8UC1;
+    switch( pRequest->imagePixelFormat.read() )
+    {
+    case ibpfMono8:
+        openCVDataType = CV_8UC1;
+        break;
+    case ibpfMono10:
+    case ibpfMono12:
+    case ibpfMono14:
+    case ibpfMono16:
+        openCVDataType = CV_16UC1;
+        break;
+    case ibpfMono32:
+        openCVDataType = CV_32SC1;
+        break;
+    case ibpfBGR888Packed:
+    case ibpfRGB888Packed:
+        openCVDataType = CV_8UC3;
+        break;
+    case ibpfRGBx888Packed:
+        openCVDataType = CV_8UC4;
+        break;
+    case ibpfRGB101010Packed:
+    case ibpfRGB121212Packed:
+    case ibpfRGB141414Packed:
+    case ibpfRGB161616Packed:
+        openCVDataType = CV_16UC3;
+        break;
+    case ibpfMono12Packed_V1:
+    case ibpfMono12Packed_V2:
+    case ibpfBGR101010Packed_V2:
+    case ibpfRGB888Planar:
+    case ibpfRGBx888Planar:
+    case ibpfYUV422Packed:
+    case ibpfYUV422_10Packed:
+    case ibpfYUV422_UYVYPacked:
+    case ibpfYUV422_UYVY_10Packed:
+    case ibpfYUV422Planar:
+    case ibpfYUV444Packed:
+    case ibpfYUV444_10Packed:
+    case ibpfYUV444_UYVPacked:
+    case ibpfYUV444_UYV_10Packed:
+    case ibpfYUV444Planar:
+    case ibpfYUV411_UYYVYY_Packed:
+        cout << "ERROR! Don't know how to render this pixel format (" << pRequest->imagePixelFormat.readS() << ") in OpenCV! Select another one e.g. by writing to mvIMPACT::acquire::ImageDestination::pixelFormat!" << endl;
+        exit( 42 );
+        break;
+    }
+    cv::Mat openCVImage( cv::Size( pRequest->imageWidth.read(), pRequest->imageHeight.read() ), openCVDataType, pRequest->imageData.read(), pRequest->imageLinePitch.read() );
+    cv::imshow( pCaptureParameter->openCVDisplayTitle, openCVImage );
+    // OpenCV event handling: you need this!
+    cv::waitKey( 5 );
+    // apply Canny Edge detection and display the result too
+    cv::Mat edgesMat;
+    switch( openCVDataType )
+    {
+    case CV_16UC3:
+        cout << "This format seems to crash the Canny Edge detector. Will display the original image instead!" << endl;
+        edgesMat = openCVImage;
+        break;
+    default:
+        cv::Canny( openCVImage, edgesMat, 35.0, 55.0 );
+        break;
+    }
+    cv::imshow( pCaptureParameter->openCVResultDisplayTitle, edgesMat );
+    // OpenCV event handling: you need this!
+    cv::waitKey( 5 );
+#endif // #ifdef BUILD_WITH_OPENCV_SUPPORT
+}
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

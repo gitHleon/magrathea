@@ -77,6 +77,7 @@ FORMS += \
         magrathea.ui
 
 INCLUDEPATH += .\alglib-3.14.0\cpp\src
+INCLUDEPATH += .\mvIMPACT_CPP
 INCLUDEPATH += D:\opencv-build\install\include
        LIBS += D:\opencv-build\bin\libopencv_flann401.dll
        LIBS += D:\opencv-build\bin\libopencv_core401.dll

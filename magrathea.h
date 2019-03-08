@@ -81,6 +81,7 @@ private slots:
     bool calibration_plate_measure();
     bool fiducial_chip_measure();
     int FitTestButtonClick();
+    int camera_read_test();
 
 private:
     Ui::Magrathea *ui;
