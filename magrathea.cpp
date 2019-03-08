@@ -552,8 +552,12 @@ bool Magrathea::focusButtonClicked()
     //veryfing that the setting of the camera is optimal
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', '8', '0', '0'));
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    //OptoEngeneering camera
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 2464);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2056);
+    //Our camera
+    //cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    //cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
     //cap.set(cv::CAP_PROP_GAIN, 4.0); ???
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
@@ -638,10 +642,12 @@ void Magrathea::Camera_test(){
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', '2'));//https://www.fourcc.org/yuv.php
     //cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('Y', 'U', 'Y', 'V'));
 
-    //cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
-    //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    //OptoEngeneering camera
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 2464);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2056);
+    //Our camera
+    //cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    //cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
 
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
@@ -717,8 +723,12 @@ void Magrathea::VignetteButton_clicked(){
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return;}
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    //OptoEngeneering camera
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 2464);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2056);
+    //Our camera
+    //cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    //cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 5.0);
     double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
@@ -761,8 +771,12 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     if(debug)
         qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    //OptoEngeneering camera
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 2464);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2056);
+    //Our camera
+    //cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    //cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
@@ -936,8 +950,12 @@ void Magrathea::calibrationCaller(int input){
 
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     //cap.set(CV_CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', '8', '0', '0'));
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    //OptoEngeneering camera
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 2464);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2056);
+    //Our camera
+    //cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    //cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
     //cap.set(cv::CAP_PROP_GAIN, 363.0); ????
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
@@ -1322,8 +1340,12 @@ void Magrathea::color_test(){
         return;}
 
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    //OptoEngeneering camera
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 2464);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2056);
+    //Our camera
+    //cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    //cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
     double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
