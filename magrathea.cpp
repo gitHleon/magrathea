@@ -22,6 +22,7 @@
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
 #include <ACSCMotionHandler.h>
+#include <QJoysticks.h>
 #endif
 
 std::string type2str(int type);
@@ -47,6 +48,7 @@ Magrathea::Magrathea(QWidget *parent) :
 #elif VALENCIA
     qInfo("Valencia, ACSC gantry");
     mMotionHandler = new ACSCMotionHandler();
+    QJoysticks* J_instance = QJoysticks::getInstance();
 #else
 #define DEBUG
     qInfo("where is your gantry?");
@@ -193,6 +195,20 @@ Magrathea::Magrathea(QWidget *parent) :
     //////////////////7
     f_locations = new fiducial_locations();
     ///////////////////
+    //------------------------------------------
+    //Joystick - Valencia ONLY
+#ifdef  VALENCIA
+    int J_number = J_instance->count();
+    std::cout<<" J_numebr :"<<J_number<<std::endl;
+    QStringList J_list = J_instance->deviceNames();
+    J_number = J_list.size();
+    std::cout<<" J_size :"<<J_number<<std::endl;
+    int J_buttons = J_instance->getNumButtons(0);
+    std::cout<<" J_buttons :"<<J_buttons<<std::endl;
+    connect(J_instance,SIGNAL(buttonChanged(int,int,bool)), this, SLOT(J_translator(int,int,bool)));
+    connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
+#endif
+
 
     //------------------------------------------
     //gantry
@@ -237,7 +253,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
     connect(ui->button_measure_30,SIGNAL(clicked(bool)),this,SLOT(loop_find_circles()));
     connect(ui->button_measure_1_well,SIGNAL(clicked(bool)),this,SLOT(loop_fid_finder()));
-
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -339,10 +354,24 @@ void Magrathea::updatePosition(){
     current =  mMotionHandler->getUAxisState();
     led_label(ui->label_16, current);
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
-    //reading fault state for each axis
+
+    //RealJoystick status update
+    if(J_control_Rotation){
+        ui->label_J_control->setStyleSheet("QLabel { background-color : yellow; color : black; }");
+        ui->label_J_control->setText("Rotation");
+    }else{
+        if(J_control_Z_1){
+            ui->label_J_control->setStyleSheet("QLabel { background-color : green; color : white; }");
+            ui->label_J_control->setText("Z 1");
+        }else{
+            ui->label_J_control->setStyleSheet("QLabel { background-color : green; color : white; }");
+            ui->label_J_control->setText("Z 2");
+        }
+    }
 
     return;
 
+    //reading fault state for each axis
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
     unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
     //GETMASK(index, size) (((1 << (size)) - 1) << (index))
@@ -392,6 +421,35 @@ void Magrathea::updatePosition(){
 
     return;
 }
+
+//******************************************
+//real joystick
+void Magrathea::J_translator(int index, int button, bool pressed){
+    //need to translate the generic joystick slots to one specific for every function
+    //An other way may be to add inputs to other functions, but this may be more complicated and less friendly to other sites
+    if(index != 0 )
+        return; //I want only the main joystick to work
+    //Add analogic speed control
+    //implement motion via this function of magrathea : enableJoystickFreeRun
+    if(button == 1 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+1);
+    if(button == 0 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-1);
+    if(button == 3 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+20);
+    if(button == 2 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-20);
+    if(button == 10 && pressed)
+        J_control_Z_1 = !J_control_Z_1;
+    if(button == 11 && pressed)
+        J_control_Rotation = !J_control_Rotation;
+    if(button == 9 && pressed)
+        emit Run_focus_signal();
+
+
+
+}
+
 
 //******************************************
 //camera

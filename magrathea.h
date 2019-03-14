@@ -57,6 +57,7 @@ private slots:
     bool loop_fid_finder();
     bool CVCaptureButtonClicked();
     bool loop_find_circles();
+    void J_translator(int index, int button, bool pressed);
 
     //gantry
     void connectGantryBoxClicked(bool checked);
@@ -82,6 +83,9 @@ private slots:
     bool fiducial_chip_measure();
     int FitTestButtonClick();
 
+signals:
+    void Run_focus_signal();
+
 private:
     Ui::Magrathea *ui;
 
@@ -98,6 +102,10 @@ private:
 
     int autoRepeatDelay;
     int autoRepeatInterval;
+
+    bool J_control_Z_1      = true;
+    bool J_control_Rotation = true;
+    double J_axis_speed     = 1.0;
 
     //keyboard shortcut for joystick
 //    QShortcut *shortcut_PX;

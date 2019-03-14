@@ -23,6 +23,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+include(QJoysticks-master\QJoysticks.pri)
 
 SOURCES += \
         main.cpp \
@@ -77,17 +78,18 @@ FORMS += \
         magrathea.ui
 
 INCLUDEPATH += .\alglib-3.14.0\cpp\src
-INCLUDEPATH += D:\opencv-build\install\include
-       LIBS += D:\opencv-build\bin\libopencv_flann401.dll
-       LIBS += D:\opencv-build\bin\libopencv_core401.dll
-       LIBS += D:\opencv-build\bin\libopencv_highgui401.dll
-       LIBS += D:\opencv-build\bin\libopencv_videoio401.dll
-       LIBS += D:\opencv-build\bin\libopencv_imgcodecs401.dll
-       LIBS += D:\opencv-build\bin\libopencv_imgproc401.dll
-       LIBS += D:\opencv-build\bin\libopencv_features2d401.dll
-       LIBS += D:\opencv-build\bin\libopencv_xfeatures2d401.dll
-       LIBS += D:\opencv-build\bin\libopencv_calib3d401.dll
-       LIBS += D:\opencv-build\bin\libopencv_aruco401.dll
+INCLUDEPATH += .\mvIMPACT_CPP
+INCLUDEPATH += C:\opencv-build\install\include
+       LIBS += C:\opencv-build\bin\libopencv_flann401.dll
+       LIBS += C:\opencv-build\bin\libopencv_core401.dll
+       LIBS += C:\opencv-build\bin\libopencv_highgui401.dll
+       LIBS += C:\opencv-build\bin\libopencv_videoio401.dll
+       LIBS += C:\opencv-build\bin\libopencv_imgcodecs401.dll
+       LIBS += C:\opencv-build\bin\libopencv_imgproc401.dll
+       LIBS += C:\opencv-build\bin\libopencv_features2d401.dll
+       LIBS += C:\opencv-build\bin\libopencv_xfeatures2d401.dll
+       LIBS += C:\opencv-build\bin\libopencv_calib3d401.dll
+       LIBS += C:\opencv-build\bin\libopencv_aruco401.dll
 
 #Vancouver
 win32 : exists(C:/Program Files (x86)/Aerotech/A3200/CLibrary/Include/A3200.h) {
@@ -108,6 +110,6 @@ win32 : exists(ACSC/C_CPP/ACSC.h) {
         ACSC\C_CPP\ACSC.h \
         DEFINES += ACSC
         DEFINES += VALENCIA
-        LIBS += D:\Code\magrathea\ACSC\C_CPP\ACSCL_x86.LIB
-        #LIBS += C:\Users\Silicio\WORK\Opencv_Qt_proj\Loader\ACSC\C_CPP\ACSCL_x86.LIB
+        #LIBS += D:\Code\magrathea\ACSC\C_CPP\ACSCL_x86.LIB
+        LIBS += C:\Users\Silicio\WORK\Opencv_Qt_proj\Loader\ACSC\C_CPP\ACSCL_x86.LIB
 }
