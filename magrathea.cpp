@@ -196,7 +196,7 @@ Magrathea::Magrathea(QWidget *parent) :
     f_locations = new fiducial_locations();
     ///////////////////
     //------------------------------------------
-    //Joystick - Valencia ONLY
+    //Real Joystick - Valencia ONLY
 #ifdef  VALENCIA
     int J_number = J_instance->count();
     std::cout<<" J_numebr :"<<J_number<<std::endl;
@@ -206,6 +206,7 @@ Magrathea::Magrathea(QWidget *parent) :
     int J_buttons = J_instance->getNumButtons(0);
     std::cout<<" J_buttons :"<<J_buttons<<std::endl;
     connect(J_instance,SIGNAL(buttonChanged(int,int,bool)), this, SLOT(J_translator(int,int,bool)));
+    connect(J_instance,SIGNAL(axisChanged(int,int,double)), this, SLOT(J_axis_translator(int,int,double)));
     connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
 #endif
 
@@ -424,13 +425,61 @@ void Magrathea::updatePosition(){
 
 //******************************************
 //real joystick
+
+//Add an oter translator for the axischanged event
+//Add analogic speed control
+//implement motion via this function of magrathea : FreeRun
+
+void Magrathea::J_axes_translator(int index, int axis, double value){
+    if(index != 0 )
+        return; //I want only the main joystick to work
+    if(axis == 0 && (value > 0.15))
+        mMotionHandler->runX(+1, ui->spinBox_J_speed->value());
+    else if(axis == 0 && (value < -0.15))
+        mMotionHandler->runX(-1, ui->spinBox_J_speed->value());
+    else if(axis == 0 && ((value < 0.15) || (value > -0.15)))
+        mMotionHandler->endRunX();
+    else if(axis == 1 && (value > 0.15))
+        mMotionHandler->runY(+1, ui->spinBox_J_speed->value());
+    else if(axis == 1 && (value < -0.15))
+        mMotionHandler->runY(-1, ui->spinBox_J_speed->value());
+    else if(axis == 1 && ((value < 0.15) || (value > -0.15)))
+        mMotionHandler->endRunY();
+    else if(axis == 4 && !J_control_Rotation && J_control_Z_1){
+        if(value > 0.15)
+            mMotionHandler->runZ(+1, ui->spinBox_J_speed->value());
+        else if(value < -0.15)
+            mMotionHandler->runZ(-1, ui->spinBox_J_speed->value());
+        else if((value < 0.15) || (value > -0.15))
+            mMotionHandler->endRunZ();
+    } else if(axis == 4 && !J_control_Rotation && !J_control_Z_1){
+        if(value > 0.15)
+            mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value());
+        else if(value < -0.15)
+            mMotionHandler->runZ_2(-1, ui->spinBox_J_speed->value());
+        else if((value < 0.15) || (value > -0.15))
+            mMotionHandler->endRunZ_2();
+    } else if(axis == 4 && J_control_Rotation){
+        if(value > 0.15)
+            mMotionHandler->runU(+1, ui->spinBox_J_speed->value());
+        else if(value < -0.15)
+            mMotionHandler->runU(-1, ui->spinBox_J_speed->value());
+        else if((value < 0.15) || (value > -0.15))
+            mMotionHandler->endRunU();
+    }
+
+    //check what happens if I change the value of J_control_Rotation and J_control_Z_1
+    //while moving the axes
+    //    mMotionHandler->endRunX();
+    //    mMotionHandler->endRunY();
+
+}
+
 void Magrathea::J_translator(int index, int button, bool pressed){
     //need to translate the generic joystick slots to one specific for every function
     //An other way may be to add inputs to other functions, but this may be more complicated and less friendly to other sites
     if(index != 0 )
         return; //I want only the main joystick to work
-    //Add analogic speed control
-    //implement motion via this function of magrathea : enableJoystickFreeRun
     if(button == 1 && pressed)
         ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+1);
     if(button == 0 && pressed)
@@ -445,8 +494,6 @@ void Magrathea::J_translator(int index, int button, bool pressed){
         J_control_Rotation = !J_control_Rotation;
     if(button == 9 && pressed)
         emit Run_focus_signal();
-
-
 
 }
 

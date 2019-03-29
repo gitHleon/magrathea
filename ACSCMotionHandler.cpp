@@ -816,7 +816,6 @@ bool ACSCMotionHandler::runX(double direction, double speed)
         qWarning("Could not free run along X axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -829,7 +828,6 @@ bool ACSCMotionHandler::endRunX()
         qWarning("Error gantry,stop jog motion X axis: %d ",acsc_GetLastError());
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -846,7 +844,6 @@ bool ACSCMotionHandler::runY(double direction, double speed)
         qWarning("Could not free run along Y axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -859,8 +856,6 @@ bool ACSCMotionHandler::endRunY()
         qWarning("Error gantry,stop jog motion Y axis: %d ",acsc_GetLastError());
         return false;
     }
-    return true;
-
 }
 
 //------------------------------------------
@@ -877,7 +872,6 @@ bool ACSCMotionHandler::runZ(double direction, double speed)
         qWarning("Could not free run along Z axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -890,7 +884,6 @@ bool ACSCMotionHandler::endRunZ()
         qWarning("Error gantry,stop jog motion Z axis: %d ",acsc_GetLastError());
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -907,7 +900,6 @@ bool ACSCMotionHandler::runZ_2(double direction, double speed)
         qWarning("Could not free run along Z 2 axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -920,7 +912,6 @@ bool ACSCMotionHandler::endRunZ_2()
         qWarning("Error gantry,stop jog motion Z 2 axis: %d ",acsc_GetLastError());
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -937,7 +928,6 @@ bool ACSCMotionHandler::runU(double direction, double speed)
         qWarning("Could not free run along U axis");
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -950,7 +940,6 @@ bool ACSCMotionHandler::endRunU()
         qWarning("Error gantry,stop jog motion U axis: %d ",acsc_GetLastError());
         return false;
     }
-    return true;
 }
 
 //******************************************

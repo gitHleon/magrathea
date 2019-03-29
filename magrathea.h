@@ -58,6 +58,7 @@ private slots:
     bool CVCaptureButtonClicked();
     bool loop_find_circles();
     void J_translator(int index, int button, bool pressed);
+    void J_axes_translator(int index, int button, double value);
 
     //gantry
     void connectGantryBoxClicked(bool checked);
