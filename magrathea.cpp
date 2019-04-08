@@ -206,7 +206,7 @@ Magrathea::Magrathea(QWidget *parent) :
     int J_buttons = J_instance->getNumButtons(0);
     std::cout<<" J_buttons :"<<J_buttons<<std::endl;
     connect(J_instance,SIGNAL(buttonChanged(int,int,bool)), this, SLOT(J_translator(int,int,bool)));
-    connect(J_instance,SIGNAL(axisChanged(int,int,double)), this, SLOT(J_axis_translator(int,int,double)));
+    connect(J_instance,SIGNAL(axisChanged(int,int,double)), this, SLOT(J_axes_translator(int,int,double)));
     connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
 #endif
 
@@ -445,21 +445,27 @@ void Magrathea::J_axes_translator(int index, int axis, double value){
         mMotionHandler->runY(-1, ui->spinBox_J_speed->value());
     else if(axis == 1 && ((value < 0.15) || (value > -0.15)))
         mMotionHandler->endRunY();
-    else if(axis == 4 && !J_control_Rotation && J_control_Z_1){
+    else if(axis == 2 && !J_control_Rotation && J_control_Z_1){
+        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A"<<std::endl;
         if(value > 0.15)
             mMotionHandler->runZ(+1, ui->spinBox_J_speed->value());
         else if(value < -0.15)
             mMotionHandler->runZ(-1, ui->spinBox_J_speed->value());
         else if((value < 0.15) || (value > -0.15))
             mMotionHandler->endRunZ();
-    } else if(axis == 4 && !J_control_Rotation && !J_control_Z_1){
+    } else if(axis == 2 && !J_control_Rotation && !J_control_Z_1){
+        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> B"<<std::endl;
         if(value > 0.15)
             mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value());
         else if(value < -0.15)
             mMotionHandler->runZ_2(-1, ui->spinBox_J_speed->value());
         else if((value < 0.15) || (value > -0.15))
             mMotionHandler->endRunZ_2();
-    } else if(axis == 4 && J_control_Rotation){
+    } else if(axis == 2 && J_control_Rotation){
+        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C"<<std::endl;
+        //Add feed control on positions to avoid going out of boundry
+        //remove cout in joystick functions
+        //add analogic movements
         if(value > 0.15)
             mMotionHandler->runU(+1, ui->spinBox_J_speed->value());
         else if(value < -0.15)
