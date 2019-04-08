@@ -419,10 +419,12 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             //return true;
             //Size of dot: diameter = 20 um
             //double Calibration; //[px/um]
-            int min_radius = 20*0.5*Calibration; //[px] //14 for SCToptics
-            int max_radius = 30*0.5*Calibration; //[px] //30 for SCToptics
+            int min_radius = 15*0.5*Calibration; //[px] //14 for SCToptics
+            int max_radius = 25*0.5*Calibration; //[px] //30 for SCToptics
+            //int min_radius = 20*0.5*Calibration; //[px] //for Calibration plate
+            //int max_radius = 30*0.5*Calibration; //[px] //for Calibration plate
             int minDist = min_radius*4; //[px]
-            double correction_factor = 0.4; //0.2 for SCToptics
+            double correction_factor = 0.5; //0.2 for SCToptics, 0.4 for calibration plate
             int hough_threshold = min_radius*correction_factor; //[px]
             if(debug)
                 std::cout<<">> calibration "<<Calibration

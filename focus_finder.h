@@ -62,7 +62,7 @@ public slots:
     void   eval_stddev_ROI(const cv::Mat &input_image, std::vector<double> &output);
     bool   find_focus(double &focus_height);
     void   Eval_syst_time();
-    void   Eval_syst_scan();
+    bool Eval_syst_scan();
 
 
 private slots:

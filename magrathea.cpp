@@ -289,8 +289,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
     connect(ui->f_loop_button,SIGNAL(clicked(bool)), this, SLOT(loop_test_images()));
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
-    //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
-    connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
+    connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
+    //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
     connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
 }
 
@@ -341,7 +341,7 @@ void Magrathea::updatePosition(){
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
     //reading fault state for each axis
 
-    return;
+    //return;
 
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
     unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
@@ -891,7 +891,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    double camera_angle = 1.265;
+    double camera_angle = 1.268;
     double target_x_short = - distance_x*0.001*cos(camera_angle) - distance_y*0.001*sin(camera_angle);
     double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
@@ -1374,7 +1374,7 @@ bool Magrathea::loop_test(){
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double camera_angle = 1.265;
+            double camera_angle =  1.268;
             double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
             double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
@@ -1467,7 +1467,7 @@ bool Magrathea::loop_fid_finder(){
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double camera_angle = 1.265;
+        double camera_angle =  1.268;
         double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
         double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image

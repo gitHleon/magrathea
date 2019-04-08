@@ -133,7 +133,9 @@ void Focus_finder::eval_stddev_ROI(const cv::Mat &input_image, std::vector<doubl
 
 bool Focus_finder::find_focus(double &focus_height)
 {
-    const int figure_index = 1;
+    const int figure_index = 1;//Std dev
+    //const int figure_index = 0;//Variance of Laplacian
+
     //Function that return the focus z coordinate
     //https://rechneronline.de/function-graphs/
     //http://doc.qt.io/qt-4.8/signalsandslots.html
@@ -268,47 +270,61 @@ double Focus_finder::EvalVertex_y(double a,double b, double c){
     return num/den;
 }
 
-void Focus_finder::Eval_syst_scan(){
+bool Focus_finder::Eval_syst_scan(){
     //measure the std-dev several times moving the gantry spanning points around the current position
-    int numb_steps = 30;
+    int numb_steps = 36;
+    double z_focus = gantry->whereAmI(1).at(z_pos_index);
     double z_temp = gantry->whereAmI(1).at(z_pos_index);
-    double z_step = 0.01;// to be changed according the units of your gantry and shape of focus-heught distribution
+    double z_step = 0.003;// to be changed according the units of your gantry and shape of focus-height distribution
     qInfo("Performing systematic scan near the focus position : %5.5f",z_temp);
-    if(z_pos_index==2)
-        gantry->moveZBy(-z_step*numb_steps*0.6,1.);
-    else if(z_pos_index ==4)
-        gantry->moveZ_2_By(-z_step*numb_steps*0.6,1.);
+//    if(z_pos_index==2)
+//        gantry->moveZBy(-z_step*numb_steps*0.55,1.);
+//    else if(z_pos_index ==4)
+//        gantry->moveZ_2_By(-z_step*numb_steps*0.55,1.);
     cv::Mat mat_from_outside;
-    for(int i=0; i<numb_steps;i++){
-        if(z_pos_index==2)
-            gantry->moveZBy(z_step,1.);
-        else if(z_pos_index ==4)
-            gantry->moveZ_2_By(z_step,1.);
-        if (cap.isOpened()){
-        mat_from_outside = get_frame_from_camera();
-        } else {
-            qWarning("Error : Not able to open camera.");
-            return;
+    for(int side_direction = 0;side_direction<2;side_direction++){
+        int direction = (side_direction == 0) ? -1 : 1;
+        std::string str_direction = (side_direction == 0) ? "M" : "P";
+        for(int i=0; i<numb_steps;i++){
+            if(i != 0 && z_pos_index==2){
+                if(!gantry->moveZBy(direction*z_step,1.))
+                    return false;
+            }else if(i != 0 && z_pos_index ==4)
+                if(!gantry->moveZ_2_By(direction*z_step,1.))
+                    return false;
+            if (cap.isOpened()){
+                mat_from_outside = get_frame_from_camera();
+            } else {
+                qWarning("Error : Not able to open camera.");
+                return false;
+            }
+            std::vector<double> figures_of_merit;
+            eval_stddev_ROI(mat_from_outside,figures_of_merit);
+            std::string file_name = "focus.txt";
+            std::ofstream ofs (file_name, std::ofstream::app);
+            ofs << i<<" "<<gantry->whereAmI(1).at(z_pos_index) <<" "<<
+                   figures_of_merit[0]<<" "<<figures_of_merit[1]<<" "<<figures_of_merit[2]<<" "<<figures_of_merit[3]<<std::endl;
+            ofs.close();
+            std::string time_now_str = "";
+            int start_x = 15;
+            int start_y = 5;
+            std::string s     = std::to_string(i);
+            std::vector <double> stuff;
+            stuff.clear();
+            stuff.push_back(figures_of_merit[1]);
+            stuff.push_back(gantry->whereAmI(1).at(z_pos_index));
+            cv::Mat RoiImage  = ( (color_int == -1) ? mat_from_outside(get_rect(mat_from_outside)) : get_component(mat_from_outside(get_rect(mat_from_outside)),color_int) );
+            addInfo(RoiImage,"F ",start_x,start_y,3,2,time_now_str,stuff);
+            cv::imwrite("EXPORT/Focus_"+str_direction+"_"+s+".jpg",RoiImage);
         }
-        std::vector<double> figures_of_merit;
-        eval_stddev_ROI(mat_from_outside,figures_of_merit);
-        std::string file_name = "focus.txt";
-        std::ofstream ofs (file_name, std::ofstream::app);
-        ofs << i<<" "<<gantry->whereAmI(1).at(z_pos_index) <<" "<<
-               figures_of_merit[0]<<" "<<figures_of_merit[1]<<" "<<figures_of_merit[2]<<" "<<figures_of_merit[3]<<std::endl;
-        ofs.close();
-        std::string time_now_str = "";
-        int start_x = 15;
-        int start_y = 5;
-        std::string s     = std::to_string(i);
-        std::vector <double> stuff;
-        stuff.clear();
-        stuff.push_back(figures_of_merit[0]);
-        stuff.push_back(gantry->whereAmI(1).at(z_pos_index));
-        cv::Mat RoiImage  = ( (color_int == -1) ? mat_from_outside(get_rect(mat_from_outside)) : get_component(mat_from_outside(get_rect(mat_from_outside)),color_int) );
-        addInfo(RoiImage,"F ",start_x,start_y,2,2,time_now_str,stuff);
-        cv::imwrite("EXPORT/Focus_"+time_now_str+"_"+s+".jpg",RoiImage);
+        if(z_pos_index==2){
+            if(!gantry->moveZTo(z_focus,2.))
+                return false;
+        }else if(z_pos_index ==4)
+            if(!gantry->moveZ_2_To(z_focus,2.))
+                return false;
     }
+    return true;
 }
 
 void Focus_finder::Eval_syst_time(){
