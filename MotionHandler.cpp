@@ -275,7 +275,14 @@ bool MotionHandler::disableUAxis()
 // Set Limits
 bool MotionHandler::SetLimitsController()
 {
-qInfo("setting limits in the controller, the machine should stop if it gets outside of these boundries");
+    qInfo("setting limits in the controller, the machine should stop if it gets outside of these boundries");
+    return true;
+}
+
+// Set Limits
+bool MotionHandler::SetLimitsController(std::vector <double> & limits)
+{
+    qInfo("setting limits in the controller, the machine should stop if it gets outside of these boundries");
     return true;
 }
 

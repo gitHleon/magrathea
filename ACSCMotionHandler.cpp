@@ -351,27 +351,71 @@ bool ACSCMotionHandler::SetLimitsController()
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&x_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position X axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position X axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&y_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position Y axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position Y axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&z_1_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position Z1 axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&z_2_min,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position Z2 axis: %d ",acsc_GetLastError());
 
     std::string temp2 = "SRLIMIT";
     char * tab2 = new char [temp2.length()+1];
     strcpy (tab2, temp2.c_str());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&x_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position X axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position X axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&y_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position Y axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position Y axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&z_1_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position Z1 axis: %d ",acsc_GetLastError());
     if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&z_2_max,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
+        qWarning("Error set limit position Z2 axis: %d ",acsc_GetLastError());
     return true;
 }
+
+// Set Limits
+bool ACSCMotionHandler::SetLimitsController(std::vector <double> & limits)
+{
+//setting limits in the controller, the machine will stop if it gets outside of these boundries
+//See Commmand and Variable Reference Guide for more info
+    if(limits.size() != 8){
+        qWarning("Error set limit position. wrong limits size");
+        return false;
+    }
+    std::string temp = "SLLIMIT";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+    if(limits.at(0) > limits.at(4))
+        limits.at(0) = limits.at(4) -1.;
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&limits.at(0),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position X axis: %d ",acsc_GetLastError());
+    if(limits.at(1) > limits.at(5))
+        limits.at(1) = limits.at(5) -1.;
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&limits.at(1),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position Y axis: %d ",acsc_GetLastError());
+    if(limits.at(2) > limits.at(6))
+        limits.at(2) = limits.at(6) -1.;
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&limits.at(2),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position Z1 axis: %d ",acsc_GetLastError());
+    if(limits.at(3) > limits.at(7))
+        limits.at(3) = limits.at(7) -1.;
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&limits.at(3),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position Z2 axis: %d ",acsc_GetLastError());
+
+    std::string temp2 = "SRLIMIT";
+    char * tab2 = new char [temp2.length()+1];
+    strcpy (tab2, temp2.c_str());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&limits.at(4),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position X axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&limits.at(5),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position Y axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&limits.at(6),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position Z1 axis: %d ",acsc_GetLastError());
+    if(acsc_WriteReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&limits.at(7),ACSC_SYNCHRONOUS)==0)
+        qWarning("Error set limit position Z2 axis: %d ",acsc_GetLastError());
+    return true;
+}
+
 
 bool ACSCMotionHandler::GetLimitsController(std::vector <double> & limits){
     std::string temp = "SLLIMIT";

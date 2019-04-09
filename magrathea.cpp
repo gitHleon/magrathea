@@ -431,54 +431,46 @@ void Magrathea::updatePosition(){
 //implement motion via this function of magrathea : FreeRun
 
 void Magrathea::J_axes_translator(int index, int axis, double value){
+    const double threshold = 0.15;
     if(index != 0 )
         return; //I want only the main joystick to work
-    if(axis == 0 && (value > 0.15))
-        mMotionHandler->runX(+1, ui->spinBox_J_speed->value());
-    else if(axis == 0 && (value < -0.15))
-        mMotionHandler->runX(-1, ui->spinBox_J_speed->value());
-    else if(axis == 0 && ((value < 0.15) || (value > -0.15)))
+    if(axis == 0 && (value > threshold))
+        mMotionHandler->runX(+1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 0 && (value < -threshold))
+        mMotionHandler->runX(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 0 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunX();
-    else if(axis == 1 && (value > 0.15))
-        mMotionHandler->runY(+1, ui->spinBox_J_speed->value());
-    else if(axis == 1 && (value < -0.15))
-        mMotionHandler->runY(-1, ui->spinBox_J_speed->value());
-    else if(axis == 1 && ((value < 0.15) || (value > -0.15)))
+    else if(axis == 1 && (value > threshold))
+        mMotionHandler->runY(+1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 1 && (value < -threshold))
+        mMotionHandler->runY(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 1 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunY();
     else if(axis == 2 && !J_control_Rotation && J_control_Z_1){
         std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A"<<std::endl;
-        if(value > 0.15)
-            mMotionHandler->runZ(+1, ui->spinBox_J_speed->value());
-        else if(value < -0.15)
-            mMotionHandler->runZ(-1, ui->spinBox_J_speed->value());
-        else if((value < 0.15) || (value > -0.15))
+        if(value > threshold)
+            mMotionHandler->runZ(+1, ui->spinBox_J_speed->value()*value);
+        else if(value < -threshold)
+            mMotionHandler->runZ(-1, ui->spinBox_J_speed->value()*value);
+        else if((value < threshold) || (value > -threshold))
             mMotionHandler->endRunZ();
     } else if(axis == 2 && !J_control_Rotation && !J_control_Z_1){
         std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> B"<<std::endl;
-        if(value > 0.15)
-            mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value());
-        else if(value < -0.15)
-            mMotionHandler->runZ_2(-1, ui->spinBox_J_speed->value());
-        else if((value < 0.15) || (value > -0.15))
+        if(value > threshold)
+            mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value()*value);
+        else if(value < -threshold)
+            mMotionHandler->runZ_2(-1, ui->spinBox_J_speed->value()*value);
+        else if((value < threshold) || (value > -threshold))
             mMotionHandler->endRunZ_2();
     } else if(axis == 2 && J_control_Rotation){
         std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C"<<std::endl;
-        //Add feed control on positions to avoid going out of boundry
-        //remove cout in joystick functions
-        //add analogic movements
-        if(value > 0.15)
-            mMotionHandler->runU(+1, ui->spinBox_J_speed->value());
-        else if(value < -0.15)
-            mMotionHandler->runU(-1, ui->spinBox_J_speed->value());
-        else if((value < 0.15) || (value > -0.15))
+        if(value > threshold)
+            mMotionHandler->runU(+1, ui->spinBox_J_speed->value()*value);
+        else if(value < -threshold)
+            mMotionHandler->runU(-1, ui->spinBox_J_speed->value()*value);
+        else if((value < threshold) || (value > -threshold))
             mMotionHandler->endRunU();
     }
-
-    //check what happens if I change the value of J_control_Rotation and J_control_Z_1
-    //while moving the axes
-    //    mMotionHandler->endRunX();
-    //    mMotionHandler->endRunY();
-
 }
 
 void Magrathea::J_translator(int index, int button, bool pressed){
@@ -491,13 +483,46 @@ void Magrathea::J_translator(int index, int button, bool pressed){
     if(button == 0 && pressed)
         ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-1);
     if(button == 3 && pressed)
-        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+20);
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+15);
     if(button == 2 && pressed)
-        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-20);
-    if(button == 10 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-15);
+    if(button == 5 && pressed){
+        std::vector<double> limits;
+        limits.clear();
+        limits.push_back(ui->doubleSpinBox_X_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_Y_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_1_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_2_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_X_max_lim->value());
+        limits.push_back(ui->doubleSpinBox_Y_max_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_1_max_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_2_max_lim->value());
+        mMotionHandler->SetLimitsController(limits);
+    }
+    if(button == 4 && pressed){
+        std::vector<double> limits;
+        limits.clear();
+        mMotionHandler->GetLimitsController(limits);
+        ui->lineEdit_X_min_lim->setText(QString::number(     limits.at(0), 'f', 3));
+        ui->lineEdit_Y_min_lim->setText(QString::number(    limits.at(1), 'f', 3));
+        ui->lineEdit_Z_1_min_lim->setText(QString::number(    limits.at(2), 'f', 3));
+        ui->lineEdit_Z_2_min_lim->setText(QString::number(    limits.at(3), 'f', 3));
+        ui->lineEdit_X_max_lim->setText(QString::number(    limits.at(4), 'f', 3));
+        ui->lineEdit_Y_max_lim->setText(QString::number(    limits.at(5), 'f', 3));
+        ui->lineEdit_Z_1_max_lim->setText(QString::number(    limits.at(6), 'f', 3));
+        ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
+    }
+    if(button == 10 && pressed){
         J_control_Z_1 = !J_control_Z_1;
-    if(button == 11 && pressed)
+        mMotionHandler->endRunZ();
+        mMotionHandler->endRunZ_2();
+    }
+    if(button == 11 && pressed){
         J_control_Rotation = !J_control_Rotation;
+        mMotionHandler->endRunZ();
+        mMotionHandler->endRunZ_2();
+        mMotionHandler->endRunU();
+    }
     if(button == 9 && pressed)
         emit Run_focus_signal();
 
@@ -1112,6 +1137,20 @@ void Magrathea::connectGantryBoxClicked(bool checked)
             ui->connectGantryBox->setChecked(true);
             mMotionHandler->gantryConnected = true;
         }
+#ifdef  VALENCIA
+    mMotionHandler->SetLimitsController();
+    std::vector<double> limits;
+    limits.clear();
+    mMotionHandler->GetLimitsController(limits);
+    ui->lineEdit_X_min_lim->setText(QString::number(     limits.at(0), 'f', 3));
+    ui->lineEdit_Y_min_lim->setText(QString::number(    limits.at(1), 'f', 3));
+    ui->lineEdit_Z_1_min_lim->setText(QString::number(    limits.at(2), 'f', 3));
+    ui->lineEdit_Z_2_min_lim->setText(QString::number(    limits.at(3), 'f', 3));
+    ui->lineEdit_X_max_lim->setText(QString::number(    limits.at(4), 'f', 3));
+    ui->lineEdit_Y_max_lim->setText(QString::number(    limits.at(5), 'f', 3));
+    ui->lineEdit_Z_1_max_lim->setText(QString::number(    limits.at(6), 'f', 3));
+    ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
+#endif
     } else {
         if (    mMotionHandler->getXAxisState() ||
                 mMotionHandler->getYAxisState() ||

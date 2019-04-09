@@ -435,13 +435,13 @@ void QJoysticks::onPOVEvent (const QJoystickPOVEvent& e)
 void QJoysticks::onAxisEvent (const QJoystickAxisEvent& e)
 {
     if (!isBlacklisted (e.joystick->id)) {
-        std::cout<<" QJ onAxisEvent value : "<<e.value<<" axis : "<<e.axis<<std::endl;
+        //std::cout<<" QJ onAxisEvent value : "<<e.value<<" axis : "<<e.axis<<std::endl;
         if(e.axis == 4)
             return;
         //        auto dummy = ((e.axis == 4) ? 2 : e.axis);
         getInputDevice (e.joystick->id)->axes [e.axis] = e.value;
         //        getInputDevice (e.joystick->id)->axes [dummy] = e.value;
-        std::cout<<" QJ onAxisEvent 2"<<std::endl;
+        //std::cout<<" QJ onAxisEvent 2"<<std::endl;
         emit axisChanged (e.joystick->id, e.axis, e.value);
     }
 }
