@@ -447,7 +447,7 @@ void Magrathea::J_axes_translator(int index, int axis, double value){
     else if(axis == 1 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunY();
     else if(axis == 2 && !J_control_Rotation && J_control_Z_1){
-        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A"<<std::endl;
+        //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A"<<std::endl;
         if(value > threshold)
             mMotionHandler->runZ(+1, ui->spinBox_J_speed->value()*value);
         else if(value < -threshold)
@@ -455,7 +455,7 @@ void Magrathea::J_axes_translator(int index, int axis, double value){
         else if((value < threshold) || (value > -threshold))
             mMotionHandler->endRunZ();
     } else if(axis == 2 && !J_control_Rotation && !J_control_Z_1){
-        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> B"<<std::endl;
+        //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> B"<<std::endl;
         if(value > threshold)
             mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value()*value);
         else if(value < -threshold)
@@ -463,7 +463,7 @@ void Magrathea::J_axes_translator(int index, int axis, double value){
         else if((value < threshold) || (value > -threshold))
             mMotionHandler->endRunZ_2();
     } else if(axis == 2 && J_control_Rotation){
-        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C"<<std::endl;
+        //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C"<<std::endl;
         if(value > threshold)
             mMotionHandler->runU(+1, ui->spinBox_J_speed->value()*value);
         else if(value < -threshold)
@@ -487,6 +487,7 @@ void Magrathea::J_translator(int index, int button, bool pressed){
     if(button == 2 && pressed)
         ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-15);
     if(button == 5 && pressed){
+        //std::cout<<"buuton 5"<<std::endl;
         std::vector<double> limits;
         limits.clear();
         limits.push_back(ui->doubleSpinBox_X_min_lim->value());
@@ -500,6 +501,8 @@ void Magrathea::J_translator(int index, int button, bool pressed){
         mMotionHandler->SetLimitsController(limits);
     }
     if(button == 4 && pressed){
+        //to be merged in one button
+        //std::cout<<"buuton 4"<<std::endl;
         std::vector<double> limits;
         limits.clear();
         mMotionHandler->GetLimitsController(limits);
@@ -1138,18 +1141,24 @@ void Magrathea::connectGantryBoxClicked(bool checked)
             mMotionHandler->gantryConnected = true;
         }
 #ifdef  VALENCIA
-    mMotionHandler->SetLimitsController();
-    std::vector<double> limits;
-    limits.clear();
-    mMotionHandler->GetLimitsController(limits);
-    ui->lineEdit_X_min_lim->setText(QString::number(     limits.at(0), 'f', 3));
-    ui->lineEdit_Y_min_lim->setText(QString::number(    limits.at(1), 'f', 3));
-    ui->lineEdit_Z_1_min_lim->setText(QString::number(    limits.at(2), 'f', 3));
-    ui->lineEdit_Z_2_min_lim->setText(QString::number(    limits.at(3), 'f', 3));
-    ui->lineEdit_X_max_lim->setText(QString::number(    limits.at(4), 'f', 3));
-    ui->lineEdit_Y_max_lim->setText(QString::number(    limits.at(5), 'f', 3));
-    ui->lineEdit_Z_1_max_lim->setText(QString::number(    limits.at(6), 'f', 3));
-    ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
+        if(!mMotionHandler->SetLimitsController())
+            return;
+        std::vector<double> limits;
+        limits.clear();
+        if(!mMotionHandler->GetLimitsController(limits))
+            return;
+        if(limits.size() != 8){
+            qWarning("Error get limit position. wrong limits size");
+            return;
+        }
+        ui->lineEdit_X_min_lim->setText(QString::number(     limits.at(0), 'f', 3));
+        ui->lineEdit_Y_min_lim->setText(QString::number(    limits.at(1), 'f', 3));
+        ui->lineEdit_Z_1_min_lim->setText(QString::number(    limits.at(2), 'f', 3));
+        ui->lineEdit_Z_2_min_lim->setText(QString::number(    limits.at(3), 'f', 3));
+        ui->lineEdit_X_max_lim->setText(QString::number(    limits.at(4), 'f', 3));
+        ui->lineEdit_Y_max_lim->setText(QString::number(    limits.at(5), 'f', 3));
+        ui->lineEdit_Z_1_max_lim->setText(QString::number(    limits.at(6), 'f', 3));
+        ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
 #endif
     } else {
         if (    mMotionHandler->getXAxisState() ||
@@ -1504,7 +1513,6 @@ void Magrathea::destroy_all(){
 }
 
 bool Magrathea::loop_test(){
-    //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int j=0;j<70;j++){//set appropriate value of the loop limit
@@ -1539,7 +1547,6 @@ bool Magrathea::loop_test(){
 }
 
 bool Magrathea::loop_find_circles(){
-    //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
     for(int j=0;j<30;j++){//set appropriate value of the loop limit
         ui->chip_number_spinBox->setValue(j);
@@ -1605,7 +1612,6 @@ bool Magrathea::loop_test_images(){
 }
 
 bool Magrathea::loop_fid_finder(){
-    //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int i=0;i<4;i++){//set appropriate value of the loop limit
