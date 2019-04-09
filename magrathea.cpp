@@ -22,6 +22,7 @@
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
 #include <ACSCMotionHandler.h>
+#include <QJoysticks.h>
 #endif
 
 std::string type2str(int type);
@@ -47,6 +48,7 @@ Magrathea::Magrathea(QWidget *parent) :
 #elif VALENCIA
     qInfo("Valencia, ACSC gantry");
     mMotionHandler = new ACSCMotionHandler();
+    QJoysticks* J_instance = QJoysticks::getInstance();
 #else
 #define DEBUG
     qInfo("where is your gantry?");
@@ -193,6 +195,21 @@ Magrathea::Magrathea(QWidget *parent) :
     //////////////////7
     f_locations = new fiducial_locations();
     ///////////////////
+    //------------------------------------------
+    //Real Joystick - Valencia ONLY
+#ifdef  VALENCIA
+    int J_number = J_instance->count();
+    std::cout<<" J_numebr :"<<J_number<<std::endl;
+    QStringList J_list = J_instance->deviceNames();
+    J_number = J_list.size();
+    std::cout<<" J_size :"<<J_number<<std::endl;
+    int J_buttons = J_instance->getNumButtons(0);
+    std::cout<<" J_buttons :"<<J_buttons<<std::endl;
+    connect(J_instance,SIGNAL(buttonChanged(int,int,bool)), this, SLOT(J_translator(int,int,bool)));
+    connect(J_instance,SIGNAL(axisChanged(int,int,double)), this, SLOT(J_axes_translator(int,int,double)));
+    connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
+#endif
+
 
     //------------------------------------------
     //gantry
@@ -237,7 +254,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
     connect(ui->button_measure_30,SIGNAL(clicked(bool)),this,SLOT(loop_find_circles()));
     connect(ui->button_measure_1_well,SIGNAL(clicked(bool)),this,SLOT(loop_fid_finder()));
-
 
     //gantry
     connect(ui->connectGantryBox, SIGNAL(toggled(bool)), this, SLOT(connectGantryBoxClicked(bool)));
@@ -339,10 +355,24 @@ void Magrathea::updatePosition(){
     current =  mMotionHandler->getUAxisState();
     led_label(ui->label_16, current);
     ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
-    //reading fault state for each axis
+
+    //RealJoystick status update
+    if(J_control_Rotation){
+        ui->label_J_control->setStyleSheet("QLabel { background-color : yellow; color : black; }");
+        ui->label_J_control->setText("Rotation");
+    }else{
+        if(J_control_Z_1){
+            ui->label_J_control->setStyleSheet("QLabel { background-color : green; color : white; }");
+            ui->label_J_control->setText("Z 1");
+        }else{
+            ui->label_J_control->setStyleSheet("QLabel { background-color : green; color : white; }");
+            ui->label_J_control->setText("Z 2");
+        }
+    }
 
     //return;
 
+    //reading fault state for each axis
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
     unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
     //GETMASK(index, size) (((1 << (size)) - 1) << (index))
@@ -392,6 +422,115 @@ void Magrathea::updatePosition(){
 
     return;
 }
+
+//******************************************
+//real joystick
+
+//Add an oter translator for the axischanged event
+//Add analogic speed control
+//implement motion via this function of magrathea : FreeRun
+
+void Magrathea::J_axes_translator(int index, int axis, double value){
+    const double threshold = 0.15;
+    if(index != 0 )
+        return; //I want only the main joystick to work
+    if(axis == 0 && (value > threshold))
+        mMotionHandler->runX(+1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 0 && (value < -threshold))
+        mMotionHandler->runX(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 0 && ((value < threshold) || (value > -threshold)))
+        mMotionHandler->endRunX();
+    else if(axis == 1 && (value > threshold))
+        mMotionHandler->runY(+1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 1 && (value < -threshold))
+        mMotionHandler->runY(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 1 && ((value < threshold) || (value > -threshold)))
+        mMotionHandler->endRunY();
+    else if(axis == 2 && !J_control_Rotation && J_control_Z_1){
+        //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A"<<std::endl;
+        if(value > threshold)
+            mMotionHandler->runZ(+1, ui->spinBox_J_speed->value()*value);
+        else if(value < -threshold)
+            mMotionHandler->runZ(-1, ui->spinBox_J_speed->value()*value);
+        else if((value < threshold) || (value > -threshold))
+            mMotionHandler->endRunZ();
+    } else if(axis == 2 && !J_control_Rotation && !J_control_Z_1){
+        //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> B"<<std::endl;
+        if(value > threshold)
+            mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value()*value);
+        else if(value < -threshold)
+            mMotionHandler->runZ_2(-1, ui->spinBox_J_speed->value()*value);
+        else if((value < threshold) || (value > -threshold))
+            mMotionHandler->endRunZ_2();
+    } else if(axis == 2 && J_control_Rotation){
+        //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C"<<std::endl;
+        if(value > threshold)
+            mMotionHandler->runU(+1, ui->spinBox_J_speed->value()*value);
+        else if(value < -threshold)
+            mMotionHandler->runU(-1, ui->spinBox_J_speed->value()*value);
+        else if((value < threshold) || (value > -threshold))
+            mMotionHandler->endRunU();
+    }
+}
+
+void Magrathea::J_translator(int index, int button, bool pressed){
+    //need to translate the generic joystick slots to one specific for every function
+    //An other way may be to add inputs to other functions, but this may be more complicated and less friendly to other sites
+    if(index != 0 )
+        return; //I want only the main joystick to work
+    if(button == 1 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+1);
+    if(button == 0 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-1);
+    if(button == 3 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+15);
+    if(button == 2 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-15);
+    if(button == 5 && pressed){
+        //std::cout<<"buuton 5"<<std::endl;
+        std::vector<double> limits;
+        limits.clear();
+        limits.push_back(ui->doubleSpinBox_X_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_Y_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_1_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_2_min_lim->value());
+        limits.push_back(ui->doubleSpinBox_X_max_lim->value());
+        limits.push_back(ui->doubleSpinBox_Y_max_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_1_max_lim->value());
+        limits.push_back(ui->doubleSpinBox_Z_2_max_lim->value());
+        mMotionHandler->SetLimitsController(limits);
+    }
+    if(button == 4 && pressed){
+        //to be merged in one button
+        //std::cout<<"buuton 4"<<std::endl;
+        std::vector<double> limits;
+        limits.clear();
+        mMotionHandler->GetLimitsController(limits);
+        ui->lineEdit_X_min_lim->setText(QString::number(     limits.at(0), 'f', 3));
+        ui->lineEdit_Y_min_lim->setText(QString::number(    limits.at(1), 'f', 3));
+        ui->lineEdit_Z_1_min_lim->setText(QString::number(    limits.at(2), 'f', 3));
+        ui->lineEdit_Z_2_min_lim->setText(QString::number(    limits.at(3), 'f', 3));
+        ui->lineEdit_X_max_lim->setText(QString::number(    limits.at(4), 'f', 3));
+        ui->lineEdit_Y_max_lim->setText(QString::number(    limits.at(5), 'f', 3));
+        ui->lineEdit_Z_1_max_lim->setText(QString::number(    limits.at(6), 'f', 3));
+        ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
+    }
+    if(button == 10 && pressed){
+        J_control_Z_1 = !J_control_Z_1;
+        mMotionHandler->endRunZ();
+        mMotionHandler->endRunZ_2();
+    }
+    if(button == 11 && pressed){
+        J_control_Rotation = !J_control_Rotation;
+        mMotionHandler->endRunZ();
+        mMotionHandler->endRunZ_2();
+        mMotionHandler->endRunU();
+    }
+    if(button == 9 && pressed)
+        emit Run_focus_signal();
+
+}
+
 
 //******************************************
 //camera
@@ -1001,6 +1140,26 @@ void Magrathea::connectGantryBoxClicked(bool checked)
             ui->connectGantryBox->setChecked(true);
             mMotionHandler->gantryConnected = true;
         }
+#ifdef  VALENCIA
+        if(!mMotionHandler->SetLimitsController())
+            return;
+        std::vector<double> limits;
+        limits.clear();
+        if(!mMotionHandler->GetLimitsController(limits))
+            return;
+        if(limits.size() != 8){
+            qWarning("Error get limit position. wrong limits size");
+            return;
+        }
+        ui->lineEdit_X_min_lim->setText(QString::number(     limits.at(0), 'f', 3));
+        ui->lineEdit_Y_min_lim->setText(QString::number(    limits.at(1), 'f', 3));
+        ui->lineEdit_Z_1_min_lim->setText(QString::number(    limits.at(2), 'f', 3));
+        ui->lineEdit_Z_2_min_lim->setText(QString::number(    limits.at(3), 'f', 3));
+        ui->lineEdit_X_max_lim->setText(QString::number(    limits.at(4), 'f', 3));
+        ui->lineEdit_Y_max_lim->setText(QString::number(    limits.at(5), 'f', 3));
+        ui->lineEdit_Z_1_max_lim->setText(QString::number(    limits.at(6), 'f', 3));
+        ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
+#endif
     } else {
         if (    mMotionHandler->getXAxisState() ||
                 mMotionHandler->getYAxisState() ||
@@ -1354,7 +1513,6 @@ void Magrathea::destroy_all(){
 }
 
 bool Magrathea::loop_test(){
-    //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int j=0;j<70;j++){//set appropriate value of the loop limit
@@ -1389,7 +1547,6 @@ bool Magrathea::loop_test(){
 }
 
 bool Magrathea::loop_find_circles(){
-    //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
     for(int j=0;j<30;j++){//set appropriate value of the loop limit
         ui->chip_number_spinBox->setValue(j);
@@ -1455,7 +1612,6 @@ bool Magrathea::loop_test_images(){
 }
 
 bool Magrathea::loop_fid_finder(){
-    //mMotionHandler->SetLimitsController();
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int i=0;i<4;i++){//set appropriate value of the loop limit
