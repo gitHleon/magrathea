@@ -48,8 +48,9 @@ public slots:
     virtual bool disableUAxis();
 
     //******************************************
-    // gantry current position
+    // gantry position
     virtual std::vector<double> whereAmI(int ific_value = 0);
+    virtual double CurrentAmI(int ific_value = 0);
     // gantry current status
     virtual bool getXAxisState();
     virtual bool getYAxisState();

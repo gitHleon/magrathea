@@ -210,7 +210,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
 #endif
 
-
     //------------------------------------------
     //gantry
     autoRepeatDelay=1000;//ms
@@ -334,6 +333,11 @@ void Magrathea::updatePosition(){
     ui->zAxisPositionLine2->setText(QString::number(   pos_t[2], 'f', 3));
     ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
+
+    double current_t = mMotionHandler->CurrentAmI(1);
+    ui->lineEdit_Z_1_current->setText(QString::number(current_t, 'f', 3));
+    current_t = mMotionHandler->CurrentAmI(2);
+    ui->lineEdit_Z_2_current->setText(QString::number(current_t, 'f', 3));
 
     //axes status update
     bool current =  mMotionHandler->getXAxisState();
@@ -1615,6 +1619,7 @@ bool Magrathea::loop_fid_finder(){
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int i=0;i<4;i++){//set appropriate value of the loop limit
+        QApplication::processEvents();
         std::cout<<"It "<<i<<std::endl;
         std::vector <double> distances;
         int input = ((i==3) ? 3 : 2);
@@ -1707,6 +1712,7 @@ bool Magrathea::calibration_plate_measure(){
     for(int i=0;i<10;i++){//y
         ui->chip_number_spinBox->setValue(i);
         for(int j=0;j<10;j++){//x
+            QApplication::processEvents();
             speed = (i!=0 && j==0) ? 6. : 3.;
             ui->spinBox_input->setValue(j);
             double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);

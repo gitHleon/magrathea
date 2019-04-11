@@ -122,7 +122,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="joystickTab">
         <attribute name="title">
@@ -626,15 +626,8 @@
            </item>
            <item>
             <layout class="QGridLayout" name="gridLayout_8">
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_67">
-               <property name="text">
-                <string>y axis [mm]</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="yAxisPositionLine2">
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="zAxisPositionLine2">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -646,8 +639,8 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
-              <spacer name="horizontalSpacer">
+             <item row="2" column="3">
+              <spacer name="horizontalSpacer_6">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -662,7 +655,21 @@
                </property>
               </spacer>
              </item>
-             <item row="0" column="4" colspan="2">
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_68">
+               <property name="text">
+                <string>z axis [mm]:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_66">
+               <property name="text">
+                <string>x axis [mm]:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="5" colspan="2">
               <widget class="QLineEdit" name="uAxisPositionLine2">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -678,8 +685,27 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QLineEdit" name="zAxisPositionLine2">
+             <item row="1" column="3">
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>50</width>
+                 <height>16</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLineEdit" name="z_2_AxisPositionLine2"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="yAxisPositionLine2">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -691,17 +717,53 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_68">
+             <item row="0" column="4">
+              <widget class="QLabel" name="label_69">
                <property name="text">
-                <string>z axis [mm]:</string>
+                <string>u axis [deg]:</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_66">
+             <item row="0" column="3">
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>50</width>
+                 <height>16</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_5">
                <property name="text">
-                <string>x axis [mm]:</string>
+                <string>z 2 axis [mm]:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <spacer name="horizontalSpacer_18">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_67">
+               <property name="text">
+                <string>y axis [mm]</string>
                </property>
               </widget>
              </item>
@@ -719,66 +781,17 @@
               </widget>
              </item>
              <item row="2" column="2">
-              <spacer name="horizontalSpacer_6">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Fixed</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>50</width>
-                 <height>16</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="1" column="2">
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Fixed</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>50</width>
-                 <height>16</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="3">
-              <widget class="QLabel" name="label_69">
-               <property name="text">
-                <string>u axis [deg]:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_5">
-               <property name="text">
-                <string>z 2 axis [mm]:</string>
-               </property>
-              </widget>
+              <widget class="QLineEdit" name="lineEdit_Z_1_current"/>
              </item>
              <item row="3" column="2">
-              <spacer name="horizontalSpacer_18">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
+              <widget class="QLineEdit" name="lineEdit_Z_2_current"/>
              </item>
-             <item row="3" column="1">
-              <widget class="QLineEdit" name="z_2_AxisPositionLine2"/>
+             <item row="1" column="2">
+              <widget class="QLabel" name="label_36">
+               <property name="text">
+                <string>Current</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>

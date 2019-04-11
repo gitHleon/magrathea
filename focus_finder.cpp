@@ -168,6 +168,7 @@ bool Focus_finder::find_focus(double &focus_height)
                 return false;
         }
         for(int i=0; i<measure_points;i++){
+            QApplication::processEvents();
             if(z_pos_index==2){
                 if(!gantry->moveZBy(z_step[j],1.))
                     return false;
