@@ -1829,3 +1829,44 @@ int Magrathea::FitTestButtonClick(){
     Ffinder->dumb_test();
     return 0;
 }
+
+bool Magrathea::touchDown(const int &ific_value, const double &threshold, const double &velocity){
+    //need to ensure all motion has stopped!!
+    //Add asking for axis status
+    //record average current status
+    double current0 = mMotionHandler->CurrentAmI(ific_value);
+    double current1 = current0;
+    int flag = 1;
+    while (flag > 0){
+        if(ific_value == 1){
+            if(!mMotionHandler->moveZBy(0.005,velocity))
+                return false;
+        }else if(ific_value == 2){
+            if(!mMotionHandler->moveZ_2_By(0.005,velocity))
+                return false;
+        }else
+            return false;
+        double current2 = mMotionHandler->CurrentAmI(ific_value);
+        //Take the difference of two consecutive current measurements (spaced 25 ms apart)
+        double compare0 = current0 - current1;
+        double compare1 = current1 - current2;
+        std::cout<<" C0 : "<<compare0<<" ; C1 : "<<compare1<<std::endl;
+        //Check to see if the differences are both consistent
+        // --> if they are, break from the loop and stop motion
+        if (compare0 > threshold){
+            if (compare1 > threshold){
+                flag = -1;
+            }
+        }
+
+        current0 = current1;
+        current1 = current2;
+    }
+    //Stop motion and move 50 um away to reduce pressure
+    if(!mMotionHandler->moveZ_2_By(0.05,velocity)){ //velocity shuld be ~0.2 mm/sec
+        return false;
+    }
+    return true;
+}
+
+

@@ -73,6 +73,7 @@ private slots:
     void axisStepRepeatBoxClicked(bool checked);
     void AxisEnableDisableButton();
     void led_label(QLabel *label, bool value);
+    bool touchDown(const int &ific_value, const double &threshold, const double &velocity);
 
     //test
     void color_test();
