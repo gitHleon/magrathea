@@ -335,10 +335,9 @@ void Magrathea::updatePosition(){
     ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
 
     double current_t = mMotionHandler->CurrentAmI(1);
-    ui->lineEdit_Z_1_current->setText(QString::number(current_t, 'f', 3));
+    ui->lineEdit_Z_1_current->setText(QString::number(current_t, 'f', 6));
     current_t = mMotionHandler->CurrentAmI(2);
-    ui->lineEdit_Z_2_current->setText(QString::number(current_t, 'f', 3));
-
+    ui->lineEdit_Z_2_current->setText(QString::number(current_t, 'f', 6));
     //axes status update
     bool current =  mMotionHandler->getXAxisState();
     led_label(ui->label_8,  mMotionHandler->getXAxisState());
@@ -1834,10 +1833,13 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
     //need to ensure all motion has stopped!!
     //Add asking for axis status
     //record average current status
+    //VALENCIA ONLY: current is returned in % of maximum motor capability
     double current0 = mMotionHandler->CurrentAmI(ific_value);
     double current1 = current0;
     int flag = 1;
+    int iterations =0;
     while (flag > 0){
+        iterations++;
         if(ific_value == 1){
             if(!mMotionHandler->moveZBy(0.005,velocity))
                 return false;
@@ -1858,9 +1860,50 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
                 flag = -1;
             }
         }
-
+        if(iterations>100)
+            flag = -1;
         current0 = current1;
         current1 = current2;
+
+        ////////////////////////////////////////////////
+        //Debugging and calibration
+        auto one = std::to_string(ui->spinBox_plate_position->value());
+        QTime now = QTime::currentTime();
+        QString time_now = now.toString("hhmmss");
+        std::string timestamp = time_now.toLocal8Bit().constData();
+
+        cv::destroyAllWindows();
+        mCamera->stop(); //closing QCamera
+
+        //make this an independent function
+        //opening camera with opencv
+        cv::Mat mat_from_camera;
+        cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+        if (!cap.isOpened()){
+            //Opening opencv-camera, needed for easier image manipulation
+            QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+            return false;}
+        cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+        cap.set(cv::CAP_PROP_FRAME_WIDTH, 1920);
+        cap.set(cv::CAP_PROP_FRAME_HEIGHT, 1080);
+        cap.set(cv::CAP_PROP_FPS, 25.0);
+        bool bSuccess = cap.read(mat_from_camera);
+        if (!bSuccess){ //if not success
+            qInfo("Cannot read a frame from video stream");
+            return false;
+        }
+        int window_size = mat_from_camera.rows;
+        double Z_value_d = mMotionHandler->whereAmI(1).at(4);
+        std::string Z_value_s = std::to_string(Z_value_d);
+        std::string dummy = std::to_string(iterations);
+        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(255,255,255),2);
+        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
+
+        std::string file_name = "touchDown.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs <<timestamp<<"  "<<iterations<<"  "<<Z_value_d<<"  "<<current1<<"  "<<current2<<std::endl;
+        ofs.close();
+        ////////////////////////////////////////////////////
     }
     //Stop motion and move 50 um away to reduce pressure
     if(!mMotionHandler->moveZ_2_By(0.05,velocity)){ //velocity shuld be ~0.2 mm/sec
