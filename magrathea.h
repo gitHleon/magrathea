@@ -83,7 +83,7 @@ private slots:
     void createTemplate_F();
     bool calibration_plate_measure();
     bool fiducial_chip_measure();
-    int FitTestButtonClick();
+    int  TestButtonClick();
 
 signals:
     void Run_focus_signal();
@@ -93,7 +93,7 @@ private:
 
     cv::Mat sub_frame;
 
-    double mCalibration = 3.62483; //SCT optics 10.035;//3.43;//4.5; //[px/um]
+    double mCalibration = 3.57;// 3.62483; //SCT optics 10.035;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;

@@ -306,7 +306,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
     //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
-    connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
+    connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
 }
 
 //******************************************
@@ -1033,9 +1033,9 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    double camera_angle = 1.268;
-    double target_x_short = - distance_x*0.001*cos(camera_angle) - distance_y*0.001*sin(camera_angle);
-    double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
+    double camera_angle = 1.348;
+    double target_x_short = distance_x*0.001*cos(camera_angle) - distance_y*0.001*sin(camera_angle);
+    double target_y_short = distance_x*0.001*sin(camera_angle) + distance_y*0.001*cos(camera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
     ofs.close();
 #else
@@ -1535,9 +1535,9 @@ bool Magrathea::loop_test(){
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double camera_angle =  1.268;
-            double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
-            double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+            double camera_angle =  1.348;
+            double target_x_short = distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
+            double target_y_short = distances[0]*sin(camera_angle) + distances[1]*cos(camera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
             //std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
             if(!mMotionHandler->moveXBy(-target_x_short,1.))
@@ -1627,14 +1627,27 @@ bool Magrathea::loop_fid_finder(){
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double camera_angle =  1.268;
-        double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
-        double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+        double camera_angle =  1.348;
+        double target_x_short = distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
+        double target_y_short = distances[0]*sin(camera_angle) + distances[1]*cos(camera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
             return false;
         if(!mMotionHandler->moveYBy(-target_y_short,1.))
             return false;
+    }
+    if(sender() == ui->button_measure_1_well){
+        auto one = std::to_string(ui->spinBox_plate_position->value());
+        QTime now = QTime::currentTime();
+        QString time_now = now.toString("hhmmss");
+        std::string timestamp = time_now.toLocal8Bit().constData();
+
+        std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+        std::string file_name = "Calibration_plate_position_"+one+".txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs<<timestamp<<" "<<ui->chip_number_spinBox->value()<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
+        ofs.close();
+        ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value()+1);
     }
     return true;
 }
@@ -1822,10 +1835,8 @@ bool Magrathea::fiducial_chip_measure(){
     return true;
 }
 
-int Magrathea::FitTestButtonClick(){
-    FiducialFinder * Ffinder = new FiducialFinder(this);
-    Ffinder->Set_log(outputLogTextEdit);
-    Ffinder->dumb_test();
+int Magrathea::TestButtonClick(){
+    touchDown(2,0.5,0.2);
     return 0;
 }
 
@@ -1838,13 +1849,28 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
     double current1 = current0;
     int flag = 1;
     int iterations =0;
+    ///////////////////////////////////////////
+    cv::destroyAllWindows();
+    mCamera->stop(); //closing QCamera
+    cv::Mat mat_from_camera;
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return false;}
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 5.0);
+    ////////////////////////////////////////////
     while (flag > 0){
+        QApplication::processEvents();
         iterations++;
         if(ific_value == 1){
-            if(!mMotionHandler->moveZBy(0.005,velocity))
+            if(!mMotionHandler->moveZBy(-0.005,velocity))
                 return false;
         }else if(ific_value == 2){
-            if(!mMotionHandler->moveZ_2_By(0.005,velocity))
+            if(!mMotionHandler->moveZ_2_By(-0.005,velocity))
                 return false;
         }else
             return false;
@@ -1860,7 +1886,7 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
                 flag = -1;
             }
         }
-        if(iterations>100)
+        if(iterations>50)
             flag = -1;
         current0 = current1;
         current1 = current2;
@@ -1872,21 +1898,6 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
         QString time_now = now.toString("hhmmss");
         std::string timestamp = time_now.toLocal8Bit().constData();
 
-        cv::destroyAllWindows();
-        mCamera->stop(); //closing QCamera
-
-        //make this an independent function
-        //opening camera with opencv
-        cv::Mat mat_from_camera;
-        cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-        if (!cap.isOpened()){
-            //Opening opencv-camera, needed for easier image manipulation
-            QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-            return false;}
-        cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-        cap.set(cv::CAP_PROP_FRAME_WIDTH, 1920);
-        cap.set(cv::CAP_PROP_FRAME_HEIGHT, 1080);
-        cap.set(cv::CAP_PROP_FPS, 25.0);
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
             qInfo("Cannot read a frame from video stream");
@@ -1896,7 +1907,7 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
         double Z_value_d = mMotionHandler->whereAmI(1).at(4);
         std::string Z_value_s = std::to_string(Z_value_d);
         std::string dummy = std::to_string(iterations);
-        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(255,255,255),2);
+        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
         cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
 
         std::string file_name = "touchDown.txt";

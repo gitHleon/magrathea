@@ -3,18 +3,19 @@
 
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+    const int verbose_level = 0;
     QString message;
     QByteArray localMsg = msg.toLocal8Bit();
     switch (type) {
     case QtDebugMsg:
         fprintf(stderr, "DEBUG: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        if(Magrathea::outputLogTextEdit != 0)
+        if(Magrathea::outputLogTextEdit != 0 && verbose_level > 1)
             message.sprintf("DEBUG: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
             Magrathea::outputLogTextEdit->append(message);
         break;
     case QtInfoMsg:
         fprintf(stderr, "INFO: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        if(Magrathea::outputLogTextEdit != 0)
+        if(Magrathea::outputLogTextEdit != 0 && verbose_level > 0)
             //message.sprintf("INFO: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
             message.sprintf("%s", localMsg.constData());
             Magrathea::outputLogTextEdit->append(message);
