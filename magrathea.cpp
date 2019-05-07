@@ -236,6 +236,18 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->uAxisPositionLine->setReadOnly(true);
 
     //------------------------------------------
+    //Create combobox for module loading tab
+    ui->Module_comboBox->addItem("R0");
+    ui->Module_comboBox->addItem("R1");
+    ui->Module_comboBox->addItem("R2");
+    ui->Module_comboBox->addItem("R3 Left");
+    ui->Module_comboBox->addItem("R3 Right");
+    ui->Module_comboBox->addItem("R4 Left");
+    ui->Module_comboBox->addItem("R4 Right");
+    ui->Module_comboBox->addItem("R5 Left");
+    ui->Module_comboBox->addItem("R5 Right");
+
+    //------------------------------------------
     //connect signals and slots
 
     //camera
@@ -370,7 +382,7 @@ void Magrathea::updatePosition(){
         }
     }
 
-    //return;
+    return;
 
     //reading fault state for each axis
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
@@ -999,11 +1011,11 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
                                   ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
         double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
         double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-        //add matched fiducial size control
         std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
     } else {
         bool do_fit = ((input == 2) ? false : true);//do fit when inputis different than 2
-        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),do_fit);
+        bool do_single = ((input == 4) ? true : false);//search for single circle
+        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),do_fit,do_single);
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
@@ -1030,9 +1042,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    double camera_angle = 1.268;
-    double target_x_short = - distance_x*0.001*cos(camera_angle) - distance_y*0.001*sin(camera_angle);
-    double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
+    double target_x_short = - distance_x*0.001*cos(mCamera_angle) - distance_y*0.001*sin(mCamera_angle);
+    double target_y_short = distance_x*0.001*sin(mCamera_angle) - distance_y*0.001*cos(mCamera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
     ofs.close();
 #else
@@ -1532,9 +1543,8 @@ bool Magrathea::loop_test(){
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double camera_angle =  1.268;
-            double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
-            double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+            double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+            double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
             //std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
             if(!mMotionHandler->moveXBy(-target_x_short,1.))
@@ -1623,9 +1633,29 @@ bool Magrathea::loop_fid_finder(){
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double camera_angle =  1.268;
-        double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
-        double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+        double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+        double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
+        //ATTENTION! distances[0] is cols, distances[1] is rows of the image
+        if(!mMotionHandler->moveXBy(-target_x_short,1.))
+            return false;
+        if(!mMotionHandler->moveYBy(-target_y_short,1.))
+            return false;
+    }
+    return true;
+}
+
+bool Magrathea::loop_fid_finder(int input){
+    //run fiducial finding algo automatically
+    //and move to the fiducial position
+    for(int i=0;i<3;i++){//set appropriate value of the loop limit
+        std::vector <double> distances;
+        if(!FiducialFinderCaller(input,distances))
+        {
+            std::cout<<"FAIL!!"<<std::endl;
+            return false;
+        }
+        double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+        double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
             return false;
@@ -1818,8 +1848,587 @@ bool Magrathea::fiducial_chip_measure(){
 }
 
 int Magrathea::FitTestButtonClick(){
+
+    //try to add three buttons to mimic the
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Warning", "Module placement error is greater than 20 um! Would you like to adjust the module?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes){
+        std::cout<<" Yes!!!"<<std::endl;
+    }else if(reply == QMessageBox::No){
+        std::cout<<" No!!!"<<std::endl;
+    }else{
+        std::cout<<" Cancel!!!"<<std::endl;
+    }
+    std::cout<<" Something something!"<<std::endl;
+
+    QMessageBox::information(this,
+                                         "Step to be taken by user 2",
+                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+    std::cout<<" Something something!"<<std::endl;
+
     FiducialFinder * Ffinder = new FiducialFinder(this);
     Ffinder->Set_log(outputLogTextEdit);
     Ffinder->dumb_test();
     return 0;
 }
+
+//--------------------------------------------------------
+// Porting from Scott code.
+//Function L744 FindPetal()
+int Magrathea::FindPetal( double &Petalangle, std::vector<double> &Z_coordinates ){
+    cv::destroyAllWindows();
+
+    //Finding first fiducial
+    double petal_1_X = 1234.5; //expected position in absolute gantry coordinates
+    double petal_1_Y = 1234.5;
+    //set these values in an appropriate archive.
+
+    if(!mMotionHandler->moveXTo(petal_1_X,1.))
+        return 1;
+    if(!mMotionHandler->moveYTo(petal_1_Y,1.))
+        return 1;
+
+    //turn on the light (if needed in setup) and autofocus
+    if(!focusButtonClicked())
+        return 1;
+    //find a circle of 300 um diameter
+    if(!loop_fid_finder(4))
+        return false;
+    //Store position somewhere...
+    std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+
+    //Finding second fiducial
+    double petal_2_X = 1234.5;  //expected position in absolute gantry coordinates
+    double petal_2_Y = 1234.5;
+    //set these values in an appropriate archive.
+
+    if(!mMotionHandler->moveXTo(petal_2_X,1.))
+        return 1;
+    if(!mMotionHandler->moveYTo(petal_2_Y,1.))
+        return 1;
+
+    //turn on the light (if needed in setup) and autofocus
+    if(!focusButtonClicked())
+        return 1;
+    //find a circle of 300 um diameter
+    if(!loop_fid_finder(4))
+        return false;
+
+    //Store position somewhere...
+    std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
+
+    //Calculate angle of petal
+    //verify calculation after deciding how the setup is placed on the gantry table
+    Petalangle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
+    //In case of issue, maybe split the function in two equal parts that look for a circle.
+    //Then make the result write into a variable. The latter being used for petal angle evaluation and sequent steps.
+    Z_coordinates.clear();
+    // !!!WARNING!!! fix index according to final camera setup!!!
+    Z_coordinates.push_back(pos_t_1[2]);
+    Z_coordinates.push_back(pos_t_2[2]);
+    return 0;
+}
+
+// Porting from Scott code.
+//Function L1204 Place()
+int Magrathea::PickAndPlaceModule(const double &PetalAngle){
+    cv::destroyAllWindows();
+    double safe_Z_height = -20;
+    double safe_Z_ModulePickUp_height = -40;
+    //This has to be evaluated as function of the position in Z
+    //of the petal. i.e. using Z_coordinates from FindPetal function
+    double safe_Z_ModulePlace_height = -50;
+    double PickUpTool_angle = 45.;
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Warning", "Is module on jig and vacuum available?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return 1;
+    }
+
+    //Think of how we want the drawing of the petal to be made
+    //Maybe load several pictures showing the different steps of the loading.
+
+    //need to load expected positions of the module on the jig and on the petal
+    //then need to adjust expected module position by the mesured rotation of the petal
+
+    //Add lockdown of petal location button
+
+    //Move to first (lower-left) 'F' fiducial on sensor (sensor is still in the jig)
+    //Add motion with the joystick. May avoid problems with small misalignement of the sensors
+
+    std::vector<cv::Point3d> R0_jig_coordinates (5);
+    std::vector<cv::Point3d> R1_jig_coordinates (5);
+    std::vector<cv::Point3d> R2_jig_coordinates (5);
+    std::vector<cv::Point3d> R3_LEFT_jig_coordinates (5);
+    std::vector<cv::Point3d> R3_RIGHT_jig_coordinates (5);
+    std::vector<cv::Point3d> R4_LEFT_jig_coordinates (5);
+    std::vector<cv::Point3d> R4_RIGHT_jig_coordinates (5);
+    std::vector<cv::Point3d> R5_LEFT_jig_coordinates (5);
+    std::vector<cv::Point3d> R6_RIGHT_jig_coordinates (5);
+
+    std::vector<std::vector< cv::Point3d> > Jig_coordinates(9);
+    Jig_coordinates.at(0)= R0_jig_coordinates;
+    Jig_coordinates.at(1)= R1_jig_coordinates;
+    Jig_coordinates.at(2)= R2_jig_coordinates;
+    Jig_coordinates.at(3)= R3_LEFT_jig_coordinates;
+    Jig_coordinates.at(4)= R3_RIGHT_jig_coordinates;
+    Jig_coordinates.at(5)= R4_LEFT_jig_coordinates;
+    Jig_coordinates.at(6)= R4_RIGHT_jig_coordinates;
+    Jig_coordinates.at(7)= R5_LEFT_jig_coordinates;
+    Jig_coordinates.at(8)= R6_RIGHT_jig_coordinates;
+
+    std::vector<cv::Point3d> R0_Petal_coordinates (5);
+    std::vector<cv::Point3d> R1_Petal_coordinates (5);
+    std::vector<cv::Point3d> R2_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R6_RIGHT_Petal_coordinates (5);
+
+    std::vector<double> Module_Petal_angles (9);
+    std::vector<std::vector< cv::Point3d> > Petal_coordinates(9);
+    Petal_coordinates.at(0)= R0_Petal_coordinates;
+    Petal_coordinates.at(1)= R1_Petal_coordinates;
+    Petal_coordinates.at(2)= R2_Petal_coordinates;
+    Petal_coordinates.at(3)= R3_LEFT_Petal_coordinates;
+    Petal_coordinates.at(4)= R3_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(5)= R4_LEFT_Petal_coordinates;
+    Petal_coordinates.at(6)= R4_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(7)= R5_LEFT_Petal_coordinates;
+    Petal_coordinates.at(8)= R6_RIGHT_Petal_coordinates;
+
+    std::vector< cv::Point3d > PickUpTool_coordinates(9);
+
+    int selected_module_index = ui->Module_comboBox->currentIndex();
+
+    if(!mMotionHandler->moveXTo(Jig_coordinates[selected_module_index][0].x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(Jig_coordinates[selected_module_index][0].y,12))
+        return false;
+    //Fix axis according to final camera setup
+    if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][0].z,3))
+        return false;
+    if(!focusButtonClicked())
+        return false;
+    if(!loop_fid_finder(0))
+        return false;
+
+    //Store position somewhere...
+    std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+
+    //Move to second (upper-right) 'F' fiducial on sensor
+
+    if(!mMotionHandler->moveXTo(Jig_coordinates[selected_module_index][1].x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(Jig_coordinates[selected_module_index][1].y,12))
+        return false;
+    //Fix axis according to final camera setup
+    if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][1].z,3))
+        return false;
+    if(!focusButtonClicked())
+        return false;
+    if(!loop_fid_finder(0))
+        return false;
+
+    //Store position somewhere...
+    std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
+
+    //Add maybe a message box?
+    qInfo("Module orientation determined. \n Moving to pick-up tool...");
+
+    //verify calculation after deciding how the setup is placed on the gantry table
+    double module_angle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
+
+    //Move to correct pick-up tool
+    //Fix axis according to final camera setup
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+
+    if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
+        return false;
+
+    //understand what the velocity means for the U axis
+    if(!mMotionHandler->moveUTo(PickUpTool_angle,5))
+        return false;
+
+    //Fix axis according to final camera setup
+    if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z+2,5))
+        return false;
+    //Slowly touch the pickup tool
+    if(!mMotionHandler->moveZBy(-2,0.75))
+        return false;
+
+    //turn ON gantry vacuum
+    QMessageBox::StandardButton info_step;
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user",
+                                         "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    qInfo("Pick-up tool obtained. \n Moving to module...");
+    //Lift pick-up tool up
+    //Fix axis according to final camera setup
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Calculate x,y coordinates of sensor location
+    //rotating by module_angle the fift coordinate, which should be an offset wrt the first fiducial
+    //verify the calculation after the setup is designed
+    double target_x = pos_t_1[0] + Jig_coordinates[selected_module_index][5].x*cos(module_angle) - Jig_coordinates[selected_module_index][5].y*sin(module_angle);
+    double target_y = pos_t_1[1] + Jig_coordinates[selected_module_index][5].x*sin(module_angle) - Jig_coordinates[selected_module_index][5].y*cos(module_angle);
+
+    //Move to correct location over sensor
+    if(!mMotionHandler->moveXTo(target_x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(target_y,12))
+        return false;
+    //rotate pickup tool to align with the sensor
+    //understand what the velocity means for the U axis
+    //verify the calculation after the setup is designed
+    if(!mMotionHandler->moveUBy(module_angle,5))
+        return false;
+
+    //Pick up module
+    if(!mMotionHandler->moveZTo(safe_Z_ModulePickUp_height,3))
+        return false;
+
+    //need to be ported from separate branch.
+    touchDown(2,0.018,0.2);
+
+    //turn OFF gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user 2",
+                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    //Lift up and rotate gantry-vacuum over holes
+    if(!mMotionHandler->moveZBy(7,2))
+        return false;
+
+    if(!mMotionHandler->moveUBy(45,5))
+        return false;
+
+    if(!mMotionHandler->moveZBy(-7,1))
+        return false;
+
+    //turn ON gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user 3",
+                                         "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    // Move over petal and place sensor
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Calculate x,y coordinates of sensor location
+    //rotating by module_angle the fift coordinate, which should be an offset wrt the first fiducial
+    //verify the calculation after the setup is designed
+    target_x = Petal_coordinates[selected_module_index][5].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][5].y*sin(PetalAngle);
+    target_y = Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) + Petal_coordinates[selected_module_index][5].y*cos(PetalAngle);
+
+    //Move to correct location over petal
+    if(!mMotionHandler->moveXTo(target_x,5))
+        return false;
+    if(!mMotionHandler->moveYTo(target_y,5))
+        return false;
+
+    //align module with petal
+    if(!mMotionHandler->moveUTo(PetalAngle + Module_Petal_angles[selected_module_index],5))
+        return false;
+
+    // Move over petal and place sensor
+    if(!mMotionHandler->moveZTo(safe_Z_ModulePlace_height,3))
+        return false;
+
+    //need to be ported from separate branch.
+    touchDown(2,0.016,0.2);
+
+    // Once petal has been found, slowly move down 50 um more to ensure contact
+    if(!mMotionHandler->moveZBy(-0.05,0.2))
+        return false;
+
+    //Store position for module adjustment
+    std::vector <double> pos_t_3 = mMotionHandler->whereAmI(1);
+    cv::Point3d module_bridge_coordinates(pos_t_3[0],pos_t_3[1],pos_t_3[2]);
+
+    //Module in place; waiting 1 minute for glue to settle...
+    //morph it into a window with a timer
+    Sleeper::sleep(60);
+
+    //turn OFF gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user 3",
+                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    // Lift gantry head up (slowly)
+    if(!mMotionHandler->moveZBy(2,0.2))
+        return false;
+
+    qInfo("Proceeding to survey placement...");
+    std::vector <cv::Point3d> Module_offsets;
+    Survey(selected_module_index, PetalAngle, Module_offsets);
+    // Check if any of the errors are greater than 20 um
+    bool big_errors = false;
+    for(unsigned int i=0;i<Module_offsets.size();i++){
+        double offset = sqrt(Module_offsets[i].x*Module_offsets[i].x + Module_offsets[i].y*Module_offsets[i].y);
+        if(offset > 0.02){
+            big_errors = true;
+            qInfo("Fiducial %d is out of range : %5.5f",i,offset);
+        }
+    }
+    if(big_errors){
+        //try to add three buttons to mimic the vancouve 3-option messagebox
+        //https://doc.qt.io/qt-5/qmessagebox.html
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Warning", "Module placement error is greater than 20 um! Would you like to adjust the module?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if(reply == QMessageBox::Yes){
+            //If 'Yes', move to adjust and resurvey the placement (below)
+            //call adjust function
+            //Function inVancouver code does not make sense, rewrite it (or try to understand it...)
+            Adjust_module(module_bridge_coordinates,Module_offsets);
+        }else if(reply == QMessageBox::No){
+            //If 'No', just wait for glue to dry
+            qInfo("Module adjustment skipped by user.");
+        }
+    }
+
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+
+    //Turn lamp over module on petal to green, indicating module has been successfully placed
+    //PetalUpdate(app,app.ModuleDropDown.Value, 2);
+
+    //Putting back the pick up tool
+
+
+    if(!mMotionHandler->moveUBy(45,5))
+        return false;
+    if(!mMotionHandler->moveXTo(module_bridge_coordinates.x,5))
+        return false;
+    if(!mMotionHandler->moveYTo(module_bridge_coordinates.y,5))
+        return false;
+    if(!mMotionHandler->moveZTo(module_bridge_coordinates.z+1,5))
+        return false;
+
+    if(!mMotionHandler->moveZBy(-1,0.25))
+        return false;
+
+    //turn ON gantry vacuum
+    QMessageBox::information(this,
+                             "Step to be taken by user - 4",
+                             "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+    //Slowly lift tool off of module
+    if(!mMotionHandler->moveZBy(0.5,0.1))
+        return false;
+    if(!mMotionHandler->moveZBy(2,0.5))
+        return false;
+    if(!mMotionHandler->moveZTo(safe_Z_height,5))
+        return false;
+
+    //Move tool back to tool holder
+    if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
+        return false;
+    if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z+2,5))
+        return false;
+    //Slowly drop the pickup tool
+    if(!mMotionHandler->moveZBy(-2,0.75))
+        return false;
+
+    //turn OFF gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user - 5",
+                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+    qInfo("Module has been successfully placed!");
+
+    return 0;
+}
+
+//L2383
+// Function for surveying placement results
+// *** When calling function, be sure to check 'motion' in calling
+//     function/callback if motion was complete or stopped
+//function [aveXYZ, motion, cals] = Survey(app, value)
+bool Magrathea::Survey(const int &selected_module_index, const double &PetalAngle, std::vector <cv::Point3d> &Module_offsets){
+    //Load module survey data
+    cv::destroyAllWindows();
+    double safe_Z_height = -20;
+    double safe_Z_height_To_autofocus = -30;
+    std::vector<cv::Point3d> R0_Petal_coordinates (5);
+    std::vector<cv::Point3d> R1_Petal_coordinates (5);
+    std::vector<cv::Point3d> R2_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_RIGHT_Petal_coordinates (5);
+
+    std::vector<double> Module_Petal_angles (9);
+    std::vector<std::vector< cv::Point3d> > Petal_coordinates(9);
+    Petal_coordinates.at(0)= R0_Petal_coordinates;
+    Petal_coordinates.at(1)= R1_Petal_coordinates;
+    Petal_coordinates.at(2)= R2_Petal_coordinates;
+    Petal_coordinates.at(3)= R3_LEFT_Petal_coordinates;
+    Petal_coordinates.at(4)= R3_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(5)= R4_LEFT_Petal_coordinates;
+    Petal_coordinates.at(6)= R4_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(7)= R5_LEFT_Petal_coordinates;
+    Petal_coordinates.at(8)= R5_RIGHT_Petal_coordinates;
+
+    //Fix axis according to final camera setup
+    if(!mMotionHandler->moveZTo(safe_Z_height,10))
+        return false;
+
+    //rotating the expected coordinate of the module on the petal
+    //by the measured angle of the petal: PetalAngle
+
+    //////////////////////////////////////////////////////////////////////////
+    // Calculate x,y coordinates of sensor location
+    //rotating by Petal_angle
+    //verify the calculation after the setup is designed
+
+    //Start survey
+    //Add an "helper" that allows to move the gantry manually
+    //to help the positioning in case of failure
+    std::vector < std::vector <double> > Real_Module_On_Petal_Positions (4);
+    std::vector <cv::Point3d> Petal_Rotated_coordinates(4) ;
+    Module_offsets.clear();
+    for(unsigned int i=0;i<4;i++){//fifth point is the center of the module
+
+        Petal_Rotated_coordinates.at(i).x = Petal_coordinates[selected_module_index][i].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][i].y*sin(PetalAngle) ;
+        Petal_Rotated_coordinates.at(i).y = Petal_coordinates[selected_module_index][i].x*sin(PetalAngle) + Petal_coordinates[selected_module_index][i].y*cos(PetalAngle) ;
+
+        if(!mMotionHandler->moveZTo(safe_Z_height,3))
+            return false;
+
+        //Move to correct location over petal
+        if(!mMotionHandler->moveXTo(Petal_Rotated_coordinates.at(i).x,5))
+            return false;
+        if(!mMotionHandler->moveYTo(Petal_Rotated_coordinates.at(i).y,5))
+            return false;
+
+        if(!mMotionHandler->moveZTo(safe_Z_height_To_autofocus,3))
+            return false;
+
+        //autofocus and find fiducial
+        if(!focusButtonClicked())
+            return false;
+        if(!loop_fid_finder(0))
+            return false;
+
+        //Store position somewhere...
+        Real_Module_On_Petal_Positions[i] = mMotionHandler->whereAmI(1);
+
+        //Calculate offsets
+        //Check axis index after setup is complete
+        cv::Point3d temp_point (Real_Module_On_Petal_Positions[i][0],Real_Module_On_Petal_Positions[i][1],Real_Module_On_Petal_Positions[i][2]);
+        Module_offsets.push_back(Petal_Rotated_coordinates.at(i) - temp_point);
+
+
+    }
+
+    //Do something with the values?
+    //Print them and decide if going on or not?
+
+    return true;
+}
+
+
+
+//L2520
+// Function for adjusting placed module and waiting for glue ot dry
+// *** When calling function, be sure to check 'motion' in calling
+//     function/callback if motion was complete or stopped
+//function motion = Adjust(app, startX,startY,startZ, offsetX,offsetY, adj
+//function [aveXYZ, motion, cals] = Survey(app, value)
+bool Magrathea::Adjust_module(const cv::Point3d &module_bridge_coordinates, const std::vector <cv::Point3d> &Module_offsets){
+    cv::destroyAllWindows();
+    double safe_Z_height = -20;
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+
+    //Functio does not make sense. Rewrite it!!!
+
+    //    if(!mMotionHandler->moveXTo(module_bridge_coordinates.x,5))
+    //        return false;
+    //    if(!mMotionHandler->moveYTo(module_bridge_coordinates.y,5))
+    //        return false;
+    //    if(!mMotionHandler->moveZTo(module_bridge_coordinates.z+1,3))
+    //        return false;
+    //    if(!mMotionHandler->moveZBy(-1,0.2))
+    //        return false;
+
+    //    //turn ON gantry vacuum
+    //    QMessageBox::StandardButton info_step;
+    //    info_step = QMessageBox::information(this,
+    //                                         "Step to be taken by user - adjustement",
+    //                                         "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    //    // Lift module 1/3 thickness of glue (150/3 = 50 um) at 5 um/s
+    //    if(!mMotionHandler->moveZBy(0.05,0.005))
+    //        return false;
+
+    //    // Wait for Z-height to be established before moving in x/y
+    //    Sleeper::sleep(12);
+
+    //    if(!mMotionHandler->moveXTo(Module_offsets[0].x,5))
+    //        return false;
+    //    if(!mMotionHandler->moveYTo(Module_offsets[0].y,5))
+    //        return false;
+    //    Sleeper::sleep(5);
+    return true;
+}
+
+bool Magrathea::touchDown(const int &ific_value, const double &threshold, const double &velocity){
+    //need to be ported from separate branch.
+    return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

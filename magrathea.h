@@ -55,6 +55,7 @@ private slots:
     void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
+    bool loop_fid_finder(int input);
     bool CVCaptureButtonClicked();
     bool loop_find_circles();
     void J_translator(int index, int button, bool pressed);
@@ -74,6 +75,14 @@ private slots:
     void AxisEnableDisableButton();
     void led_label(QLabel *label, bool value);
 
+    //Loading
+    int FindPetal( double &Petalangle, std::vector<double> &Z_coordinates );
+    int PickAndPlaceModule(const double &PetalAngle);
+    bool touchDown(const int &ific_value, const double &threshold, const double &velocity);
+    bool Survey(const int &selected_module_index, const double &PetalAngle, std::vector<cv::Point3d> &Module_offsets);
+    bool Adjust_module(const cv::Point3d &module_bridge_coordinates, const std::vector<cv::Point3d> &Module_offsets);
+
+
     //test
     void color_test();
     void destroy_all();
@@ -92,6 +101,7 @@ private:
 
     cv::Mat sub_frame;
 
+    double mCamera_angle =  1.268;
     double mCalibration = 3.62483; //SCT optics 10.035;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;

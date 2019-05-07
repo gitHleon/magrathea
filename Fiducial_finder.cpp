@@ -343,12 +343,11 @@ cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P
     return Out;
 }
 
-bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit){
+bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit, bool single){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
     bool debug = false;
     bool print_raw = true;
-
 
     if(image.empty()){
         log->append("Error!! Image is empty!!");
@@ -415,8 +414,58 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                 std::string ty =  type2str( image_gray.type() );
                 std::cout<< ty<<std::endl;
             }
-            //------
-            //return true;
+            //-------------------------------------------------------------------------
+            if(single){
+                //Size of dot: diameter = 300 um
+                //double Calibration; //[px/um]
+                int min_radius = 270*0.5*Calibration; //[px]
+                int max_radius = 330*0.5*Calibration; //[px]
+                int minDist = min_radius*4; //[px]
+                double correction_factor = 0.4;
+                int hough_threshold = min_radius*correction_factor; //[px]
+                if(debug)
+                    std::cout<<">> calibration "<<Calibration
+                            <<" min_radius "<<min_radius<<
+                              " max_radius "<<max_radius<<
+                              " hough_threshold "<<hough_threshold<<std::endl;
+                std::vector<cv::Vec4f> circles;
+                circles.clear();
+                //    for(int iterations = 0;;iterations++){
+                //        if(iterations!=0){
+                //            image_gray = enance_contrast(image_gray,2.);
+                //            if(debug)
+                //                cv::imshow("contrast",image_gray);
+                //        }
+                cv::HoughCircles(image_gray, circles, cv::HOUGH_GRADIENT, 1, minDist, 150, hough_threshold, min_radius, max_radius);
+                if(debug)
+                    std::cout<<">> circles "<<circles.size()<<std::endl;
+                cv::Mat RoiImage_out     = RoiImage.clone();
+                //if not exactly one circle go to next iteration and apply modification to the image
+                if(circles.size() != 1)
+                    continue;
+
+                for( size_t i = 0; i < circles.size(); i++ ){
+                    cv::Point2d center(circles[i][0], circles[i][1]);
+                    auto radius = circles[i][2];
+                    auto vote   = circles[i][3];
+                    if(debug)
+                        std::cout<<" radius "<<radius<<" CX "<<center.x<<" CY "<<center.y<< " vote : "<<vote<<std::endl;
+                    // circle center
+                    cv::circle(RoiImage_out, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+                    // circle outline
+                    cv::circle(RoiImage_out, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+                    X_distance = (center.x - RoiImage_out.cols/2)*(1./Calibration); //[um]
+                    Y_distance = (center.y - RoiImage_out.rows/2)*(1./Calibration); //[um]
+                }
+                if(debug)
+                    cv::imshow("3 Results",RoiImage_out);
+                std::string dummy = std::to_string(iterations);
+                std::string one   = std::to_string(input_1);
+                cv::imwrite("EXPORT/CirclePetal_ORIGINAL_"+one+"_"+dummy+".jpg",image);
+                cv::imwrite("EXPORT/CirclePetal_"+one+"_"+dummy+".jpg",RoiImage_out);
+
+                return true;
+            } else { //if Single
             //Size of dot: diameter = 20 um
             //double Calibration; //[px/um]
             int min_radius = 15*0.5*Calibration; //[px] //14 for SCToptics
@@ -433,7 +482,6 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
                           " hough_threshold "<<hough_threshold<<std::endl;
             std::vector<cv::Vec4f> circles;
             circles.clear();
-
             //    for(int iterations = 0;;iterations++){
             //        if(iterations!=0){
             //            image_gray = enance_contrast(image_gray,2.);
@@ -646,8 +694,6 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             }
             //3 evaluate the center of the new square
 
-//            double fitted_square_center_x = 0.;
-//            double fitted_square_center_y = 0.;
             double fitted_square_center_x = starting_value_variables[12];
             double fitted_square_center_y = starting_value_variables[13];
             std::cout<<" "<<fitted_square_center_x<<" "<<fitted_square_center_y<<std::endl;
@@ -668,10 +714,11 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             cv::imwrite("EXPORT/Circles_FIT_"+one+"_"+two+"_"+dummy+".jpg",RoiImage_out_fit);
             return true;
         }
+            }
 
         if(iterations>2)
             break;
-        }
+        }//end loop on Itrations
         return false;
 }
 
