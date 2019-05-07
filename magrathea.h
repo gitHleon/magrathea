@@ -91,7 +91,7 @@ private slots:
     void createTemplate_F();
     bool calibration_plate_measure();
     bool fiducial_chip_measure();
-    int FitTestButtonClick();
+    int TestButtonClick();
 
 signals:
     void Run_focus_signal();
@@ -117,19 +117,6 @@ private:
     bool J_control_Z_1      = true;
     bool J_control_Rotation = true;
     double J_axis_speed     = 1.0;
-
-    //keyboard shortcut for joystick
-//    QShortcut *shortcut_PX;
-//    QShortcut *shortcut_NX;
-//    QShortcut *shortcut_PY;
-//    QShortcut *shortcut_NY;
-//    QShortcut *shortcut_PZ;
-//    QShortcut *shortcut_NZ;
-//    QShortcut *shortcut_PZ_2;
-//    QShortcut *shortcut_NZ_2;
-//    QShortcut *shortcut_PU;
-//    QShortcut *shortcut_NU;
-//    QShortcut *shortcut_STOP;
 
 };
 

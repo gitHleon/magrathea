@@ -725,13 +725,20 @@ bool MotionHandler::endRunU()
 }
 
 //******************************************
-//gantry current position
+//gantry position
 std::vector<double> MotionHandler::whereAmI(int ific_value) {
     std::vector<double> position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     if (gantryConnected) {
         position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     }
     return position;
+}
+
+//******************************************
+//gantry current position
+double MotionHandler::CurrentAmI(int ific_value) {
+    double current = qQNaN();
+    return current;
 }
 
 //******************************************

@@ -5,38 +5,48 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
 {
     QString message;
     QByteArray localMsg = msg.toLocal8Bit();
+    const int verbose_level = 3;
     switch (type) {
     case QtDebugMsg:
-        fprintf(stderr, "DEBUG: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        if(Magrathea::outputLogTextEdit != 0)
-            message.sprintf("DEBUG: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
-            Magrathea::outputLogTextEdit->append(message);
+        if(verbose_level <= 1){
+            fprintf(stderr, "DEBUG: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+            if(Magrathea::outputLogTextEdit != 0)
+                message.sprintf("DEBUG: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
+            Magrathea::outputLogTextEdit->append(message);}
         break;
     case QtInfoMsg:
-        fprintf(stderr, "INFO: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        if(Magrathea::outputLogTextEdit != 0)
-            //message.sprintf("INFO: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
-            message.sprintf("%s", localMsg.constData());
+        if(verbose_level <=2){
+            fprintf(stderr, "INFO: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+            if(Magrathea::outputLogTextEdit != 0)
+                //message.sprintf("INFO: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
+                message.sprintf("%s", localMsg.constData());
             Magrathea::outputLogTextEdit->append(message);
+        }
         break;
     case QtWarningMsg:
-        fprintf(stderr, "WARNING: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        if(Magrathea::outputLogTextEdit != 0)
-            //message.sprintf("WARNING: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
-            message.sprintf("WARNING: %s", localMsg.constData());
+        if(verbose_level <=3){
+            fprintf(stderr, "WARNING: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+            if(Magrathea::outputLogTextEdit != 0)
+                //message.sprintf("WARNING: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
+                message.sprintf("WARNING: %s", localMsg.constData());
             Magrathea::outputLogTextEdit->append(message);
+        }
         break;
     case QtCriticalMsg:
-        fprintf(stderr, "CRITICAL: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        if(Magrathea::outputLogTextEdit != 0)
-            message.sprintf("CRITICAL: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
+        if(verbose_level <=4){
+            fprintf(stderr, "CRITICAL: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+            if(Magrathea::outputLogTextEdit != 0)
+                message.sprintf("CRITICAL: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
             Magrathea::outputLogTextEdit->append(message);
+        }
         break;
     case QtFatalMsg:
-        fprintf(stderr, "FATAL: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        if(Magrathea::outputLogTextEdit != 0)
-            message.sprintf("FATAL: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
+        if(verbose_level <=5){
+            fprintf(stderr, "FATAL: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+            if(Magrathea::outputLogTextEdit != 0)
+                message.sprintf("FATAL: %s (%s:%u, %s)", localMsg.constData(), context.file, context.line, context.function);
             Magrathea::outputLogTextEdit->append(message);
+        }
         abort();
     }
 }

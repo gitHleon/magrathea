@@ -319,7 +319,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
     //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
-    connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
+    connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
 }
 
 //******************************************
@@ -346,6 +346,11 @@ void Magrathea::updatePosition(){
     ui->zAxisPositionLine2->setText(QString::number(   pos_t[2], 'f', 3));
     ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
+
+    double current_t = mMotionHandler->CurrentAmI(1);
+    ui->lineEdit_Z_1_current->setText(QString::number(current_t, 'f', 6));
+    current_t = mMotionHandler->CurrentAmI(2);
+    ui->lineEdit_Z_2_current->setText(QString::number(current_t, 'f', 6));
 
     //axes status update
     bool current =  mMotionHandler->getXAxisState();
@@ -1625,6 +1630,7 @@ bool Magrathea::loop_fid_finder(){
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int i=0;i<4;i++){//set appropriate value of the loop limit
+         QApplication::processEvents();
         std::cout<<"It "<<i<<std::endl;
         std::vector <double> distances;
         int input = ((i==3) ? 3 : 2);
@@ -1641,6 +1647,19 @@ bool Magrathea::loop_fid_finder(){
         if(!mMotionHandler->moveYBy(-target_y_short,1.))
             return false;
     }
+    if(sender() == ui->button_measure_1_well){
+        auto one = std::to_string(ui->spinBox_plate_position->value());
+        QTime now = QTime::currentTime();
+        QString time_now = now.toString("hhmmss");
+        std::string timestamp = time_now.toLocal8Bit().constData();
+
+        std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+        std::string file_name = "Calibration_plate_position_"+one+".txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs<<timestamp<<" "<<ui->chip_number_spinBox->value()<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
+        ofs.close();
+        ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value()+1);
+    }
     return true;
 }
 
@@ -1648,6 +1667,7 @@ bool Magrathea::loop_fid_finder(int input){
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int i=0;i<3;i++){//set appropriate value of the loop limit
+        QApplication::processEvents();
         std::vector <double> distances;
         if(!FiducialFinderCaller(input,distances))
         {
@@ -1737,6 +1757,7 @@ bool Magrathea::calibration_plate_measure(){
     for(int i=0;i<10;i++){//y
         ui->chip_number_spinBox->setValue(i);
         for(int j=0;j<10;j++){//x
+            QApplication::processEvents();
             speed = (i!=0 && j==0) ? 6. : 3.;
             ui->spinBox_input->setValue(j);
             double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
@@ -1847,7 +1868,7 @@ bool Magrathea::fiducial_chip_measure(){
     return true;
 }
 
-int Magrathea::FitTestButtonClick(){
+int Magrathea::TestButtonClick(){
 
     //try to add three buttons to mimic the
     QMessageBox::StandardButton reply;
@@ -1863,13 +1884,16 @@ int Magrathea::FitTestButtonClick(){
     std::cout<<" Something something!"<<std::endl;
 
     QMessageBox::information(this,
-                                         "Step to be taken by user 2",
-                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+                             "Step to be taken by user 2",
+                             "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
     std::cout<<" Something something!"<<std::endl;
 
-    FiducialFinder * Ffinder = new FiducialFinder(this);
-    Ffinder->Set_log(outputLogTextEdit);
-    Ffinder->dumb_test();
+    //    FiducialFinder * Ffinder = new FiducialFinder(this);
+    //    Ffinder->Set_log(outputLogTextEdit);
+    //    Ffinder->dumb_test();
+
+    //touchDown(2,0.5,0.2);
+
     return 0;
 }
 
@@ -2389,7 +2413,85 @@ bool Magrathea::Adjust_module(const cv::Point3d &module_bridge_coordinates, cons
 }
 
 bool Magrathea::touchDown(const int &ific_value, const double &threshold, const double &velocity){
-    //need to be ported from separate branch.
+    //need to ensure all motion has stopped!!
+    //Add asking for axis status
+    //record average current status
+    //VALENCIA ONLY: current is returned in % of maximum motor capability
+    double current0 = mMotionHandler->CurrentAmI(ific_value);
+    double current1 = current0;
+    int flag = 1;
+    int iterations =0;
+    ///////////////////////////////////////////
+    cv::destroyAllWindows();
+    mCamera->stop(); //closing QCamera
+    cv::Mat mat_from_camera;
+    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    if (!cap.isOpened()){
+        //Opening opencv-camera, needed for easier image manipulation
+        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+        return false;}
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    cap.set(cv::CAP_PROP_FPS, 5.0);
+    ////////////////////////////////////////////
+    while (flag > 0){
+        QApplication::processEvents();
+        iterations++;
+        if(ific_value == 1){
+            if(!mMotionHandler->moveZBy(-0.005,velocity))
+                return false;
+        }else if(ific_value == 2){
+            if(!mMotionHandler->moveZ_2_By(-0.005,velocity))
+                return false;
+        }else
+            return false;
+        double current2 = mMotionHandler->CurrentAmI(ific_value);
+        //Take the difference of two consecutive current measurements (spaced 25 ms apart)
+        double compare0 = current0 - current1;
+        double compare1 = current1 - current2;
+        std::cout<<" C0 : "<<compare0<<" ; C1 : "<<compare1<<std::endl;
+        //Check to see if the differences are both consistent
+        // --> if they are, break from the loop and stop motion
+        if (compare0 > threshold){
+            if (compare1 > threshold){
+                flag = -1;
+            }
+        }
+        if(iterations>50)
+            flag = -1;
+        current0 = current1;
+        current1 = current2;
+
+        ////////////////////////////////////////////////
+        //Debugging and calibration
+        auto one = std::to_string(ui->spinBox_plate_position->value());
+        QTime now = QTime::currentTime();
+        QString time_now = now.toString("hhmmss");
+        std::string timestamp = time_now.toLocal8Bit().constData();
+
+        bool bSuccess = cap.read(mat_from_camera);
+        if (!bSuccess){ //if not success
+            qInfo("Cannot read a frame from video stream");
+            return false;
+        }
+        int window_size = mat_from_camera.rows;
+        double Z_value_d = mMotionHandler->whereAmI(1).at(4);
+        std::string Z_value_s = std::to_string(Z_value_d);
+        std::string dummy = std::to_string(iterations);
+        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
+        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
+
+        std::string file_name = "touchDown.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs <<timestamp<<"  "<<iterations<<"  "<<Z_value_d<<"  "<<current1<<"  "<<current2<<std::endl;
+        ofs.close();
+        ////////////////////////////////////////////////////
+    }
+    //Stop motion and move 50 um away to reduce pressure
+    if(!mMotionHandler->moveZ_2_By(0.05,velocity)){ //velocity shuld be ~0.2 mm/sec
+        return false;
+    }
     return true;
 }
 

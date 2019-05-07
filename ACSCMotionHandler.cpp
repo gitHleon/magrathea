@@ -1046,6 +1046,27 @@ std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
     return position;
 }
 
+double ACSCMotionHandler::CurrentAmI(int ific_value) {
+    double current_tmp = -8888.8;
+
+    std::string temp = "RMS";
+    char * tab = new char [temp.length()+1];
+    strcpy (tab, temp.c_str());
+
+    if(ific_value == 1){ //Axis Z 1
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&current_tmp,ACSC_SYNCHRONOUS)==0)
+            qWarning("Error get current Z 1 axis: %d ",acsc_GetLastError());
+    }else if (ific_value == 2) {
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&current_tmp,ACSC_SYNCHRONOUS)==0)
+            qWarning("Error get current Z 2 axis: %d ",acsc_GetLastError());
+    }else {
+        qWarning("Error get current");
+        return -8888.8;
+    }
+
+    return current_tmp;
+}
+
 //******************************************
 //Get Axis states
 //------------------------------------------
