@@ -16,8 +16,12 @@
 #include "focus_finder.h"
 #include "Fiducial_finder.h"
 #include "verticalalignmenttool.h"
+#include "serialportwriterandreader.h"
 #include <conio.h>
 #include <fstream>
+#include <iomanip>
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
 #ifdef VANCOUVER
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
@@ -26,6 +30,27 @@
 #endif
 
 std::string type2str(int type);
+
+QByteArray int_tohexQByteArray_UltimusV(int input){
+    auto && oss = std::ostringstream();
+    oss << std::hex << std::setw(2) << std::setfill('0')
+        << input;
+    auto && buf = oss.str();
+    //add the stx
+    QByteArray writeData = QByteArray(buf.c_str());
+    for(int i=0;i<writeData.size();i++){
+        switch (writeData[i]) {
+        case 'a' : writeData[i] = 'A'; break;
+        case 'b' : writeData[i] = 'B'; break;
+        case 'c' : writeData[i] = 'C'; break;
+        case 'd' : writeData[i] = 'D'; break;
+        case 'e' : writeData[i] = 'E'; break;
+        case 'f' : writeData[i] = 'F'; break;
+        default: break;
+        }
+    }
+    return writeData;
+}
 
 //******************************************
 Magrathea::Magrathea(QWidget *parent) :
@@ -210,6 +235,22 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
 #endif
 
+    ///////////////////////////////////////////
+    //Glue dispencer via RS232
+    QSerialPort serialPort;
+    const QString serialPortName = "COM1";
+    serialPort.setPortName(serialPortName);
+
+    const int serialPortBaudRate = QSerialPort::Baud9600;
+    serialPort.setBaudRate(serialPortBaudRate);
+
+    if (!serialPort.open(QIODevice::ReadWrite)) {
+        qWarning("Failed to open port %s, error: %s",serialPortName.toLocal8Bit().constData(),serialPort.errorString().toLocal8Bit().constData());
+    }
+
+    talker = new SerialPortWriterAndReader(&serialPort,this);
+
+    ///////////////////////////////////////////
 
     //------------------------------------------
     //gantry
@@ -334,8 +375,10 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
+
     std::vector <double> pos_t = mMotionHandler->whereAmI(1);
 
+    return;
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
     ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
     ui->zAxisPositionLine->setText(QString::number(    pos_t[2], 'f', 3));
@@ -386,8 +429,6 @@ void Magrathea::updatePosition(){
             ui->label_J_control->setText("Z 2");
         }
     }
-
-    return;
 
     //reading fault state for each axis
     unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
@@ -1870,6 +1911,58 @@ bool Magrathea::fiducial_chip_measure(){
 
 int Magrathea::TestButtonClick(){
 
+    std::vector<std::string> arguments;
+    arguments.push_back("DI  ");
+//    arguments.push_back("PS  ");
+//    arguments.push_back("0500");
+
+    TalkSR232(arguments);
+
+    return 0;
+    int stx = 2;
+    int etx = 3;
+    int eot = 4;
+    int enq = 5;
+    int ack = 6;
+    char ch_stx = static_cast<char>(stx) ;
+    char ch_etx = static_cast<char>(etx) ;
+    char ch_eot = static_cast<char>(eot) ;
+    char ch_enq = static_cast<char>(enq) ;
+    char ch_ack = static_cast<char>(ack) ;
+    QByteArray st_a0 = "A0";
+    QByteArray st_a2 = "A2";
+    QByteArray readData;
+
+    int checksum = 0;
+    int N_bytes = 4*arguments.size();
+    //add the stx
+    QByteArray writeData = QByteArray(&ch_stx);
+    QByteArray temp_writeData = int_tohexQByteArray_UltimusV(N_bytes);
+    for(unsigned int i=0;i<arguments.size();i++){
+        temp_writeData.append(QByteArray(arguments[i].c_str()));
+    }
+    for(int i=0;i<temp_writeData.size();i++){
+        checksum -= temp_writeData[i];
+    }
+    writeData.append(temp_writeData);
+    //take tha least significant byte of checksum
+    //checksum & 0x000000ff;
+    temp_writeData.clear();
+    temp_writeData = int_tohexQByteArray_UltimusV(checksum & 0x000000ff);
+    QByteArray qb_checksum;
+    qb_checksum.clear();
+    if(temp_writeData.size() > 2){
+        std::cout<<"here : "<<temp_writeData.size()<<"  :  "<<temp_writeData.toStdString();
+        qb_checksum = temp_writeData.remove(0,(temp_writeData.size()-2));
+        std::cout<<"  :  "<<qb_checksum.toStdString()<<std::endl;
+    } else {
+        qb_checksum = temp_writeData;
+    }
+    writeData.append(qb_checksum);
+    writeData.append(QByteArray(&ch_etx));
+    std::cout<<" here : "<<writeData.toStdString()<<std::endl;
+
+    return 0;
     //try to add three buttons to mimic the
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "Warning", "Module placement error is greater than 20 um! Would you like to adjust the module?",
@@ -1878,8 +1971,6 @@ int Magrathea::TestButtonClick(){
         std::cout<<" Yes!!!"<<std::endl;
     }else if(reply == QMessageBox::No){
         std::cout<<" No!!!"<<std::endl;
-    }else{
-        std::cout<<" Cancel!!!"<<std::endl;
     }
     std::cout<<" Something something!"<<std::endl;
 
@@ -1900,7 +1991,7 @@ int Magrathea::TestButtonClick(){
 //--------------------------------------------------------
 // Porting from Scott code.
 //Function L744 FindPetal()
-int Magrathea::FindPetal( double &Petalangle, std::vector<double> &Z_coordinates ){
+int Magrathea::FindPetal( double &Petalangle, std::vector<cv::Point3d> &Coordinates ){
     cv::destroyAllWindows();
 
     //Finding first fiducial
@@ -1947,19 +2038,21 @@ int Magrathea::FindPetal( double &Petalangle, std::vector<double> &Z_coordinates
     Petalangle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
     //In case of issue, maybe split the function in two equal parts that look for a circle.
     //Then make the result write into a variable. The latter being used for petal angle evaluation and sequent steps.
-    Z_coordinates.clear();
+    Coordinates.clear();
     // !!!WARNING!!! fix index according to final camera setup!!!
-    Z_coordinates.push_back(pos_t_1[2]);
-    Z_coordinates.push_back(pos_t_2[2]);
+    Coordinates.push_back(cv::Point3d(pos_t_1[0],pos_t_1[1],pos_t_1[2]));
+    Coordinates.push_back(cv::Point3d(pos_t_2[0],pos_t_2[1],pos_t_2[2]));
     return 0;
 }
 
 // Porting from Scott code.
 //Function L1204 Place()
-int Magrathea::PickAndPlaceModule(const double &PetalAngle){
+int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv::Point3d> &Coordinates ){
     cv::destroyAllWindows();
     double safe_Z_height = -20;
     double safe_Z_ModulePickUp_height = -40;
+    double Camera_offset_X = 4321.0;
+    double Camera_offset_Y = 4321.0;
     //This has to be evaluated as function of the position in Z
     //of the petal. i.e. using Z_coordinates from FindPetal function
     double safe_Z_ModulePlace_height = -50;
@@ -2033,7 +2126,6 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle){
         return false;
     if(!mMotionHandler->moveYTo(Jig_coordinates[selected_module_index][0].y,12))
         return false;
-    //Fix axis according to final camera setup
     if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][0].z,3))
         return false;
     if(!focusButtonClicked())
@@ -2041,16 +2133,14 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle){
     if(!loop_fid_finder(0))
         return false;
 
-    //Store position somewhere...
+    //Store real position of fiducial
     std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
 
     //Move to second (upper-right) 'F' fiducial on sensor
-
     if(!mMotionHandler->moveXTo(Jig_coordinates[selected_module_index][1].x,12))
         return false;
     if(!mMotionHandler->moveYTo(Jig_coordinates[selected_module_index][1].y,12))
         return false;
-    //Fix axis according to final camera setup
     if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][1].z,3))
         return false;
     if(!focusButtonClicked())
@@ -2058,7 +2148,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle){
     if(!loop_fid_finder(0))
         return false;
 
-    //Store position somewhere...
+    //Store real position of fiducial
     std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
 
     //Add maybe a message box?
@@ -2104,8 +2194,8 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle){
     // Calculate x,y coordinates of sensor location
     //rotating by module_angle the fift coordinate, which should be an offset wrt the first fiducial
     //verify the calculation after the setup is designed
-    double target_x = pos_t_1[0] + Jig_coordinates[selected_module_index][5].x*cos(module_angle) - Jig_coordinates[selected_module_index][5].y*sin(module_angle);
-    double target_y = pos_t_1[1] + Jig_coordinates[selected_module_index][5].x*sin(module_angle) - Jig_coordinates[selected_module_index][5].y*cos(module_angle);
+    double target_x = pos_t_1[0] + Jig_coordinates[selected_module_index][5].x*cos(module_angle) - Jig_coordinates[selected_module_index][5].y*sin(module_angle) - Camera_offset_X;
+    double target_y = pos_t_1[1] + Jig_coordinates[selected_module_index][5].x*sin(module_angle) - Jig_coordinates[selected_module_index][5].y*cos(module_angle) - Camera_offset_Y;
 
     //Move to correct location over sensor
     if(!mMotionHandler->moveXTo(target_x,12))
@@ -2153,8 +2243,8 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle){
     // Calculate x,y coordinates of sensor location
     //rotating by module_angle the fift coordinate, which should be an offset wrt the first fiducial
     //verify the calculation after the setup is designed
-    target_x = Petal_coordinates[selected_module_index][5].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][5].y*sin(PetalAngle);
-    target_y = Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) + Petal_coordinates[selected_module_index][5].y*cos(PetalAngle);
+    target_x = Petal_coordinates[selected_module_index][5].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) - Camera_offset_X;
+    target_y = Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) + Petal_coordinates[selected_module_index][5].y*cos(PetalAngle) - Camera_offset_Y;
 
     //Move to correct location over petal
     if(!mMotionHandler->moveXTo(target_x,5))
@@ -2170,7 +2260,6 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle){
     if(!mMotionHandler->moveZTo(safe_Z_ModulePlace_height,3))
         return false;
 
-    //need to be ported from separate branch.
     touchDown(2,0.016,0.2);
 
     // Once petal has been found, slowly move down 50 um more to ensure contact
@@ -2412,6 +2501,8 @@ bool Magrathea::Adjust_module(const cv::Point3d &module_bridge_coordinates, cons
     return true;
 }
 
+//Function for "force-sensing"
+//L1680
 bool Magrathea::touchDown(const int &ific_value, const double &threshold, const double &velocity){
     //need to ensure all motion has stopped!!
     //Add asking for axis status
@@ -2495,9 +2586,114 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
     return true;
 }
 
+//Function for gluing (lines)
+//L1014
+bool Magrathea::GlueLines( const std::vector<cv::Point3d> &line_points){
+    if(line_points.size()!=2)
+        return false;
 
+    const double safe_gluing_Z_height = -20.0; //add correction for petal real positioning
+    const double glue_speed = 3.0; //[mm/s]
+//    const std::vector<cv::Point3d> Petal_nominal_coordinates(2);
+//    double Petal_offset_X = Coordinates[0].x-Petal_nominal_coordinates[0].x;
+//    double Petal_offset_Y = Coordinates[0].y-Petal_nominal_coordinates[0].y;
+    //evaluate distance between two points
+    double distance = sqrt(pow((line_points[0].x-line_points[1].x),2)+pow((line_points[0].y-line_points[1].y),2));
+    //double time = distance / glue_speed; //[s]
 
+    //send start dispensing to dispeser
 
+    //Move to correct location over petal
+    if(!mMotionHandler->moveXTo(line_points[0].x,5))
+        return false;
+    if(!mMotionHandler->moveYTo(line_points[0].y,5))
+        return false;
+    if(!mMotionHandler->moveZTo(safe_gluing_Z_height,5))
+        return false;
+
+    //send start dispensing to dispeser
+    //move symultaneously the two axis (verify if this works,
+    //or use the appropriate function to move two axis at a time)
+    mMotionHandler->moveXTo(line_points[0].x,glue_speed);
+    mMotionHandler->moveYTo(line_points[0].y,glue_speed);
+
+    //send end dispensing to dispeser
+
+    return true;
+}
+
+bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
+    int stx = 2;
+    int etx = 3;
+    int eot = 4;
+    int enq = 5;
+    int ack = 6;
+    char ch_stx = static_cast<char>(stx) ;
+    char ch_etx = static_cast<char>(etx) ;
+    char ch_eot = static_cast<char>(eot) ;
+    char ch_enq = static_cast<char>(enq) ;
+    char ch_ack = static_cast<char>(ack) ;
+    QByteArray st_a0 = "A0";
+    QByteArray st_a2 = "A2";
+    QByteArray readData;
+
+    if(!talker->write(&ch_enq))
+        return false;
+    talker->handleReadyRead();
+    talker->GetRead(readData);
+
+    if(readData.size() == 0)
+        return false;
+
+    if(readData.at(0) != ch_ack){
+        return false;
+    }
+
+    //// Composing message in an appropriate way for the Ultimis V (Sec1 of appB of manual)
+    int checksum = 0;
+    int N_bytes = 4*arguments.size();
+    //add the stx
+    QByteArray writeData = QByteArray(&ch_stx);
+    QByteArray temp_writeData = int_tohexQByteArray_UltimusV(N_bytes);
+    for(unsigned int i=0;i<arguments.size();i++){
+        temp_writeData.append(QByteArray(arguments[i].c_str()));
+    }
+    for(int i=0;i<temp_writeData.size();i++){
+        checksum -= writeData[i];
+    }
+    writeData.append(temp_writeData);
+    //take tha least significant byte of checksum
+    //checksum & 0x000000ff;
+    temp_writeData.clear();
+    temp_writeData = int_tohexQByteArray_UltimusV(checksum & 0x000000ff);
+    QByteArray qb_checksum;
+    qb_checksum.clear();
+    if(temp_writeData.size() > 2){
+        std::cout<<"here : "<<temp_writeData.size()<<"  :  "<<temp_writeData.toStdString();
+        qb_checksum = temp_writeData.remove(0,(temp_writeData.size()-2));
+        std::cout<<"  :  "<<qb_checksum.toStdString()<<std::endl;
+    } else {
+        qb_checksum = temp_writeData;
+    }
+    writeData.append(qb_checksum);
+    writeData.append(QByteArray(&ch_etx));
+
+    if(!talker->write(writeData))
+        return false;
+    talker->handleReadyRead();
+    talker->GetRead(readData);
+
+    if(readData != st_a0){
+        return false;
+    }
+
+    if(!talker->write(&ch_eot))
+        return false;
+    talker->handleReadyRead();
+    talker->GetRead(readData);
+
+    return true;
+}
 
 
 

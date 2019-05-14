@@ -1023,23 +1023,23 @@ std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
         std::string temp = "APOS";
         char * tab = new char [temp.length()+1];
         strcpy (tab, temp.c_str());
-        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,X_axis,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position X axis: %d ",acsc_GetLastError());
         position[0] = position_tmp;
 
-        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,Y_axis,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position Y axis: %d ",acsc_GetLastError());
         position[1] = position_tmp;
 
-        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,Z_axis,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position Z axis: %d ",acsc_GetLastError());
         position[2] = position_tmp;
 
-        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_6,ACSC_AXIS_6,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,U_axis,ACSC_AXIS_6,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position U axis: %d ",acsc_GetLastError());
         position[3] = position_tmp;
 
-        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,Z_2_axis,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&position_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get position Z 2 axis: %d ",acsc_GetLastError());
         position[4] = position_tmp;
     }
@@ -1054,10 +1054,10 @@ double ACSCMotionHandler::CurrentAmI(int ific_value) {
     strcpy (tab, temp.c_str());
 
     if(ific_value == 1){ //Axis Z 1
-        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&current_tmp,ACSC_SYNCHRONOUS)==0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,Z_axis,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&current_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get current Z 1 axis: %d ",acsc_GetLastError());
     }else if (ific_value == 2) {
-        if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&current_tmp,ACSC_SYNCHRONOUS)==0)
+        if(acsc_ReadReal(gantry,ACSC_NONE,tab,Z_2_axis,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&current_tmp,ACSC_SYNCHRONOUS)==0)
             qWarning("Error get current Z 2 axis: %d ",acsc_GetLastError());
     }else {
         qWarning("Error get current");
@@ -1141,7 +1141,7 @@ bool ACSCMotionHandler::validate_target_pos_x(double val){
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     double min_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,X_axis,X_axis,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position X axis: %d ",acsc_GetLastError());
         return false;
     }
@@ -1149,7 +1149,7 @@ bool ACSCMotionHandler::validate_target_pos_x(double val){
     char * tab2 = new char [temp2.length()+1];
     strcpy (tab2, temp2.c_str());
     double max_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,X_axis,X_axis,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position X axis: %d ",acsc_GetLastError());
         return false;
     }
@@ -1166,7 +1166,7 @@ bool ACSCMotionHandler::validate_target_pos_y(double val){
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     double min_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,Y_axis,Y_axis,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position Y axis: %d ",acsc_GetLastError());
         return false;
     }
@@ -1174,7 +1174,7 @@ bool ACSCMotionHandler::validate_target_pos_y(double val){
     char * tab2 = new char [temp2.length()+1];
     strcpy (tab2, temp2.c_str());
     double max_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,Y_axis,Y_axis,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position Y axis: %d ",acsc_GetLastError());
         return false;
     }
@@ -1192,7 +1192,7 @@ bool ACSCMotionHandler::validate_target_pos_z_1(double val){
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     double min_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,Z_axis,Z_axis,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
         return false;
     }
@@ -1200,7 +1200,7 @@ bool ACSCMotionHandler::validate_target_pos_z_1(double val){
     char * tab2 = new char [temp2.length()+1];
     strcpy (tab2, temp2.c_str());
     double max_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,Z_axis,Z_axis,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position Z1 axis: %d ",acsc_GetLastError());
         return false;
     }
@@ -1218,7 +1218,7 @@ bool ACSCMotionHandler::validate_target_pos_z_2(double val){
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     double min_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab,Z_2_axis,Z_2_axis,ACSC_NONE,ACSC_NONE,&min_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
         return false;
     }
@@ -1226,7 +1226,7 @@ bool ACSCMotionHandler::validate_target_pos_z_2(double val){
     char * tab2 = new char [temp2.length()+1];
     strcpy (tab2, temp2.c_str());
     double max_lim_temp = 0.0;
-    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
+    if(acsc_ReadReal(gantry,ACSC_NONE,tab2,Z_2_axis,Z_2_axis,ACSC_NONE,ACSC_NONE,&max_lim_temp,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get position Z2 axis: %d ",acsc_GetLastError());
         return false;
     }
