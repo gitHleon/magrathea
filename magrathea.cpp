@@ -237,18 +237,31 @@ Magrathea::Magrathea(QWidget *parent) :
 
     ///////////////////////////////////////////
     //Glue dispencer via RS232
+
+//    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+//            std::cout << "Name : " << info.portName().toLocal8Bit().constData()<<std::endl;
+//            std::cout << "Description : " << info.description().toLocal8Bit().constData()<<std::endl;
+//            std::cout << "Manufacturer: " << info.manufacturer().toLocal8Bit().constData()<<std::endl;
+
+//            // Example use QSerialPort
+//            QSerialPort serial;
+//            serial.setPort(info);
+//            if (serial.open(QIODevice::ReadWrite))
+//                serial.close();
+//        }
+
     QSerialPort serialPort;
     const QString serialPortName = "COM1";
     serialPort.setPortName(serialPortName);
-
-    const int serialPortBaudRate = QSerialPort::Baud9600;
+    const int serialPortBaudRate = QSerialPort::Baud115200;
     serialPort.setBaudRate(serialPortBaudRate);
 
     if (!serialPort.open(QIODevice::ReadWrite)) {
         qWarning("Failed to open port %s, error: %s",serialPortName.toLocal8Bit().constData(),serialPort.errorString().toLocal8Bit().constData());
+    }else {
+        std::cout<<"COM1 port opened successfully"<<std::endl;
     }
-
-    talker = new SerialPortWriterAndReader(&serialPort,this);
+    talker = new SerialPortWriterAndReader(&serialPort, this);
 
     ///////////////////////////////////////////
 
@@ -2637,9 +2650,12 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     QByteArray st_a2 = "A2";
     QByteArray readData;
 
+    std::cout<<" ok 1 "<<std::endl;
     if(!talker->write(&ch_enq))
         return false;
+    std::cout<<" ok 2 "<<std::endl;
     talker->handleReadyRead();
+    std::cout<<" ok 3 "<<std::endl;
     talker->GetRead(readData);
 
     if(readData.size() == 0)
@@ -2649,6 +2665,7 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
         return false;
     }
 
+    std::cout<<" ok 4 "<<std::endl;
     //// Composing message in an appropriate way for the Ultimis V (Sec1 of appB of manual)
     int checksum = 0;
     int N_bytes = 4*arguments.size();
@@ -2678,6 +2695,7 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     writeData.append(qb_checksum);
     writeData.append(QByteArray(&ch_etx));
 
+    std::cout<<" ok 5 "<<std::endl;
     if(!talker->write(writeData))
         return false;
     talker->handleReadyRead();

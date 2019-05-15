@@ -1,4 +1,5 @@
 #include "serialportwriterandreader.h"
+#include <QtSerialPort/QSerialPortInfo>
 
 //https://doc.qt.io/qt-5/qtserialport-cwriterasync-serialportwriter-cpp.html
 
@@ -84,10 +85,28 @@ bool SerialPortWriterAndReader::handleError(QSerialPort::SerialPortError serialP
 
 bool SerialPortWriterAndReader::write(const QByteArray &writeData)
 {
+
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+        m_standardOutput << "Name : " << info.portName().toLocal8Bit().constData()<<endl;
+        m_standardOutput << "Description : " << info.description().toLocal8Bit().constData()<<endl;
+        m_standardOutput << "Manufacturer: " << info.manufacturer().toLocal8Bit().constData()<<endl;
+
+        // Example use QSerialPort
+        QSerialPort serial;
+        serial.setPort(info);
+        if (serial.open(QIODevice::ReadWrite))
+            m_standardOutput<<" >> here 0 "<<endl;
+            serial.write(writeData);
+            m_standardOutput<<" >> here 00 "<<endl; //this works!!!
+            serial.close();
+    }
+
+    m_writeData.clear();
     m_writeData = writeData;
+    m_standardOutput<<" >> here 1 "<<endl;
+    const qint64 bytesWritten = m_serialPort->write(writeData); //this NOT works!!!
 
-    const qint64 bytesWritten = m_serialPort->write(writeData);
-
+    m_standardOutput<<" >> here 1 "<<endl;
     if (bytesWritten == -1) {
         m_standardOutput << QObject::tr("Failed to write the data to port %1, error: %2")
                             .arg(m_serialPort->portName())
