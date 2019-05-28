@@ -16,7 +16,6 @@
 #include "focus_finder.h"
 #include "Fiducial_finder.h"
 #include "verticalalignmenttool.h"
-#include "serialportwriterandreader.h"
 #include <conio.h>
 #include <fstream>
 #include <iomanip>
@@ -234,37 +233,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(J_instance,SIGNAL(axisChanged(int,int,double)), this, SLOT(J_axes_translator(int,int,double)));
     connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
 #endif
-
-    ///////////////////////////////////////////
-    //Glue dispencer via RS232
-
-//    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-//            std::cout << "Name : " << info.portName().toLocal8Bit().constData()<<std::endl;
-//            std::cout << "Description : " << info.description().toLocal8Bit().constData()<<std::endl;
-//            std::cout << "Manufacturer: " << info.manufacturer().toLocal8Bit().constData()<<std::endl;
-
-//            // Example use QSerialPort
-//            QSerialPort serial;
-//            serial.setPort(info);
-//            if (serial.open(QIODevice::ReadWrite))
-//                serial.close();
-//        }
-
-    QSerialPort serialPort;
-    const QString serialPortName = "COM1";
-    serialPort.setPortName(serialPortName);
-    const int serialPortBaudRate = QSerialPort::Baud115200;
-    serialPort.setBaudRate(serialPortBaudRate);
-
-    if (!serialPort.open(QIODevice::ReadWrite)) {
-        qWarning("Failed to open port %s, error: %s",serialPortName.toLocal8Bit().constData(),serialPort.errorString().toLocal8Bit().constData());
-    }else {
-        std::cout<<"COM1 port opened successfully"<<std::endl;
-    }
-    talker = new SerialPortWriterAndReader(&serialPort, this);
-
-    ///////////////////////////////////////////
-
     //------------------------------------------
     //gantry
     autoRepeatDelay=1000;//ms
@@ -1925,57 +1893,14 @@ bool Magrathea::fiducial_chip_measure(){
 int Magrathea::TestButtonClick(){
 
     std::vector<std::string> arguments;
-    arguments.push_back("DI  ");
-//    arguments.push_back("PS  ");
-//    arguments.push_back("0500");
+    //arguments.push_back("DI  ");
+    arguments.push_back("PS  ");
+    arguments.push_back("0500");
 
     TalkSR232(arguments);
 
     return 0;
-    int stx = 2;
-    int etx = 3;
-    int eot = 4;
-    int enq = 5;
-    int ack = 6;
-    char ch_stx = static_cast<char>(stx) ;
-    char ch_etx = static_cast<char>(etx) ;
-    char ch_eot = static_cast<char>(eot) ;
-    char ch_enq = static_cast<char>(enq) ;
-    char ch_ack = static_cast<char>(ack) ;
-    QByteArray st_a0 = "A0";
-    QByteArray st_a2 = "A2";
-    QByteArray readData;
 
-    int checksum = 0;
-    int N_bytes = 4*arguments.size();
-    //add the stx
-    QByteArray writeData = QByteArray(&ch_stx);
-    QByteArray temp_writeData = int_tohexQByteArray_UltimusV(N_bytes);
-    for(unsigned int i=0;i<arguments.size();i++){
-        temp_writeData.append(QByteArray(arguments[i].c_str()));
-    }
-    for(int i=0;i<temp_writeData.size();i++){
-        checksum -= temp_writeData[i];
-    }
-    writeData.append(temp_writeData);
-    //take tha least significant byte of checksum
-    //checksum & 0x000000ff;
-    temp_writeData.clear();
-    temp_writeData = int_tohexQByteArray_UltimusV(checksum & 0x000000ff);
-    QByteArray qb_checksum;
-    qb_checksum.clear();
-    if(temp_writeData.size() > 2){
-        std::cout<<"here : "<<temp_writeData.size()<<"  :  "<<temp_writeData.toStdString();
-        qb_checksum = temp_writeData.remove(0,(temp_writeData.size()-2));
-        std::cout<<"  :  "<<qb_checksum.toStdString()<<std::endl;
-    } else {
-        qb_checksum = temp_writeData;
-    }
-    writeData.append(qb_checksum);
-    writeData.append(QByteArray(&ch_etx));
-    std::cout<<" here : "<<writeData.toStdString()<<std::endl;
-
-    return 0;
     //try to add three buttons to mimic the
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "Warning", "Module placement error is greater than 20 um! Would you like to adjust the module?",
@@ -2607,14 +2532,13 @@ bool Magrathea::GlueLines( const std::vector<cv::Point3d> &line_points){
 
     const double safe_gluing_Z_height = -20.0; //add correction for petal real positioning
     const double glue_speed = 3.0; //[mm/s]
-//    const std::vector<cv::Point3d> Petal_nominal_coordinates(2);
-//    double Petal_offset_X = Coordinates[0].x-Petal_nominal_coordinates[0].x;
-//    double Petal_offset_Y = Coordinates[0].y-Petal_nominal_coordinates[0].y;
+    //    const std::vector<cv::Point3d> Petal_nominal_coordinates(2);
+    //    double Petal_offset_X = Coordinates[0].x-Petal_nominal_coordinates[0].x;
+    //    double Petal_offset_Y = Coordinates[0].y-Petal_nominal_coordinates[0].y;
     //evaluate distance between two points
-    double distance = sqrt(pow((line_points[0].x-line_points[1].x),2)+pow((line_points[0].y-line_points[1].y),2));
+    //    double distance = sqrt(pow((line_points[0].x-line_points[1].x),2)+
+    //            pow((line_points[0].y-line_points[1].y),2));
     //double time = distance / glue_speed; //[s]
-
-    //send start dispensing to dispeser
 
     //Move to correct location over petal
     if(!mMotionHandler->moveXTo(line_points[0].x,5))
@@ -2625,91 +2549,159 @@ bool Magrathea::GlueLines( const std::vector<cv::Point3d> &line_points){
         return false;
 
     //send start dispensing to dispeser
+    //(Ultimus needs to be in steady "mode", see sec 2.2.27 of manual )
+    std::vector<std::string> arguments;
+    arguments.push_back("DI  ");
+    TalkSR232(arguments);
     //move symultaneously the two axis (verify if this works,
     //or use the appropriate function to move two axis at a time)
     mMotionHandler->moveXTo(line_points[0].x,glue_speed);
     mMotionHandler->moveYTo(line_points[0].y,glue_speed);
 
     //send end dispensing to dispeser
+    TalkSR232(arguments);
 
     return true;
 }
 
 bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
-    int stx = 2;
-    int etx = 3;
-    int eot = 4;
-    int enq = 5;
-    int ack = 6;
-    char ch_stx = static_cast<char>(stx) ;
-    char ch_etx = static_cast<char>(etx) ;
-    char ch_eot = static_cast<char>(eot) ;
-    char ch_enq = static_cast<char>(enq) ;
-    char ch_ack = static_cast<char>(ack) ;
-    QByteArray st_a0 = "A0";
-    QByteArray st_a2 = "A2";
+    //    int stx = 2;
+    //    int etx = 3;
+    //    int eot = 4;
+    //    int enq = 5;
+    //    int ack = 6;
+    //    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+    //            std::cout << "Name : " << info.portName().toLocal8Bit().constData()<<std::endl;
+    //            std::cout << "Description : " << info.description().toLocal8Bit().constData()<<std::endl;
+    //            std::cout << "Manufacturer: " << info.manufacturer().toLocal8Bit().constData()<<std::endl;
+    //            // Example use QSerialPort
+    //            QSerialPort serial;
+    //            serial.setPort(info);
+    //            if (serial.open(QIODevice::ReadWrite))
+    //                serial.close();
+    //        }
+    bool debug = false;
     QByteArray readData;
+    QByteArray writeData;
+    QSerialPort serialPort;
+    const QString serialPortName = "COM3"; //to modify according to the serial port used
+    serialPort.setPortName(serialPortName);
+    serialPort.setBaudRate(QSerialPort::Baud115200); // set BaudRate to 115200
+    serialPort.setParity(QSerialPort::NoParity); //set Parity Bit to None
+    serialPort.setStopBits(QSerialPort::OneStop); //set
+    serialPort.setDataBits(QSerialPort::Data8); //DataBits to 8
+    serialPort.setFlowControl(QSerialPort::NoFlowControl);
+    serialPort.close();
+    if (!serialPort.open(QIODevice::ReadWrite)) {
+        qWarning("Failed to open port %s, error: %s",serialPortName.toLocal8Bit().constData(),serialPort.errorString().toLocal8Bit().constData());
+    }else {
+        if (debug)
+            std::cout<<"Port opened successfully"<<std::endl;
+    }
 
-    std::cout<<" ok 1 "<<std::endl;
-    if(!talker->write(&ch_enq))
-        return false;
-    std::cout<<" ok 2 "<<std::endl;
-    talker->handleReadyRead();
-    std::cout<<" ok 3 "<<std::endl;
-    talker->GetRead(readData);
-
-    if(readData.size() == 0)
-        return false;
-
-    if(readData.at(0) != ch_ack){
+    writeData = QByteArrayLiteral("\x05"); //sending enquiry command
+    long long int output = 0;
+    output = serialPort.write(writeData);
+    if (debug)
+        std::cout<<"Log >> bytes written   : "<<output<<" : operation : "<<writeData.toStdString()<<std::endl;
+    if(output == -1){
+        std::cout<<"Error write operation : "<<writeData.toStdString()
+                << " => " << serialPort.errorString().toStdString()<<std::endl;
         return false;
     }
 
-    std::cout<<" ok 4 "<<std::endl;
-    //// Composing message in an appropriate way for the Ultimis V (Sec1 of appB of manual)
+    readData.clear();
+    int control = 0;
+    while(serialPort.isOpen()){ // READING BYTES FROM SERIAL PORT
+        //https://stackoverflow.com/questions/42576537/qt-serial-port-reading
+        if(!serialPort.waitForReadyRead(-1)) //block until new data arrives, dangerous, need a fix
+            std::cout << "Read error: " << serialPort.errorString().toStdString()<<std::endl;
+        else{
+            if (debug)
+                std::cout << "New data available: " << serialPort.bytesAvailable()<<std::endl;
+            readData = serialPort.readAll();
+            if (debug)
+                std::cout << readData.toStdString()<<std::endl;
+            break;
+        }
+        if (control > 1000)
+            break;
+    }// END READING BYTES FROM SERIAL PORT
+    if(readData.size() != 0){
+        if (debug)
+            std::cout<<"Read operation ok : "<<readData.toStdString()<<std::endl;
+        if(readData.at(0) != 6){ //expecting acknowledge command (0x06)
+            std::cout<<"Wrong read : "<<readData.toStdString()<<std::endl;
+            return false;
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////////
+    // Composing message in an appropriate way for the Ultimis V (Sec1 of appB of manual)
     int checksum = 0;
     int N_bytes = 4*arguments.size();
-    //add the stx
-    QByteArray writeData = QByteArray(&ch_stx);
+    writeData = QByteArrayLiteral("\x02"); //https://stackoverflow.com/questions/36327327/is-there-a-shorter-way-to-initialize-a-qbytearray
     QByteArray temp_writeData = int_tohexQByteArray_UltimusV(N_bytes);
-    for(unsigned int i=0;i<arguments.size();i++){
+
+    for(unsigned int i=0;i<arguments.size();i++)
         temp_writeData.append(QByteArray(arguments[i].c_str()));
-    }
-    for(int i=0;i<temp_writeData.size();i++){
-        checksum -= writeData[i];
-    }
+
+    for(int i=0;i<temp_writeData.size();i++)// evauating checksum quantity
+        checksum -= temp_writeData[i];
+
     writeData.append(temp_writeData);
-    //take tha least significant byte of checksum
-    //checksum & 0x000000ff;
+
+    //take tha least significant byte of checksum, i.e. checksum & 0x000000ff
     temp_writeData.clear();
     temp_writeData = int_tohexQByteArray_UltimusV(checksum & 0x000000ff);
     QByteArray qb_checksum;
     qb_checksum.clear();
     if(temp_writeData.size() > 2){
-        std::cout<<"here : "<<temp_writeData.size()<<"  :  "<<temp_writeData.toStdString();
+        if (debug)
+            std::cout<<"here : "<<temp_writeData.size()<<"  :  "<<temp_writeData.toStdString();
         qb_checksum = temp_writeData.remove(0,(temp_writeData.size()-2));
-        std::cout<<"  :  "<<qb_checksum.toStdString()<<std::endl;
+        if (debug)
+            std::cout<<"CS  :  "<<qb_checksum.toStdString()<<std::endl;
     } else {
         qb_checksum = temp_writeData;
+        if (debug)
+            std::cout<<"CS  :  "<<qb_checksum.toStdString()<<std::endl;
     }
+
     writeData.append(qb_checksum);
-    writeData.append(QByteArray(&ch_etx));
+    writeData.append(QByteArrayLiteral("\x03"));
+    writeData.append(QByteArrayLiteral("\x04"));
+    //// END OF COMMAND CONSTRUCTION
 
-    std::cout<<" ok 5 "<<std::endl;
-    if(!talker->write(writeData))
-        return false;
-    talker->handleReadyRead();
-    talker->GetRead(readData);
-
-    if(readData != st_a0){
+    output = serialPort.write(writeData);// SENDING MESSAGE TO ULTIMUS V
+    if (debug)
+        std::cout<<"Log >> bytes written   : "<<output<<" : "<<writeData.toStdString()<<std::endl;
+    if(output == -1){
+        std::cout<<"Error write operation : "<<writeData.toStdString()<<std::endl;
+        std::cout << "error: " << serialPort.errorString().toStdString()<<std::endl;
         return false;
     }
+    //////////// End sending UltimusV command
+    Sleeper::msleep(200);
 
-    if(!talker->write(&ch_eot))
-        return false;
-    talker->handleReadyRead();
-    talker->GetRead(readData);
-
+    readData.clear();
+    control = 0;
+    while(serialPort.isOpen()){ //dangerous, may freez the GUI
+        if(!serialPort.waitForReadyRead(-1)) //block until new data arrives
+            std::cout << "error: " << serialPort.errorString().toStdString()<<std::endl;
+        else{
+            if (debug)
+                std::cout << "2 New data available: " << serialPort.bytesAvailable()<<std::endl;
+            readData.append(serialPort.readAll());
+            if (debug)
+                std::cout << readData.toStdString()<<std::endl;
+            if(readData.at(0) == 2 && readData.at(readData.size()-1) == 3) //expectin A0 command, may add controls on checksum in future
+                break;
+        }
+        if (control > 1000)
+            break;
+    }
+    //////////////////////////////////
+    serialPort.close(); //closing serial port comunication
     return true;
 }
 

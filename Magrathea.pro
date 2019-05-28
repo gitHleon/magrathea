@@ -33,7 +33,6 @@ SOURCES += \
         MotionHandler.cpp \
 Fiducial_finder.cpp \
     fiducial_locations.cpp \
-    serialportwriterandreader.cpp \
     verticalalignmenttool.cpp \
 #alglib
 alglib-3.14.0\cpp\src\alglibinternal.cpp \
@@ -58,7 +57,6 @@ HEADERS += \
         MotionHandler.h \
 Fiducial_finder.h \
     fiducial_locations.h \
-    serialportwriterandreader.h \
     verticalalignmenttool.h \
 #alglib
 alglib-3.14.0\cpp\src\alglibinternal.h \

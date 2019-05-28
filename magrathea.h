@@ -5,10 +5,8 @@
 #include <QTextEdit>
 #include <QLabel>
 #include <QPushButton>
-//#include <QShortcut>
 #include <opencv2/opencv.hpp>
 #include "fiducial_locations.h"
-#include "serialportwriterandreader.h"
 
 namespace Ui {
 class Magrathea;
@@ -112,7 +110,6 @@ private:
     MotionHandler *mMotionHandler;
     QTimer *mPositionTimer;
     fiducial_locations *f_locations;
-    SerialPortWriterAndReader *talker;
 
     int autoRepeatDelay;
     int autoRepeatInterval;
