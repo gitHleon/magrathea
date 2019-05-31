@@ -318,28 +318,28 @@ int  MotionHandler::GetfaultSateZ2Axis(){
 //******************************************
 //Get Axis states
 //------------------------------------------
-bool MotionHandler::getXAxisState(){
-    return xAxisEnabled;
+void MotionHandler::getXAxisState(std::vector <bool> &state){
+    state.clear();
 }
 
 //------------------------------------------
-bool MotionHandler::getYAxisState(){
-    return yAxisEnabled;
+void MotionHandler::getYAxisState(std::vector <bool> &state){
+    state.clear();
 }
 
 //------------------------------------------
-bool MotionHandler::getZAxisState(){
-    return zAxisEnabled;
+void MotionHandler::getZAxisState(std::vector <bool> &state){
+    state.clear();
 }
 
 //------------------------------------------
-bool MotionHandler::getZ_2_AxisState(){
-    return z_2_AxisEnabled;
+void MotionHandler::getZ_2_AxisState(std::vector <bool> &state){
+    state.clear();
 }
 
 //------------------------------------------
-bool MotionHandler::getUAxisState(){
-    return uAxisEnabled;
+void MotionHandler::getUAxisState(std::vector <bool> &state){
+    state.clear();
 }
 
 //******************************************

@@ -377,25 +377,34 @@ void Magrathea::updatePosition(){
     ui->lineEdit_Z_2_current->setText(QString::number(current_t, 'f', 6));
 
     //axes status update
-    bool current =  mMotionHandler->getXAxisState();
-    led_label(ui->label_8,  mMotionHandler->getXAxisState());
-    ui->EnableButton_X->setText((current ? "Disable" : "Enable"));
+    std::vector <bool> status_axes;
+    std::vector <QString> m_labels(2);
+    m_labels[0] = "STOP";
+    m_labels[1] = "MOVING";
+    mMotionHandler->getXAxisState(status_axes);
+    led_label(ui->label_8, status_axes[0]);
+    led_label(ui->label_9, status_axes[1],m_labels);
+    ui->EnableButton_X->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getYAxisState();
-    led_label(ui->label_10, current);
-    ui->EnableButton_Y->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getYAxisState(status_axes);
+    led_label(ui->label_10, status_axes[0]);
+    led_label(ui->label_11, status_axes[1],m_labels);
+    ui->EnableButton_Y->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getZAxisState();
-    led_label(ui->label_12, current);
-    ui->EnableButton_Z->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getZAxisState(status_axes);
+    led_label(ui->label_12, status_axes[0]);
+    led_label(ui->label_13, status_axes[1],m_labels);
+    ui->EnableButton_Z->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getZ_2_AxisState();
-    led_label(ui->label_14, current);
-    ui->EnableButton_Z_2->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getZ_2_AxisState(status_axes);
+    led_label(ui->label_14, status_axes[0]);
+    led_label(ui->label_15, status_axes[1],m_labels);
+    ui->EnableButton_Z_2->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getUAxisState();
-    led_label(ui->label_16, current);
-    ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getUAxisState(status_axes);
+    led_label(ui->label_16, status_axes[0]);
+    led_label(ui->label_17, status_axes[1],m_labels);
+    ui->EnableButton_U->setText((status_axes[0] ? "Disable" : "Enable"));
 
     //RealJoystick status update
     if(J_control_Rotation){
@@ -411,15 +420,17 @@ void Magrathea::updatePosition(){
         }
     }
 
+    //This part needs to be moved to the ACSCMotionHandler!!!!!!!<<<<<<<<<<<<<<<<<<<<<<
     //reading fault state for each axis
-    unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
-    unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
+    unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit; manual (C library reference, 6.13.5)
+    unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit; manual (C library reference, 6.13.5)
     //GETMASK(index, size) (((1 << (size)) - 1) << (index))
     //READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
     unsigned int fault_state = mMotionHandler->GetfaultSateXAxis();
     unsigned int temp1 = (fault_state & mask1) >> 5;//Software Right Limit
     unsigned int temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
     bool axis_fault = (temp1 || temp2 );
+    //////////////////////////////////////////////////////////////<<<<<<<<<<<<<<<<<<<<
     ui->label_9->setText((axis_fault ? "Out of Env" : "Good"));
     if(axis_fault)
         ui->label_9->setStyleSheet("QLabel { background-color : red; color : black; }");
@@ -1200,11 +1211,21 @@ void Magrathea::connectGantryBoxClicked(bool checked)
         ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
 #endif
     } else {
-        if (    mMotionHandler->getXAxisState() ||
-                mMotionHandler->getYAxisState() ||
-                mMotionHandler->getZAxisState() ||
-                mMotionHandler->getZ_2_AxisState() ||
-                mMotionHandler->getUAxisState()) {
+        std::vector<bool> x_status;
+        mMotionHandler->getXAxisState(x_status);
+        std::vector<bool> y_status;
+        mMotionHandler->getYAxisState(y_status);
+        std::vector<bool> z_status;
+        mMotionHandler->getZAxisState(z_status);
+        std::vector<bool> z2_status;
+        mMotionHandler->getZ_2_AxisState(z2_status);
+        std::vector<bool> u_status;
+        mMotionHandler->getUAxisState(u_status);
+        if (    x_status[0]  ||
+                y_status[0]  ||
+                z_status[0]  ||
+                z2_status[0] ||
+                u_status[0]    ) {
             ui->connectGantryBox->setChecked(true);
             qWarning("disable axes before disconnecting from gantry");
         } else {
@@ -1471,27 +1492,22 @@ void Magrathea::axisStepRepeatBoxClicked(bool checked)
 }
 
 void Magrathea::AxisEnableDisableButton(){
-    bool current = false;
+    std::vector <bool> status_axes;
     if(sender() == ui->EnableButton_X){
-        current = mMotionHandler->getXAxisState();
-        mMotionHandler->enableXAxis(!current);
-        ui->EnableButton_X->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getXAxisState(status_axes);
+        mMotionHandler->enableXAxis(status_axes[0]);
     }else if (sender() == ui->EnableButton_Y){
-        current = mMotionHandler->getYAxisState();
-        mMotionHandler->enableYAxis(!current);
-        ui->EnableButton_Y->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getYAxisState(status_axes);
+        mMotionHandler->enableYAxis(status_axes[0]);
     }else if (sender() == ui->EnableButton_Z){
-        current = mMotionHandler->getZAxisState();
-        mMotionHandler->enableZAxis(!current);
-        ui->EnableButton_Z->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getZAxisState(status_axes);
+        mMotionHandler->enableZAxis(status_axes[0]);
     }else if (sender() == ui->EnableButton_Z_2){
-        current = mMotionHandler->getZ_2_AxisState();
-        mMotionHandler->enableZ_2_Axis(!current);
-        ui->EnableButton_Z_2->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getZ_2_AxisState(status_axes);
+        mMotionHandler->enableZ_2_Axis(status_axes[0]);
     }else if (sender() == ui->EnableButton_U){
-        current = mMotionHandler->getUAxisState();
-        mMotionHandler->enableUAxis(!current);
-        ui->EnableButton_U->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getUAxisState(status_axes);
+        mMotionHandler->enableUAxis(status_axes[0]);
     }else
         qWarning("Warning! Improper use of function AxisEnableDisableButton.");
 }
@@ -1506,6 +1522,21 @@ void Magrathea::led_label(QLabel *label, bool value){
         label->setText("OFF");
     }
 }
+
+void Magrathea::led_label(QLabel *label, bool value, const std::vector <QString> &input){
+    if(input.size() !=2){
+        if(value){
+            label->setStyleSheet("QLabel { background-color : green; color : black; }");
+            label->setText(input[1]);
+        }else{
+            label->setStyleSheet("QLabel { background-color : red; color : white; }");
+            label->setText(input[0]);
+        }
+    } else
+        led_label(label,value);
+
+}
+
 
 void Magrathea::color_test(){
     std::cout<<"here"<<std::endl;

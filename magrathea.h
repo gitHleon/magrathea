@@ -73,6 +73,7 @@ private slots:
     void axisStepRepeatBoxClicked(bool checked);
     void AxisEnableDisableButton();
     void led_label(QLabel *label, bool value);
+    void led_label(QLabel *label, bool value, const std::vector<QString> &input);
 
     //Loading
     int FindPetal(double &Petalangle, std::vector<cv::Point3d> &Coordinates );

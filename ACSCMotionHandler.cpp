@@ -1070,68 +1070,93 @@ double ACSCMotionHandler::CurrentAmI(int ific_value) {
 //******************************************
 //Get Axis states
 //------------------------------------------
-bool ACSCMotionHandler::getXAxisState(){
-    int State;
+void ACSCMotionHandler::getXAxisState(std::vector <bool> &state){
+    state.clear();
+    int m_State;
     if(!gantryConnected)
-        return false;
-    if(!acsc_GetMotorState(gantry,X_axis,&State,ACSC_SYNCHRONOUS)){
+        return;
+    if(!acsc_GetMotorState(gantry,X_axis,&m_State,ACSC_SYNCHRONOUS)){
         qWarning("Error get X axis state: %d ",acsc_GetLastError());
+        state.push_back(false);
+        state.push_back(false);
     }else{
-        xAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+        bool m_AxisEnabled = static_cast<bool>(m_State & ACSC_MST_ENABLE);//manual C library reference 6.9.1
+        bool m_AxisMoving  = static_cast<bool>(m_State & ACSC_MST_MOVE);//manual C library reference 6.9.3
+        state.push_back(m_AxisEnabled);
+        state.push_back(m_AxisMoving);
     }
-    return xAxisEnabled;
 }
 
 //------------------------------------------
-bool ACSCMotionHandler::getYAxisState(){
-    int State;
+void ACSCMotionHandler::getYAxisState(std::vector <bool> &state){
+    state.clear();
+    int m_State;
     if(!gantryConnected)
-        return false;
-    if(!acsc_GetMotorState(gantry,Y_axis,&State,ACSC_SYNCHRONOUS)){
+        return;
+    if(!acsc_GetMotorState(gantry,Y_axis,&m_State,ACSC_SYNCHRONOUS)){
         qWarning("Error get Y axis state: %d ",acsc_GetLastError());
+        state.push_back(false);
+        state.push_back(false);
     }else{
-        yAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+        bool m_AxisEnabled = static_cast<bool>(m_State & ACSC_MST_ENABLE);//manual C library reference 6.9.1
+        bool m_AxisMoving  = static_cast<bool>(m_State & ACSC_MST_MOVE);//manual C library reference 6.9.3
+        state.push_back(m_AxisEnabled);
+        state.push_back(m_AxisMoving);
     }
-    return yAxisEnabled;
 }
 
 //------------------------------------------
-bool ACSCMotionHandler::getZAxisState(){
-    int State;
+void ACSCMotionHandler::getZAxisState(std::vector <bool> &state){
+    state.clear();
+    int m_State;
     if(!gantryConnected)
-        return false;
-    if(!acsc_GetMotorState(gantry,Z_axis,&State,ACSC_SYNCHRONOUS)){
+        return;
+    if(!acsc_GetMotorState(gantry,Z_axis,&m_State,ACSC_SYNCHRONOUS)){
         qWarning("Error get Z axis state: %d ",acsc_GetLastError());
+        state.push_back(false);
+        state.push_back(false);
     }else{
-        zAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+        bool m_AxisEnabled = static_cast<bool>(m_State & ACSC_MST_ENABLE);//manual C library reference 6.9.1
+        bool m_AxisMoving  = static_cast<bool>(m_State & ACSC_MST_MOVE);//manual C library reference 6.9.3
+        state.push_back(m_AxisEnabled);
+        state.push_back(m_AxisMoving);
     }
-    return zAxisEnabled;
 }
 
 //------------------------------------------
-bool ACSCMotionHandler::getZ_2_AxisState(){
-    int State;
+void ACSCMotionHandler::getZ_2_AxisState(std::vector <bool> &state){
+    state.clear();
+    int m_State;
     if(!gantryConnected)
-        return false;
-    if(!acsc_GetMotorState(gantry,Z_2_axis,&State,ACSC_SYNCHRONOUS)){
-        qWarning("Error get Z2 axis state: %d ",acsc_GetLastError());
+        return;
+    if(!acsc_GetMotorState(gantry,Z_2_axis,&m_State,ACSC_SYNCHRONOUS)){
+        qWarning("Error get Z 2 axis state: %d ",acsc_GetLastError());
+        state.push_back(false);
+        state.push_back(false);
     }else{
-        z_2_AxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+        bool m_AxisEnabled = static_cast<bool>(m_State & ACSC_MST_ENABLE);//manual C library reference 6.9.1
+        bool m_AxisMoving  = static_cast<bool>(m_State & ACSC_MST_MOVE);//manual C library reference 6.9.3
+        state.push_back(m_AxisEnabled);
+        state.push_back(m_AxisMoving);
     }
-    return z_2_AxisEnabled;
 }
 
 //------------------------------------------
-bool ACSCMotionHandler::getUAxisState(){
-    int State;
+void ACSCMotionHandler::getUAxisState(std::vector <bool> &state){
+    state.clear();
+    int m_State;
     if(!gantryConnected)
-        return false;
-    if(!acsc_GetMotorState(gantry,U_axis,&State,ACSC_SYNCHRONOUS)){
+        return;
+    if(!acsc_GetMotorState(gantry,U_axis,&m_State,ACSC_SYNCHRONOUS)){
         qWarning("Error get U axis state: %d ",acsc_GetLastError());
+        state.push_back(false);
+        state.push_back(false);
     }else{
-        uAxisEnabled = static_cast<bool>(State & ACSC_MST_ENABLE);
+        bool m_AxisEnabled = static_cast<bool>(m_State & ACSC_MST_ENABLE);//manual C library reference 6.9.1
+        bool m_AxisMoving  = static_cast<bool>(m_State & ACSC_MST_MOVE);//manual C library reference 6.9.3
+        state.push_back(m_AxisEnabled);
+        state.push_back(m_AxisMoving);
     }
-    return uAxisEnabled;
 }
 
 //******************************************
