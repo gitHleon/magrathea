@@ -1996,12 +1996,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     double safe_Z_ModulePlace_height = -50;
     double PickUpTool_angle = 45.;
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Warning", "Is module on jig and vacuum available?",
-                                  QMessageBox::Yes|QMessageBox::No);
-    if (reply == QMessageBox::No) {
-        return 1;
-    }
-
+    QMessageBox::StandardButton info_step;
     //Think of how we want the drawing of the petal to be made
     //Maybe load several pictures showing the different steps of the loading.
 
@@ -2060,6 +2055,12 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
 
     int selected_module_index = ui->Module_comboBox->currentIndex();
 
+    reply = QMessageBox::question(this, "Warning", "Is module on jig and vacuum available?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return 1;
+    }
+
     if(!mMotionHandler->moveXTo(Jig_coordinates[selected_module_index][0].x,12))
         return false;
     if(!mMotionHandler->moveYTo(Jig_coordinates[selected_module_index][0].y,12))
@@ -2095,43 +2096,56 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     //verify calculation after deciding how the setup is placed on the gantry table
     double module_angle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
 
-    //Move to correct pick-up tool
-    //Fix axis according to final camera setup
-    if(!mMotionHandler->moveZTo(safe_Z_height,3))
-        return false;
+    //setting ifs to allow partial run of the code, without splitting the function
+    if (sender() == ui->PickUp_Button){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
-        return false;
-    if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
-        return false;
+        //Move to correct pick-up tool
+        //Fix axis according to final camera setup
+        if(!mMotionHandler->moveZTo(safe_Z_height,3))
+            return false;
 
-    //understand what the velocity means for the U axis
-    if(!mMotionHandler->moveUTo(PickUpTool_angle,5))
-        return false;
+        if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
+            return false;
+        if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
+            return false;
 
-    //Fix axis according to final camera setup
-    if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z+2,5))
-        return false;
-    //Slowly touch the pickup tool
-    if(!mMotionHandler->moveZBy(-2,0.75))
-        return false;
+        //understand what the velocity means for the U axis
+        if(!mMotionHandler->moveUTo(PickUpTool_angle,5))
+            return false;
 
-    //turn ON gantry vacuum
-    QMessageBox::StandardButton info_step;
-    info_step = QMessageBox::information(this,
-                                         "Step to be taken by user",
-                                         "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+        //Fix axis according to final camera setup
+        if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z+2,5))
+            return false;
+        //Slowly touch the pickup tool
+        if(!mMotionHandler->moveZBy(-2,0.75))
+            return false;
 
-    qInfo("Pick-up tool obtained. \n Moving to module...");
-    //Lift pick-up tool up
-    //Fix axis according to final camera setup
-    if(!mMotionHandler->moveZTo(safe_Z_height,3))
-        return false;
+        //turn ON gantry vacuum
+        info_step = QMessageBox::information(this,
+                                             "Step to be taken by user",
+                                             "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
 
+        qInfo("Pick-up tool obtained. \n Moving to module...");
+        //Lift pick-up tool up
+        //Fix axis according to final camera setup
+        if(!mMotionHandler->moveZTo(safe_Z_height,3))
+            return false;
+    } // end if sender pickup_button<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //////////////////////////////////////////////////////////////////////////
-    // Calculate x,y coordinates of sensor location
-    //rotating by module_angle the fift coordinate, which should be an offset wrt the first fiducial
+
+    if (sender() == ui->PickUp_Module_Button){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        //////////////////////////////////////////////////////////////////////////
+
+        reply = QMessageBox::question(this, "Warning", "Is pick-up tool properly attached to the loading head?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::No)
+            return 1;
+
+        // Calculate x,y coordinates of sensor location
+    //rotating by module_angle the fift element of the array, which should be an offset wrt the first fiducial
     //verify the calculation after the setup is designed
+        //make position T1 and T2 a defaualt in case of testing
     double target_x = pos_t_1[0] + Jig_coordinates[selected_module_index][5].x*cos(module_angle) - Jig_coordinates[selected_module_index][5].y*sin(module_angle) - Camera_offset_X;
     double target_y = pos_t_1[1] + Jig_coordinates[selected_module_index][5].x*sin(module_angle) - Jig_coordinates[selected_module_index][5].y*cos(module_angle) - Camera_offset_Y;
 
@@ -2150,7 +2164,6 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     if(!mMotionHandler->moveZTo(safe_Z_ModulePickUp_height,3))
         return false;
 
-    //need to be ported from separate branch.
     touchDown(2,0.018,0.2);
 
     //turn OFF gantry vacuum
@@ -2176,13 +2189,19 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     // Move over petal and place sensor
     if(!mMotionHandler->moveZTo(safe_Z_height,3))
         return false;
+    }//End if PickUp module button<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    if(sender() == ui->PlaceModule_Button){
+        reply = QMessageBox::question(this, "Warning", "Is module properly attached to the loading head?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::No)
+            return 1;
 
-    //////////////////////////////////////////////////////////////////////////
     // Calculate x,y coordinates of sensor location
     //rotating by module_angle the fift coordinate, which should be an offset wrt the first fiducial
     //verify the calculation after the setup is designed
-    target_x = Petal_coordinates[selected_module_index][5].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) - Camera_offset_X;
-    target_y = Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) + Petal_coordinates[selected_module_index][5].y*cos(PetalAngle) - Camera_offset_Y;
+    double target_x = Petal_coordinates[selected_module_index][5].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) - Camera_offset_X;
+    double target_y = Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) + Petal_coordinates[selected_module_index][5].y*cos(PetalAngle) - Camera_offset_Y;
 
     //Move to correct location over petal
     if(!mMotionHandler->moveXTo(target_x,5))
@@ -2203,6 +2222,11 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     // Once petal has been found, slowly move down 50 um more to ensure contact
     if(!mMotionHandler->moveZBy(-0.05,0.2))
         return false;
+
+    } //end if place module
+
+    if(sender() == ui->PickUp_Button || sender() == ui->PickUp_Module_Button || sender() == ui->PlaceModule_Button)
+        return true; //finish here if running testing
 
     //Store position for module adjustment
     std::vector <double> pos_t_3 = mMotionHandler->whereAmI(1);
