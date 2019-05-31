@@ -383,27 +383,27 @@ void Magrathea::updatePosition(){
     m_labels[1] = "MOVING";
     mMotionHandler->getXAxisState(status_axes);
     led_label(ui->label_8, status_axes[0]);
-    led_label(ui->label_9, status_axes[1],m_labels);
+    led_label(ui->label_75, status_axes[1],m_labels);
     ui->EnableButton_X->setText((status_axes[0] ? "Disable" : "Enable"));
 
     mMotionHandler->getYAxisState(status_axes);
     led_label(ui->label_10, status_axes[0]);
-    led_label(ui->label_11, status_axes[1],m_labels);
+    led_label(ui->label_76, status_axes[1],m_labels);
     ui->EnableButton_Y->setText((status_axes[0] ? "Disable" : "Enable"));
 
     mMotionHandler->getZAxisState(status_axes);
     led_label(ui->label_12, status_axes[0]);
-    led_label(ui->label_13, status_axes[1],m_labels);
+    led_label(ui->label_77, status_axes[1],m_labels);
     ui->EnableButton_Z->setText((status_axes[0] ? "Disable" : "Enable"));
 
     mMotionHandler->getZ_2_AxisState(status_axes);
     led_label(ui->label_14, status_axes[0]);
-    led_label(ui->label_15, status_axes[1],m_labels);
+    led_label(ui->label_78, status_axes[1],m_labels);
     ui->EnableButton_Z_2->setText((status_axes[0] ? "Disable" : "Enable"));
 
     mMotionHandler->getUAxisState(status_axes);
     led_label(ui->label_16, status_axes[0]);
-    led_label(ui->label_17, status_axes[1],m_labels);
+    led_label(ui->label_79, status_axes[1],m_labels);
     ui->EnableButton_U->setText((status_axes[0] ? "Disable" : "Enable"));
 
     //RealJoystick status update
@@ -1524,7 +1524,7 @@ void Magrathea::led_label(QLabel *label, bool value){
 }
 
 void Magrathea::led_label(QLabel *label, bool value, const std::vector <QString> &input){
-    if(input.size() !=2){
+    if(input.size() ==2){
         if(value){
             label->setStyleSheet("QLabel { background-color : green; color : black; }");
             label->setText(input[1]);
