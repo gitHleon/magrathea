@@ -95,6 +95,7 @@ private slots:
 
 signals:
     void Run_focus_signal();
+    void Test_signal();
 
 private:
     Ui::Magrathea *ui;

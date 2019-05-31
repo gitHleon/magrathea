@@ -232,6 +232,7 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(J_instance,SIGNAL(buttonChanged(int,int,bool)), this, SLOT(J_translator(int,int,bool)));
     connect(J_instance,SIGNAL(axisChanged(int,int,double)), this, SLOT(J_axes_translator(int,int,double)));
     connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
+    connect(this,SIGNAL(Test_signal()), this, SLOT(TestButtonClick()));
 #endif
     //------------------------------------------
     //gantry
@@ -565,7 +566,8 @@ void Magrathea::J_translator(int index, int button, bool pressed){
         mMotionHandler->endRunU();
     }
     if(button == 9 && pressed)
-        emit Run_focus_signal();
+        //emit Run_focus_signal();
+        emit Test_signal();
 
 }
 
@@ -1892,11 +1894,14 @@ bool Magrathea::fiducial_chip_measure(){
 int Magrathea::TestButtonClick(){
 
     std::vector<std::string> arguments;
-    //arguments.push_back("DI  ");
-    arguments.push_back("PS  ");
-    arguments.push_back("0500");
-
+    arguments.push_back("DI  ");
+    //arguments.push_back("PS  ");
+    //arguments.push_back("0500");
     TalkSR232(arguments);
+    Sleeper::msleep(500);
+    if(!mMotionHandler->moveYBy(30,5.))
+        return 1;
+
 
     return 0;
 
