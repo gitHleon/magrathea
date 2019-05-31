@@ -359,7 +359,6 @@ void Magrathea::updatePosition(){
 
     std::vector <double> pos_t = mMotionHandler->whereAmI(1);
 
-    return;
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
     ui->yAxisPositionLine->setText(QString::number(    pos_t[1], 'f', 3));
     ui->zAxisPositionLine->setText(QString::number(    pos_t[2], 'f', 3));
@@ -474,15 +473,15 @@ void Magrathea::J_axes_translator(int index, int axis, double value){
     if(index != 0 )
         return; //I want only the main joystick to work
     if(axis == 0 && (value > threshold))
-        mMotionHandler->runX(+1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 0 && (value < -threshold))
         mMotionHandler->runX(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 0 && (value < -threshold))
+        mMotionHandler->runX(+1, ui->spinBox_J_speed->value()*value);
     else if(axis == 0 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunX();
     else if(axis == 1 && (value > threshold))
-        mMotionHandler->runY(+1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 1 && (value < -threshold))
         mMotionHandler->runY(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 1 && (value < -threshold))
+        mMotionHandler->runY(+1, ui->spinBox_J_speed->value()*value);
     else if(axis == 1 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunY();
     else if(axis == 2 && !J_control_Rotation && J_control_Z_1){
@@ -2608,7 +2607,7 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     QByteArray readData;
     QByteArray writeData;
     QSerialPort serialPort;
-    const QString serialPortName = "COM3"; //to modify according to the serial port used
+    const QString serialPortName = "COM1"; //to modify according to the serial port used
     serialPort.setPortName(serialPortName);
     serialPort.setBaudRate(QSerialPort::Baud115200); // set BaudRate to 115200
     serialPort.setParity(QSerialPort::NoParity); //set Parity Bit to None
