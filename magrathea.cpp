@@ -1886,9 +1886,9 @@ int Magrathea::TestButtonClick(){
     //arguments.push_back("PS  ");
     //arguments.push_back("0500");
     TalkSR232(arguments);
-    Sleeper::msleep(500);
-    if(!mMotionHandler->moveYBy(30,5.))
-        return 1;
+    //    Sleeper::msleep(500);
+//    if(!mMotionHandler->moveYBy(30,5.))
+//        return 1;
 
 
     return 0;
@@ -2596,7 +2596,7 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     //            if (serial.open(QIODevice::ReadWrite))
     //                serial.close();
     //        }
-    bool debug = false;
+    bool debug = true;
     QByteArray readData;
     QByteArray writeData;
     QSerialPort serialPort;
@@ -2607,9 +2607,13 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     serialPort.setStopBits(QSerialPort::OneStop); //set
     serialPort.setDataBits(QSerialPort::Data8); //DataBits to 8
     serialPort.setFlowControl(QSerialPort::NoFlowControl);
+    std::cout<<"OK!!!!!"<<std::endl;
     serialPort.close();
+    std::cout<<"fail !!!!!"<<std::endl;
     if (!serialPort.open(QIODevice::ReadWrite)) {
+        std::cout<<"FAIL!!!!!"<<std::endl;
         qWarning("Failed to open port %s, error: %s",serialPortName.toLocal8Bit().constData(),serialPort.errorString().toLocal8Bit().constData());
+        return false;
     }else {
         if (debug)
             std::cout<<"Port opened successfully"<<std::endl;
@@ -2629,8 +2633,9 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     readData.clear();
     int control = 0;
     while(serialPort.isOpen()){ // READING BYTES FROM SERIAL PORT
+        control += 1;
         //https://stackoverflow.com/questions/42576537/qt-serial-port-reading
-        if(!serialPort.waitForReadyRead(-1)) //block until new data arrives, dangerous, need a fix
+        if(!serialPort.waitForReadyRead(100)) //block until new data arrives, dangerous, need a fix
             std::cout << "Read error: " << serialPort.errorString().toStdString()<<std::endl;
         else{
             if (debug)
@@ -2640,9 +2645,13 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
                 std::cout << readData.toStdString()<<std::endl;
             break;
         }
-        if (control > 1000)
-            break;
+        if (control > 10){
+            std::cout << "Time out read error"<<std::endl;
+            return false;
+        }
+
     }// END READING BYTES FROM SERIAL PORT
+
     if(readData.size() != 0){
         if (debug)
             std::cout<<"Read operation ok : "<<readData.toStdString()<<std::endl;
@@ -2702,7 +2711,8 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     readData.clear();
     control = 0;
     while(serialPort.isOpen()){ //dangerous, may freez the GUI
-        if(!serialPort.waitForReadyRead(-1)) //block until new data arrives
+        control += 1;
+        if(!serialPort.waitForReadyRead(100)) //block until new data arrives
             std::cout << "error: " << serialPort.errorString().toStdString()<<std::endl;
         else{
             if (debug)
@@ -2713,8 +2723,10 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
             if(readData.at(0) == 2 && readData.at(readData.size()-1) == 3) //expectin A0 command, may add controls on checksum in future
                 break;
         }
-        if (control > 1000)
-            break;
+        if (control > 10){
+            std::cout << "Time out read error"<<std::endl;
+            return false;
+        }
     }
     //////////////////////////////////
     serialPort.close(); //closing serial port comunication

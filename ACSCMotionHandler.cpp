@@ -866,7 +866,7 @@ bool ACSCMotionHandler::runX(double direction, double speed)
     double sign = direction<0?-1.:1.;
     speed = fabs(speed);
     qInfo("free running %s X axis at %.1f mm/s", direction<0?"-":"+", speed);
-    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,X_axis,sign*speed,ACSC_SYNCHRONOUS)){
+    if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,X_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running X axis");
         return true;
     }else{
@@ -879,7 +879,7 @@ bool ACSCMotionHandler::runX(double direction, double speed)
 //------------------------------------------
 bool ACSCMotionHandler::endRunX()
 {
-    if(!acsc_Halt(gantry,X_axis,ACSC_SYNCHRONOUS)){
+    if(acsc_Halt(gantry,X_axis,ACSC_SYNCHRONOUS) != 0){
         qInfo("STOP running X axis");
         return true;
     }else{
@@ -894,7 +894,7 @@ bool ACSCMotionHandler::runY(double direction, double speed)
     double sign = direction<0?-1.:1.;
     speed = fabs(speed);
     qInfo("free running %s Y axis at %.1f mm/s", direction<0?"-":"+", speed);
-    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,Y_axis,sign*speed,ACSC_SYNCHRONOUS)){
+    if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,Y_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running Y axis");
         return true;
     }else{
@@ -907,7 +907,7 @@ bool ACSCMotionHandler::runY(double direction, double speed)
 //------------------------------------------
 bool ACSCMotionHandler::endRunY()
 {
-    if(!acsc_Halt(gantry,Y_axis,ACSC_SYNCHRONOUS)){
+    if(acsc_Halt(gantry,Y_axis,ACSC_SYNCHRONOUS) != 0){
         qInfo("STOP running Y axis");
         return true;
     }else{
@@ -922,7 +922,7 @@ bool ACSCMotionHandler::runZ(double direction, double speed)
     double sign = direction<0?-1.:1.;
     speed = fabs(speed);
     qInfo("free running %s Z axis at %.1f mm/s", direction<0?"-":"+", speed);
-    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_axis,sign*speed,ACSC_SYNCHRONOUS)){
+    if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running Z axis");
         return true;
     }else{
@@ -935,7 +935,7 @@ bool ACSCMotionHandler::runZ(double direction, double speed)
 //------------------------------------------
 bool ACSCMotionHandler::endRunZ()
 {
-    if(!acsc_Halt(gantry,Z_axis,ACSC_SYNCHRONOUS)){
+    if(acsc_Halt(gantry,Z_axis,ACSC_SYNCHRONOUS) != 0){
         qInfo("STOP running Z axis");
         return true;
     }else{
@@ -950,7 +950,7 @@ bool ACSCMotionHandler::runZ_2(double direction, double speed)
     double sign = direction<0?-1.:1.;
     speed = fabs(speed);
     qInfo("free running %s Z 2 axis at %.1f mm/s", direction<0?"-":"+", speed);
-    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_2_axis,sign*speed,ACSC_SYNCHRONOUS)){
+    if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_2_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running Z 2 axis");
         return true;
     }else{
@@ -963,7 +963,7 @@ bool ACSCMotionHandler::runZ_2(double direction, double speed)
 //------------------------------------------
 bool ACSCMotionHandler::endRunZ_2()
 {
-    if(!acsc_Halt(gantry,Z_2_axis,ACSC_SYNCHRONOUS)){
+    if(acsc_Halt(gantry,Z_2_axis,ACSC_SYNCHRONOUS) != 0){
         qInfo("STOP running Z 2 axis");
         return true;
     }else{
@@ -978,7 +978,7 @@ bool ACSCMotionHandler::runU(double direction, double speed)
     double sign = direction<0?-1.:1.;
     speed = fabs(speed);
     qInfo("free running %s U axis at %.1f rad/s", direction<0?"-":"+", speed);
-    if(!acsc_Jog(gantry,ACSC_AMF_VELOCITY,U_axis,sign*speed,ACSC_SYNCHRONOUS)){
+    if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,U_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running U axis");
         return true;
     }else{
@@ -991,7 +991,7 @@ bool ACSCMotionHandler::runU(double direction, double speed)
 //------------------------------------------
 bool ACSCMotionHandler::endRunU()
 {
-    if(!acsc_Halt(gantry,U_axis,ACSC_SYNCHRONOUS)){
+    if(acsc_Halt(gantry,U_axis,ACSC_SYNCHRONOUS) != 0){
         qInfo("STOP running U axis");
         return true;
     }else{
