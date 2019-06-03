@@ -379,9 +379,7 @@ void Magrathea::updatePosition(){
 
     //axes status update
     std::vector <bool> status_axes;
-    std::vector <QString> m_labels(2);
-    m_labels[0] = "STOP";
-    m_labels[1] = "MOVING";
+    std::vector <QString> m_labels{"STOP","MOVING"};
     mMotionHandler->getXAxisState(status_axes);
     led_label(ui->label_8, status_axes[0]);
     led_label(ui->label_75, status_axes[1],m_labels);
@@ -1405,16 +1403,23 @@ void Magrathea::stepMotion()
 //position move proxy function to pass arguments to the MotionHandler
 void Magrathea::positionMove()
 {
-    if (sender() == ui->xAxisPositionMoveButton)
+    std::vector <QString> m_labels{"STOP","MOVING"};
+    if (sender() == ui->xAxisPositionMoveButton){
+        led_label(ui->label_75,true,m_labels);
         mMotionHandler->moveXTo(ui->xAxisPositionMoveDoubleSpinBox->value(), ui->xAxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->yAxisPositionMoveButton)
+    }else if (sender() == ui->yAxisPositionMoveButton){
+        led_label(ui->label_76,true,m_labels);
         mMotionHandler->moveYTo(ui->yAxisPositionMoveDoubleSpinBox->value(), ui->yAxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->zAxisPositionMoveButton)
+    }else if (sender() == ui->zAxisPositionMoveButton){
+        led_label(ui->label_77,true,m_labels);
         mMotionHandler->moveZTo(ui->zAxisPositionMoveDoubleSpinBox->value(), ui->zAxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->z_2_AxisPositionMoveButton)
+    }else if (sender() == ui->z_2_AxisPositionMoveButton){
+        led_label(ui->label_78,true,m_labels);
         mMotionHandler->moveZ_2_To(ui->z_2_AxisPositionMoveDoubleSpinBox->value(), ui->z_2_AxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->uAxisPositionMoveButton)
+    }else if (sender() == ui->uAxisPositionMoveButton){
+        led_label(ui->label_79,true,m_labels);
         mMotionHandler->moveUTo(ui->uAxisPositionMoveDoubleSpinBox->value(), ui->uAxisSpeedDoubleSpinBox->value());
+    }
     return;
 }
 

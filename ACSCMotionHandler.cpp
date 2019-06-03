@@ -731,7 +731,6 @@ bool ACSCMotionHandler::moveBy(double positions[4], double speed)
     moveYTo(positions[1],speed);
     moveZTo(positions[2],speed);
     moveZ_2_To(positions[3],speed);
-    //qInfo("...");
     return true;
 }
 
@@ -756,8 +755,6 @@ bool ACSCMotionHandler::moveXBy(double x, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -781,8 +778,6 @@ bool ACSCMotionHandler::moveYBy(double y, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -806,8 +801,6 @@ bool ACSCMotionHandler::moveZBy(double z, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -831,8 +824,6 @@ bool ACSCMotionHandler::moveZ_2_By(double z, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -852,8 +843,6 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
         emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //******************************************
