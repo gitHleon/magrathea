@@ -358,6 +358,7 @@ Magrathea::~Magrathea()
 //position update
 void Magrathea::updatePosition(){
 
+
     std::vector <double> pos_t = mMotionHandler->whereAmI(1);
 
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
@@ -420,53 +421,11 @@ void Magrathea::updatePosition(){
         }
     }
 
-    //This part needs to be moved to the ACSCMotionHandler!!!!!!!<<<<<<<<<<<<<<<<<<<<<<
     //reading fault state for each axis
-    unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit; manual (C library reference, 6.13.5)
-    unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit; manual (C library reference, 6.13.5)
-    //GETMASK(index, size) (((1 << (size)) - 1) << (index))
-    //READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
-    unsigned int fault_state = mMotionHandler->GetfaultSateXAxis();
-    unsigned int temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    unsigned int temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-    bool axis_fault = (temp1 || temp2 );
-    //////////////////////////////////////////////////////////////<<<<<<<<<<<<<<<<<<<<
-    ui->label_9->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_9->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_9->setStyleSheet("QLabel { background-color : green; color : white; }");
-
-    fault_state = mMotionHandler->GetfaultSateYAxis();
-    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-     axis_fault = (temp1 == 1 || temp2 == 1);
-    ui->label_11->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_11->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_11->setStyleSheet("QLabel { background-color : green; color : white; }");
-
-    fault_state = mMotionHandler->GetfaultSateZ1Axis();
-    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-     axis_fault = (temp1 == 1 || temp2 == 1);
-    ui->label_13->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_13->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_13->setStyleSheet("QLabel { background-color : green; color : white; }");
-
-    fault_state = mMotionHandler->GetfaultSateZ2Axis();
-    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-     axis_fault = (temp1 == 1 || temp2 == 1);
-    ui->label_15->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_15->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_15->setStyleSheet("QLabel { background-color : green; color : white; }");
-
+    led_label(ui->label_9 ,!mMotionHandler->GetfaultSateXAxis(), std::vector<QString>{"Out of Env","Good"});
+    led_label(ui->label_11,!mMotionHandler->GetfaultSateYAxis(), std::vector<QString>{"Out of Env","Good"});
+    led_label(ui->label_13,!mMotionHandler->GetfaultSateZAxis(), std::vector<QString>{"Out of Env","Good"});
+    led_label(ui->label_15,!mMotionHandler->GetfaultSateZ2Axis(),std::vector<QString>{"Out of Env","Good"});
     ui->label_17->setText("Always good");
     ui->label_17->setStyleSheet("QLabel { background-color : yellow; color : black; }");
 
@@ -1512,7 +1471,6 @@ void Magrathea::AxisEnableDisableButton(){
         qWarning("Warning! Improper use of function AxisEnableDisableButton.");
 }
 
-
 void Magrathea::led_label(QLabel *label, bool value){
     if(value){
         label->setStyleSheet("QLabel { background-color : green; color : black; }");
@@ -1536,7 +1494,6 @@ void Magrathea::led_label(QLabel *label, bool value, const std::vector <QString>
         led_label(label,value);
 
 }
-
 
 void Magrathea::color_test(){
     std::cout<<"here"<<std::endl;

@@ -457,44 +457,56 @@ bool ACSCMotionHandler::GetLimitsController(std::vector <double> & limits){
     return true;
 };
 
-int ACSCMotionHandler::GetfaultSateXAxis(){
+bool ACSCMotionHandler::GetfaultSateXAxis(){//returns true if out of envelope
     std::string temp = "FAULT";
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     int fault_state = 1;
-    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_0,ACSC_AXIS_0,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,X_axis,X_axis,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get fault X axis: %d ",acsc_GetLastError());
-    return fault_state;
+        return true;}
+    bool m_AxisOutR = static_cast<bool>(fault_state & ACSC_SAFETY_SRL);//manual C library reference 6.13.5
+    bool m_AxisOutL = static_cast<bool>(fault_state & ACSC_SAFETY_SLL);//manual C library reference 6.13.6
+    return  (m_AxisOutR || m_AxisOutL );
 };
 
-int ACSCMotionHandler::GetfaultSateYAxis(){
+bool ACSCMotionHandler::GetfaultSateYAxis(){
     std::string temp = "FAULT";
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     int fault_state = 1;
-    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_1,ACSC_AXIS_1,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,Y_axis,Y_axis,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0){
         qWarning("Error get fault Y axis: %d ",acsc_GetLastError());
-    return fault_state;
+        return true;}
+    bool m_AxisOutR = static_cast<bool>(fault_state & ACSC_SAFETY_SRL);//manual C library reference 6.13.5
+    bool m_AxisOutL = static_cast<bool>(fault_state & ACSC_SAFETY_SLL);//manual C library reference 6.13.6
+    return  (m_AxisOutR || m_AxisOutL );
 };
 
-int ACSCMotionHandler::GetfaultSateZ1Axis(){
+bool ACSCMotionHandler::GetfaultSateZAxis(){
     std::string temp = "FAULT";
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     int fault_state = 1;
-    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_5,ACSC_AXIS_5,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get fault Z1 axis: %d ",acsc_GetLastError());
-    return fault_state;
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,Z_axis,Z_axis,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0){
+        qWarning("Error get fault Z axis: %d ",acsc_GetLastError());
+        return true;}
+    bool m_AxisOutR = static_cast<bool>(fault_state & ACSC_SAFETY_SRL);//manual C library reference 6.13.5
+    bool m_AxisOutL = static_cast<bool>(fault_state & ACSC_SAFETY_SLL);//manual C library reference 6.13.6
+    return  (m_AxisOutR || m_AxisOutL );
 };
 
-int ACSCMotionHandler::GetfaultSateZ2Axis(){
+bool ACSCMotionHandler::GetfaultSateZ2Axis(){
     std::string temp = "FAULT";
     char * tab = new char [temp.length()+1];
     strcpy (tab, temp.c_str());
     int fault_state = 1;
-    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,ACSC_AXIS_4,ACSC_AXIS_4,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0)
-        qWarning("Error get fault Z2 axis: %d ",acsc_GetLastError());
-    return fault_state;
+    if(acsc_ReadInteger(gantry,ACSC_NONE,tab,Z_2_axis,Z_2_axis,ACSC_NONE,ACSC_NONE,&fault_state,ACSC_SYNCHRONOUS)==0){
+        qWarning("Error get fault Z 2 axis: %d ",acsc_GetLastError());
+        return true;}
+    bool m_AxisOutR = static_cast<bool>(fault_state & ACSC_SAFETY_SRL);//manual C library reference 6.13.5
+    bool m_AxisOutL = static_cast<bool>(fault_state & ACSC_SAFETY_SLL);//manual C library reference 6.13.6
+    return  (m_AxisOutR || m_AxisOutL );
 };
 
 //******************************************

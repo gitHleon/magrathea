@@ -110,10 +110,10 @@ public slots:
     virtual bool SetLimitsController();
     virtual bool SetLimitsController(std::vector <double> & limits);
     virtual bool GetLimitsController(std::vector <double> & limits);
-    virtual int  GetfaultSateXAxis();
-    virtual int  GetfaultSateYAxis();
-    virtual int  GetfaultSateZ1Axis();
-    virtual int  GetfaultSateZ2Axis();
+    virtual bool GetfaultSateXAxis();
+    virtual bool GetfaultSateYAxis();
+    virtual bool GetfaultSateZAxis();
+    virtual bool GetfaultSateZ2Axis();
     //******************************************
     // default speeds
     // NOTE default unit is mm/s

@@ -295,24 +295,24 @@ bool MotionHandler::GetLimitsController(std::vector <double> & limits){
 };
 
 
-int  MotionHandler::GetfaultSateXAxis(){
+bool  MotionHandler::GetfaultSateXAxis(){
  qInfo("Info on X axis.");
- return 1;
+ return 0;
 };
 
-int  MotionHandler::GetfaultSateYAxis(){
+bool  MotionHandler::GetfaultSateYAxis(){
  qInfo("Info on Y axis.");
- return 1;
+ return 0;
 };
 
-int  MotionHandler::GetfaultSateZ1Axis(){
+bool  MotionHandler::GetfaultSateZAxis(){
  qInfo("Info on Z1 axis.");
- return 1;
+ return 0;
 };
 
-int  MotionHandler::GetfaultSateZ2Axis(){
+bool  MotionHandler::GetfaultSateZ2Axis(){
  qInfo("Info on Z2 axis.");
- return 1;
+ return 0;
 };
 
 //******************************************
@@ -320,26 +320,37 @@ int  MotionHandler::GetfaultSateZ2Axis(){
 //------------------------------------------
 void MotionHandler::getXAxisState(std::vector <bool> &state){
     state.clear();
+    state.push_back(false);
+    state.push_back(false);
+
 }
 
 //------------------------------------------
 void MotionHandler::getYAxisState(std::vector <bool> &state){
     state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //------------------------------------------
 void MotionHandler::getZAxisState(std::vector <bool> &state){
     state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //------------------------------------------
 void MotionHandler::getZ_2_AxisState(std::vector <bool> &state){
     state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //------------------------------------------
 void MotionHandler::getUAxisState(std::vector <bool> &state){
     state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //******************************************
