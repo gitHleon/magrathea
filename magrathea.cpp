@@ -1886,6 +1886,10 @@ bool Magrathea::fiducial_chip_measure(){
 
 int Magrathea::TestButtonClick(){
 
+    touchDown(1,0.018,0.75);
+
+
+    return 0;
     std::vector<std::string> arguments;
     arguments.push_back("DI  ");
     //arguments.push_back("PS  ");
@@ -2472,43 +2476,38 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
     int flag = 1;
     int iterations =0;
     ///////////////////////////////////////////
-    cv::destroyAllWindows();
-    mCamera->stop(); //closing QCamera
-    cv::Mat mat_from_camera;
-    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-    if (!cap.isOpened()){
-        //Opening opencv-camera, needed for easier image manipulation
-        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-        return false;}
-    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
-    cap.set(cv::CAP_PROP_FPS, 5.0);
+    //    cv::destroyAllWindows();
+    //    mCamera->stop(); //closing QCamera
+    //    cv::Mat mat_from_camera;
+    //    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
+    //    if (!cap.isOpened()){
+    //        //Opening opencv-camera, needed for easier image manipulation
+    //        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
+    //        return false;}
+    //    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
+    //    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
+    //    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
+    //    cap.set(cv::CAP_PROP_FPS, 5.0);
     ////////////////////////////////////////////
     while (flag > 0){
         QApplication::processEvents();
         iterations++;
-        if(ific_value == 1){
-            if(!mMotionHandler->moveZBy(-0.005,velocity))
-                return false;
-        }else if(ific_value == 2){
-            if(!mMotionHandler->moveZ_2_By(-0.005,velocity))
-                return false;
-        }else
+        if(!mMotionHandler->moveZ_2_By(-0.005,velocity))
             return false;
         double current2 = mMotionHandler->CurrentAmI(ific_value);
         //Take the difference of two consecutive current measurements (spaced 25 ms apart)
         double compare0 = current0 - current1;
         double compare1 = current1 - current2;
-        std::cout<<" C0 : "<<compare0<<" ; C1 : "<<compare1<<std::endl;
+        std::cout<<" Comp 0 : "<<compare0<<" ; Comp 1 : "<<compare1<<
+                   " Curr 0 : "<<current0<<" ; Curr 1 : "<<current1<<" ; Curr 2 : "<<current2<<std::endl;
         //Check to see if the differences are both consistent
         // --> if they are, break from the loop and stop motion
         if (compare0 > threshold){
             if (compare1 > threshold){
-                flag = -1;
+                break;
             }
         }
-        if(iterations>50)
+        if(iterations>10)
             flag = -1;
         current0 = current1;
         current1 = current2;
@@ -2520,28 +2519,28 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
         QString time_now = now.toString("hhmmss");
         std::string timestamp = time_now.toLocal8Bit().constData();
 
-        bool bSuccess = cap.read(mat_from_camera);
-        if (!bSuccess){ //if not success
-            qInfo("Cannot read a frame from video stream");
-            return false;
-        }
-        int window_size = mat_from_camera.rows;
-        double Z_value_d = mMotionHandler->whereAmI(1).at(4);
-        std::string Z_value_s = std::to_string(Z_value_d);
-        std::string dummy = std::to_string(iterations);
-        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
-        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
+        //        bool bSuccess = cap.read(mat_from_camera);
+        //        if (!bSuccess){ //if not success
+        //            qInfo("Cannot read a frame from video stream");
+        //            return false;
+        //        }
+        //        int window_size = mat_from_camera.rows;
+        //double Z_value_d = mMotionHandler->whereAmI(1).at(4);
+        //        std::string Z_value_s = std::to_string(Z_value_d);
+        //        std::string dummy = std::to_string(iterations);
+        //        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
+        //        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
 
-        std::string file_name = "touchDown.txt";
-        std::ofstream ofs (file_name, std::ofstream::app);
-        ofs <<timestamp<<"  "<<iterations<<"  "<<Z_value_d<<"  "<<current1<<"  "<<current2<<std::endl;
-        ofs.close();
+        //        std::string file_name = "touchDown.txt";
+        //        std::ofstream ofs (file_name, std::ofstream::app);
+        //        ofs <<timestamp<<"  "<<iterations<<"  "<<Z_value_d<<"  "<<current1<<"  "<<current2<<std::endl;
+        //        ofs.close();
         ////////////////////////////////////////////////////
     }
-    //Stop motion and move 50 um away to reduce pressure
-    if(!mMotionHandler->moveZ_2_By(0.05,velocity)){ //velocity shuld be ~0.2 mm/sec
-        return false;
-    }
+    //    //Stop motion and move 50 um away to reduce pressure
+    //    if(!mMotionHandler->moveZ_2_By(0.05,velocity)){ //velocity shuld be ~0.2 mm/sec
+    //        return false;
+    //    }
     return true;
 }
 
