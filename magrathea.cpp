@@ -2500,10 +2500,10 @@ bool Magrathea::touchDown(const double &threshold){
     //Add asking for axis status
     const double velocity         = 0.1; //[mm/s]
     const double maximum_distance = 1.5; //[mm]
-    const int millisec_wait       = 110;
+    const int millisec_wait       = 100;
     if(!mMotionHandler->moveZ_2_By(-maximum_distance,velocity))
         return false;
-    Sleeper::sleep(1); //need to wait for inductance of the engine to charge, corresponds to 100 um of travel
+    Sleeper::msleep(1500); //need to wait for inductance of the engine to charge, corresponds to 150 um of travel
     double current0 = mMotionHandler->CurrentAmI(2);
     Sleeper::msleep(millisec_wait);
     double current1 = mMotionHandler->CurrentAmI(2);
@@ -2531,19 +2531,19 @@ bool Magrathea::touchDown(const double &threshold){
         double current2 = mMotionHandler->CurrentAmI(2);
         //Take the difference of two consecutive current measurements
         //(spaced 100 ms apart) average time of the current in the motor in Valencia, may be different in other sites
-        double compare0 = current0 - current1;
-        double compare1 = current1 - current2;
+        double compare0 = current1 - current0;
+        double compare1 = current2 - current1;
         std::cout<<" Comp 0 : "<<compare0<<" ; Comp 1 : "<<compare1<<
                    " Curr 0 : "<<current0<<" ; Curr 1 : "<<current1<<" ; Curr 2 : "<<current2<<std::endl;
         //Check to see if the differences are both consistent
         // --> if they are, break from the loop and stop motion
         if (compare0 > threshold){
             if (compare1 > threshold){
-                mMotionHandler->endRunZ();
-                break;
+                mMotionHandler->endRunZ_2();
+                flag = -1;
             }
         }
-        if(iterations>100)
+        if(iterations>140)
             flag = -1;
         current0 = current1;
         current1 = current2;
@@ -2564,10 +2564,11 @@ bool Magrathea::touchDown(const double &threshold){
         //        std::string dummy = std::to_string(iterations);
         //        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
         //        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
-
+        if(flag < 0)
+            Sleeper::msleep(100);
         std::string file_name = "touchDown.txt";
         std::ofstream ofs (file_name, std::ofstream::app);
-        ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<std::endl;
+        ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
         ofs.close();
         ////////////////////////////////////////////////////
     }
