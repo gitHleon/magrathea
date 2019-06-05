@@ -1660,7 +1660,11 @@ bool Magrathea::loop_fid_finder(){
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
             return false;
+        if(!mMotionHandler->WaitX(-1))
+            return false;
         if(!mMotionHandler->moveYBy(-target_y_short,1.))
+            return false;
+        if(!mMotionHandler->WaitY(-1))
             return false;
     }
     if(sender() == ui->button_measure_1_well){
@@ -1695,8 +1699,13 @@ bool Magrathea::loop_fid_finder(int input){
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
             return false;
+        if(!mMotionHandler->WaitX(-1))
+            return false;
         if(!mMotionHandler->moveYBy(-target_y_short,1.))
             return false;
+        if(!mMotionHandler->WaitY(-1))
+            return false;
+
     }
     return true;
 }
@@ -1781,7 +1790,11 @@ bool Magrathea::calibration_plate_measure(){
             std::cout<<j<<" "<<i<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
             if(!mMotionHandler->moveXTo(target_x,speed))
                 return false;
+            if(!mMotionHandler->WaitX(-1))
+                return false;
             if(!mMotionHandler->moveYTo(target_y,3.))
+                return false;
+            if(!mMotionHandler->WaitY(-1))
                 return false;
             if(!focusButtonClicked())
                 return false;
@@ -1845,7 +1858,11 @@ bool Magrathea::fiducial_chip_measure(){
         std::cout<<m<<" BIG : target_x "<<big_target_x<<" target_y "<<big_target_y<<std::endl;
         if(!mMotionHandler->moveXTo(big_target_x,speed))
             return false;
+        if(!mMotionHandler->WaitX(-1))
+            return false;
         if(!mMotionHandler->moveYTo(big_target_y,3.))
+            return false;
+        if(!mMotionHandler->WaitY(-1))
             return false;
         for(int i=0;i<12;i++){
             ui->chip_number_spinBox->setValue(i);
@@ -1857,7 +1874,11 @@ bool Magrathea::fiducial_chip_measure(){
                 std::cout<<i<<" "<<j<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
                 if(!mMotionHandler->moveXTo(target_x,speed))
                     return false;
+                if(!mMotionHandler->WaitX(-1))
+                    return false;
                 if(!mMotionHandler->moveYTo(target_y,3.))
+                    return false;
+                if(!mMotionHandler->WaitY(-1))
                     return false;
                 if(!focusButtonClicked())
                     return false;
@@ -1886,7 +1907,7 @@ bool Magrathea::fiducial_chip_measure(){
 
 int Magrathea::TestButtonClick(){
 
-    touchDown(1,0.018,0.75);
+    touchDown(0.018);
 
 
     return 0;
@@ -1942,6 +1963,10 @@ int Magrathea::FindPetal( double &Petalangle, std::vector<cv::Point3d> &Coordina
         return 1;
     if(!mMotionHandler->moveYTo(petal_1_Y,1.))
         return 1;
+    if(!mMotionHandler->WaitX(-1))
+        return false;
+    if(!mMotionHandler->WaitY(-1))
+        return false;
 
     //turn on the light (if needed in setup) and autofocus
     if(!focusButtonClicked())
@@ -1961,6 +1986,10 @@ int Magrathea::FindPetal( double &Petalangle, std::vector<cv::Point3d> &Coordina
         return 1;
     if(!mMotionHandler->moveYTo(petal_2_Y,1.))
         return 1;
+    if(!mMotionHandler->WaitX(-1))
+        return false;
+    if(!mMotionHandler->WaitY(-1))
+        return false;
 
     //turn on the light (if needed in setup) and autofocus
     if(!focusButtonClicked())
@@ -2165,7 +2194,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     if(!mMotionHandler->moveZTo(safe_Z_ModulePickUp_height,3))
         return false;
 
-    touchDown(2,0.018,0.2);
+    touchDown(0.018);
 
     //turn OFF gantry vacuum
     info_step = QMessageBox::information(this,
@@ -2218,7 +2247,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     if(!mMotionHandler->moveZTo(safe_Z_ModulePlace_height,3))
         return false;
 
-    touchDown(2,0.016,0.2);
+    touchDown(0.016);
 
     // Once petal has been found, slowly move down 50 um more to ensure contact
     if(!mMotionHandler->moveZBy(-0.05,0.2))
@@ -2466,13 +2495,19 @@ bool Magrathea::Adjust_module(const cv::Point3d &module_bridge_coordinates, cons
 
 //Function for "force-sensing"
 //L1680
-bool Magrathea::touchDown(const int &ific_value, const double &threshold, const double &velocity){
-    //need to ensure all motion has stopped!!
+bool Magrathea::touchDown(const double &threshold){
+    mMotionHandler->endRunZ(); //need to ensure all motion has stopped!!
     //Add asking for axis status
-    //record average current status
+    const double velocity         = 0.1; //[mm/s]
+    const double maximum_distance = 1.5; //[mm]
+    const int millisec_wait       = 110;
+    if(!mMotionHandler->moveZ_2_By(-maximum_distance,velocity))
+        return false;
+    Sleeper::sleep(1); //need to wait for inductance of the engine to charge, corresponds to 100 um of travel
+    double current0 = mMotionHandler->CurrentAmI(2);
+    Sleeper::msleep(millisec_wait);
+    double current1 = mMotionHandler->CurrentAmI(2);
     //VALENCIA ONLY: current is returned in % of maximum motor capability
-    double current0 = mMotionHandler->CurrentAmI(ific_value);
-    double current1 = current0;
     int flag = 1;
     int iterations =0;
     ///////////////////////////////////////////
@@ -2490,12 +2525,12 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
     //    cap.set(cv::CAP_PROP_FPS, 5.0);
     ////////////////////////////////////////////
     while (flag > 0){
-        QApplication::processEvents();
+        Sleeper::msleep(millisec_wait);
+        //QApplication::processEvents(); ???
         iterations++;
-        if(!mMotionHandler->moveZ_2_By(-0.005,velocity))
-            return false;
-        double current2 = mMotionHandler->CurrentAmI(ific_value);
-        //Take the difference of two consecutive current measurements (spaced 25 ms apart)
+        double current2 = mMotionHandler->CurrentAmI(2);
+        //Take the difference of two consecutive current measurements
+        //(spaced 100 ms apart) average time of the current in the motor in Valencia, may be different in other sites
         double compare0 = current0 - current1;
         double compare1 = current1 - current2;
         std::cout<<" Comp 0 : "<<compare0<<" ; Comp 1 : "<<compare1<<
@@ -2504,21 +2539,20 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
         // --> if they are, break from the loop and stop motion
         if (compare0 > threshold){
             if (compare1 > threshold){
+                mMotionHandler->endRunZ();
                 break;
             }
         }
-        if(iterations>10)
+        if(iterations>100)
             flag = -1;
         current0 = current1;
         current1 = current2;
-
         ////////////////////////////////////////////////
         //Debugging and calibration
-        auto one = std::to_string(ui->spinBox_plate_position->value());
-        QTime now = QTime::currentTime();
-        QString time_now = now.toString("hhmmss");
-        std::string timestamp = time_now.toLocal8Bit().constData();
-
+        //        auto one = std::to_string(ui->spinBox_plate_position->value());
+        //        QTime now = QTime::currentTime();
+        //        QString time_now = now.toString("hhmmss");
+        //        std::string timestamp = time_now.toLocal8Bit().constData();
         //        bool bSuccess = cap.read(mat_from_camera);
         //        if (!bSuccess){ //if not success
         //            qInfo("Cannot read a frame from video stream");
@@ -2531,12 +2565,13 @@ bool Magrathea::touchDown(const int &ific_value, const double &threshold, const 
         //        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
         //        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
 
-        //        std::string file_name = "touchDown.txt";
-        //        std::ofstream ofs (file_name, std::ofstream::app);
-        //        ofs <<timestamp<<"  "<<iterations<<"  "<<Z_value_d<<"  "<<current1<<"  "<<current2<<std::endl;
-        //        ofs.close();
+        std::string file_name = "touchDown.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<std::endl;
+        ofs.close();
         ////////////////////////////////////////////////////
     }
+    //////////////////////////////////////
     //    //Stop motion and move 50 um away to reduce pressure
     //    if(!mMotionHandler->moveZ_2_By(0.05,velocity)){ //velocity shuld be ~0.2 mm/sec
     //        return false;

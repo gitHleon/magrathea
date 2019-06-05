@@ -93,6 +93,14 @@ public slots:
     virtual bool moveUBy(double u=0, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
+    // wait motion to end
+    virtual bool WaitX  (int timeout = -1); //timeout in milliseconds
+    virtual bool WaitY  (int timeout = -1);
+    virtual bool WaitZ  (int timeout = -1);
+    virtual bool WaitZ_2(int timeout = -1);
+    virtual bool WaitU  (int timeout = -1);
+
+    //******************************************
     // free run
     virtual bool runX(double direction, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool endRunX();
@@ -131,8 +139,6 @@ private:
     const int Z_axis = ACSC_AXIS_5;//I need the camera to stay on axis z1
     const int Z_2_axis = ACSC_AXIS_4;
     const int U_axis = ACSC_AXIS_6;
-
-    const int TimeOut = 10000;//timeout in ms
 
     double Home_coord[5]          = {0.,0.,0.,0.,0.};
     double default_speed         = 15;

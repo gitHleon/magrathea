@@ -88,6 +88,14 @@ public slots:
     virtual bool moveUBy(double u=0, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
+    // wait motion to end
+    virtual bool WaitX  (int timeout = -1); //timeout in milliseconds
+    virtual bool WaitY  (int timeout = -1);
+    virtual bool WaitZ  (int timeout = -1);
+    virtual bool WaitZ_2(int timeout = -1);
+    virtual bool WaitU  (int timeout = -1);
+
+    //******************************************
     // free run
     virtual bool runX(double direction, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool endRunX();

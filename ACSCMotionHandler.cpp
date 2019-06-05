@@ -517,12 +517,6 @@ bool ACSCMotionHandler::home() {
 
     qInfo("Running homing buffer...");
     acsc_RunBuffer(gantry,1,NULL,ACSC_SYNCHRONOUS);
-    //    qInfo("homing axes...");
-    //    homeX();
-    //    homeY();
-    //    homeZ();
-    //    homeZ_2();
-    //    homeU();
     qInfo("Done...");
     return true;
 }
@@ -585,7 +579,6 @@ bool ACSCMotionHandler::moveTo(double positions[4], double speed)
     moveYTo(positions[1],speed);
     moveZTo(positions[2],speed);
     moveZ_2_To(positions[3],speed);
-    //qInfo("...");
     return true;
 }
 
@@ -599,19 +592,11 @@ bool ACSCMotionHandler::moveXTo(double x, double speed) {
     if(acsc_SetVelocity(gantry,X_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed X axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,X_axis,x,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,X_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved x axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion X axis: %d ",acsc_GetLastError());
-        qWarning("could not move x axis to destination");
-        emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -623,19 +608,11 @@ bool ACSCMotionHandler::moveYTo(double y, double speed) {
     if(acsc_SetVelocity(gantry,Y_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Y axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,Y_axis,y,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,Y_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion Y axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved Y axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion Y axis: %d ",acsc_GetLastError());
-        qWarning("could not move Y axis to destination");
-        emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -647,19 +624,11 @@ bool ACSCMotionHandler::moveZTo(double z, double speed) {
     if(acsc_SetVelocity(gantry,Z_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,Z_axis,z,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,Z_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion Z axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved Z axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion Z axis: %d ",acsc_GetLastError());
-        qWarning("could not move Z axis to destination");
-        emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -671,19 +640,11 @@ bool ACSCMotionHandler::moveZ_2_To(double z, double speed) {
     if(acsc_SetVelocity(gantry,Z_2_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,Z_2_axis,z,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,Z_2_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion Z 2 axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved Z 2 axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion Z 2 axis: %d ",acsc_GetLastError());
-        qWarning("could not move Z 2 axis to destination");
-        emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //------------------------------------------
@@ -692,19 +653,11 @@ bool ACSCMotionHandler::moveUTo(double u, double speed) {
     if(acsc_SetVelocity(gantry,U_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed U axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,U_axis,u,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,U_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion U axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved U axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion U axis: %d ",acsc_GetLastError());
-        qWarning("could not move U axis to destination");
-        emit updatePositions_s();
         return false;
     }
-    emit updatePositions_s();
-    return true;
 }
 
 //******************************************
@@ -744,15 +697,9 @@ bool ACSCMotionHandler::moveXBy(double x, double speed) {
     if(acsc_SetVelocity(gantry,X_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed X axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,ACSC_AMF_RELATIVE,X_axis,x,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,X_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved x axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion X axis: %d ",acsc_GetLastError());
-        qWarning("could not move x axis to destination");
-        emit updatePositions_s();
         return false;
     }
 }
@@ -767,15 +714,9 @@ bool ACSCMotionHandler::moveYBy(double y, double speed) {
     if(acsc_SetVelocity(gantry,Y_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Y axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,ACSC_AMF_RELATIVE,Y_axis,y,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,Y_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion Y axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved Y axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion Y axis: %d ",acsc_GetLastError());
-        qWarning("could not move Y axis to destination");
-        emit updatePositions_s();
         return false;
     }
 }
@@ -790,15 +731,9 @@ bool ACSCMotionHandler::moveZBy(double z, double speed) {
     if(acsc_SetVelocity(gantry,Z_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,ACSC_AMF_RELATIVE,Z_axis,z,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,Z_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion Z axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved Z axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion Z axis: %d ",acsc_GetLastError());
-        qWarning("could not move Z axis to destination");
-        emit updatePositions_s();
         return false;
     }
 }
@@ -813,15 +748,9 @@ bool ACSCMotionHandler::moveZ_2_By(double z, double speed) {
     if(acsc_SetVelocity(gantry,Z_2_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed Z 2 axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,ACSC_AMF_RELATIVE,Z_2_axis,z,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,Z_2_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion Z 2 axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved Z 2 axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion Z 2 axis: %d ",acsc_GetLastError());
-        qWarning("could not move Z 2 axis to destination");
-        emit updatePositions_s();
         return false;
     }
 }
@@ -832,16 +761,67 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
     if(acsc_SetVelocity(gantry,U_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed U axis: %d ",acsc_GetLastError());
     if (acsc_ToPoint(gantry,0,U_axis,u,ACSC_SYNCHRONOUS) != 0) { //move to destination here
-        if(acsc_WaitMotionEnd(gantry,U_axis,TimeOut) == 0)
-            qWarning("Error gantry, waiting motion U axis to end: %d ",acsc_GetLastError());//wait
-        qInfo("moved U axis to destination");
-        emit updatePositions_s();
         return true;
     } else {
         qWarning("Error gantry, motion U axis: %d ",acsc_GetLastError());
-        qWarning("could not move U axis to destination");
-        emit updatePositions_s();
         return false;
+    }
+}
+
+//******************************************
+// wait motion to end
+bool ACSCMotionHandler::WaitX(int timeout){
+    if (timeout < 0)
+        timeout = INFINITE;
+    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
+         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+         return false;
+    } else {
+        return true; //returned correctly
+    }
+}
+
+bool ACSCMotionHandler::WaitY(int timeout){
+    if (timeout < 0)
+        timeout = INFINITE;
+    if(acsc_WaitMotionEnd(gantry,Y_axis,timeout) != 0){
+         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+         return false;
+    } else {
+        return true; //returned correctly
+    }
+}
+
+bool ACSCMotionHandler::WaitZ(int timeout){
+    if (timeout < 0)
+        timeout = INFINITE;
+    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
+         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+         return false;
+    } else {
+        return true; //returned correctly
+    }
+}
+
+bool ACSCMotionHandler::WaitZ_2(int timeout){
+    if (timeout < 0)
+        timeout = INFINITE;
+    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
+         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+         return false;
+    } else {
+        return true; //returned correctly
+    }
+}
+
+bool ACSCMotionHandler::WaitU(int timeout){
+    if (timeout < 0)
+        timeout = INFINITE;
+    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
+         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+         return false;
+    } else {
+        return true; //returned correctly
     }
 }
 

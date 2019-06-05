@@ -600,6 +600,29 @@ bool MotionHandler::moveUBy(double u, double speed) {
     return true;
 }
 
+//******************************************
+// wait motion to end
+
+bool MotionHandler::WaitX(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitY(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitZ(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitZ_2(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitU(int timeout){
+    return true;
+}
+
 
 //******************************************
 // free run

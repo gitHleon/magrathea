@@ -78,7 +78,7 @@ private slots:
     //Loading
     int FindPetal(double &Petalangle, std::vector<cv::Point3d> &Coordinates );
     int PickAndPlaceModule(const double &PetalAngle,const std::vector<cv::Point3d> &Coordinates );
-    bool touchDown(const int &ific_value, const double &threshold, const double &velocity);
+    bool touchDown(const double &threshold);
     bool Survey(const int &selected_module_index, const double &PetalAngle, std::vector<cv::Point3d> &Module_offsets);
     bool Adjust_module(const cv::Point3d &module_bridge_coordinates, const std::vector<cv::Point3d> &Module_offsets);
     bool GlueLines(const std::vector<cv::Point3d> &line_points);

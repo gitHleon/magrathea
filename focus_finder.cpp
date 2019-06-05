@@ -163,8 +163,12 @@ bool Focus_finder::find_focus(double &focus_height)
         if(z_pos_index==2){
             if(!gantry->moveZBy(-z_step[j]*ceil(measure_points*0.6),1.))
                 return false;
+            if(!gantry->WaitZ(-1))
+                return false;
         }else if(z_pos_index ==4){
             if(!gantry->moveZ_2_By(-z_step[j]*ceil(measure_points*0.6),1.))
+                return false;
+            if(!gantry->WaitZ_2(-1))
                 return false;
         }
         for(int i=0; i<measure_points;i++){
@@ -172,8 +176,12 @@ bool Focus_finder::find_focus(double &focus_height)
             if(z_pos_index==2){
                 if(!gantry->moveZBy(z_step[j],1.))
                     return false;
+                if(!gantry->WaitZ(-1))
+                    return false;
             }else if(z_pos_index ==4){
                 if(!gantry->moveZ_2_By(z_step[j],1.))
+                    return false;
+                if(!gantry->WaitZ_2(-1))
                     return false;
             }
             mat_from_outside = get_frame_from_camera();
@@ -203,11 +211,16 @@ bool Focus_finder::find_focus(double &focus_height)
             //            }
         }// for 6
         //z_step = 0.3 * z_step;
-        if(z_pos_index==2)
+        if(z_pos_index==2){
             gantry->moveZTo(Z_MAX,1.);
-        else if(z_pos_index ==4)
-            gantry->moveZ_2_To(Z_MAX,1.);
+            if(!gantry->WaitZ(-1))
+                return false;
 
+        }else if(z_pos_index ==4){
+            gantry->moveZ_2_To(Z_MAX,1.);
+            if(!gantry->WaitZ_2(-1))
+                return false;
+        }
         focus_height = Z_MAX;
     }
 
@@ -290,9 +303,14 @@ bool Focus_finder::Eval_syst_scan(){
             if(i != 0 && z_pos_index==2){
                 if(!gantry->moveZBy(direction*z_step,1.))
                     return false;
-            }else if(i != 0 && z_pos_index ==4)
+                if(!gantry->WaitZ(-1))
+                    return false;
+            }else if(i != 0 && z_pos_index ==4){
                 if(!gantry->moveZ_2_By(direction*z_step,1.))
                     return false;
+                if(!gantry->WaitZ_2(-1))
+                    return false;
+            }
             if (cap.isOpened()){
                 mat_from_outside = get_frame_from_camera();
             } else {
@@ -321,9 +339,14 @@ bool Focus_finder::Eval_syst_scan(){
         if(z_pos_index==2){
             if(!gantry->moveZTo(z_focus,2.))
                 return false;
-        }else if(z_pos_index ==4)
+            if(!gantry->WaitZ(-1))
+                return false;
+        }else if(z_pos_index ==4){
             if(!gantry->moveZ_2_To(z_focus,2.))
                 return false;
+            if(!gantry->WaitZ_2(-1))
+                return false;
+        }
     }
     return true;
 }
