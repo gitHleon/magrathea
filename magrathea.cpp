@@ -342,7 +342,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
     //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
-    connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
+    //connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
+    connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(loop_test_pressure()));
 }
 
 //******************************************
@@ -1544,6 +1545,24 @@ void Magrathea::destroy_all(){
     cv::destroyAllWindows();
 }
 
+bool Magrathea::loop_test_pressure(){
+
+    if(!mMotionHandler->moveZ_2_To(-47.100,1.))
+        return false;
+    if(!mMotionHandler->WaitZ_2())
+        return false;
+    std::cout<<"start!! "<<std::endl;
+    for(int j=0;j<100;j++){//set appropriate value of the loop limit
+        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> iteration : "<<j<<std::endl;
+        if(!touchDown(0.018))
+            return false;
+        if(!mMotionHandler->moveZ_2_To(-47.100,1.))
+            return false;
+        if(!mMotionHandler->WaitZ_2())
+            return false;
+    }
+    return true;
+}
 bool Magrathea::loop_test(){
     //run fiducial finding algo automatically
     //and move to the fiducial position
@@ -1551,7 +1570,11 @@ bool Magrathea::loop_test(){
         ui->chip_number_spinBox->setValue(j);
         if(!mMotionHandler->moveXBy(0.070,1.))//dispalacement added for systematic testing of the algorithm
             return false;
+        if(!mMotionHandler->WaitX())
+            return false;
         if(!mMotionHandler->moveYBy(0.070,1.))
+            return false;
+        if(!mMotionHandler->WaitY())
             return false;
         for(int i=0;i<5;i++){//set appropriate value of the loop limit
             std::cout<<"j "<<j<<" ; i "<<i<<std::endl;
@@ -2564,8 +2587,13 @@ bool Magrathea::touchDown(const double &threshold){
         //        std::string dummy = std::to_string(iterations);
         //        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
         //        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
-        if(flag < 0)
+        if(flag < 0){
             Sleeper::msleep(100);
+            std::string file_name = "touchDown_good.txt";
+            std::ofstream ofs (file_name, std::ofstream::app);
+            ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
+            ofs.close();
+        }
         std::string file_name = "touchDown.txt";
         std::ofstream ofs (file_name, std::ofstream::app);
         ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;

@@ -773,7 +773,7 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
 bool ACSCMotionHandler::WaitX(int timeout){
     if (timeout < 0)
         timeout = INFINITE;
-    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
+    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) == 0){
          qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
          return false;
     } else {
@@ -784,8 +784,8 @@ bool ACSCMotionHandler::WaitX(int timeout){
 bool ACSCMotionHandler::WaitY(int timeout){
     if (timeout < 0)
         timeout = INFINITE;
-    if(acsc_WaitMotionEnd(gantry,Y_axis,timeout) != 0){
-         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+    if(acsc_WaitMotionEnd(gantry,Y_axis,timeout) == 0){
+         qWarning("Error gantry, waiting motion Y axis to end: %d ",acsc_GetLastError());//wait
          return false;
     } else {
         return true; //returned correctly
@@ -795,8 +795,8 @@ bool ACSCMotionHandler::WaitY(int timeout){
 bool ACSCMotionHandler::WaitZ(int timeout){
     if (timeout < 0)
         timeout = INFINITE;
-    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
-         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+    if(acsc_WaitMotionEnd(gantry,Z_axis,timeout) == 0){
+         qWarning("Error gantry, waiting motion Z axis to end: %d ",acsc_GetLastError());//wait
          return false;
     } else {
         return true; //returned correctly
@@ -806,8 +806,8 @@ bool ACSCMotionHandler::WaitZ(int timeout){
 bool ACSCMotionHandler::WaitZ_2(int timeout){
     if (timeout < 0)
         timeout = INFINITE;
-    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
-         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+    if(acsc_WaitMotionEnd(gantry,Z_2_axis,timeout) == 0){
+         qWarning("Error gantry, waiting motion Z 2 axis to end: %d ",acsc_GetLastError());//wait
          return false;
     } else {
         return true; //returned correctly
@@ -817,8 +817,8 @@ bool ACSCMotionHandler::WaitZ_2(int timeout){
 bool ACSCMotionHandler::WaitU(int timeout){
     if (timeout < 0)
         timeout = INFINITE;
-    if(acsc_WaitMotionEnd(gantry,X_axis,timeout) != 0){
-         qWarning("Error gantry, waiting motion X axis to end: %d ",acsc_GetLastError());//wait
+    if(acsc_WaitMotionEnd(gantry,U_axis,timeout) == 0){
+         qWarning("Error gantry, waiting motion U axis to end: %d ",acsc_GetLastError());//wait
          return false;
     } else {
         return true; //returned correctly
