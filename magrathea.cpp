@@ -1930,8 +1930,8 @@ bool Magrathea::fiducial_chip_measure(){
 
 int Magrathea::TestButtonClick(){
 
-    touchDown(0.018);
-
+    //touchDown(0.018);
+    touchDown(ui->doubleSpinBox_thresholdTouch->value());
 
     return 0;
     std::vector<std::string> arguments;
@@ -2524,6 +2524,7 @@ bool Magrathea::touchDown(const double &threshold){
     const double velocity         = 0.1; //[mm/s]
     const double maximum_distance = 1.5; //[mm]
     const int millisec_wait       = 100;
+    std::cout<<"Start, T: "<<threshold<<std::endl;
     if(!mMotionHandler->moveZ_2_By(-maximum_distance,velocity))
         return false;
     Sleeper::msleep(1500); //need to wait for inductance of the engine to charge, corresponds to 150 um of travel
@@ -2566,8 +2567,10 @@ bool Magrathea::touchDown(const double &threshold){
                 flag = -1;
             }
         }
-        if(iterations>140)
+        if(iterations>140){
             flag = -1;
+            std::cout<<"NO touch!!!!!"<<std::endl;
+        }
         current0 = current1;
         current1 = current2;
         ////////////////////////////////////////////////
@@ -2591,8 +2594,10 @@ bool Magrathea::touchDown(const double &threshold){
             Sleeper::msleep(100);
             std::string file_name = "touchDown_good.txt";
             std::ofstream ofs (file_name, std::ofstream::app);
-            ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
+            ofs <<"T: "<<threshold<<" : "<<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
             ofs.close();
+            if(iterations<=140)
+                std::cout<<"Touch down!!!!!"<<std::endl;
         }
         std::string file_name = "touchDown.txt";
         std::ofstream ofs (file_name, std::ofstream::app);

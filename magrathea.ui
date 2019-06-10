@@ -1073,13 +1073,6 @@
              </property>
             </widget>
            </item>
-           <item row="5" column="6">
-            <widget class="QPushButton" name="focusalgotest_pushButton">
-             <property name="text">
-              <string>Focus algo test</string>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="1">
             <widget class="QPushButton" name="Circles_button">
              <property name="text">
@@ -1141,10 +1134,37 @@
              </property>
             </widget>
            </item>
-           <item row="6" column="6">
+           <item row="6" column="5">
             <widget class="QPushButton" name="TestButton">
              <property name="text">
               <string>Test</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="5">
+            <widget class="QPushButton" name="focusalgotest_pushButton">
+             <property name="text">
+              <string>Focus algo test</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="6">
+            <widget class="QLabel" name="label_80">
+             <property name="text">
+              <string>Threshold touch test</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="6">
+            <widget class="QDoubleSpinBox" name="doubleSpinBox_thresholdTouch">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
              </property>
             </widget>
            </item>
@@ -1917,7 +1937,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move BY</string>
               </property>
              </widget>
             </item>
@@ -1988,7 +2008,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move TO</string>
               </property>
              </widget>
             </item>
@@ -2089,7 +2109,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move BY</string>
               </property>
              </widget>
             </item>
@@ -2170,7 +2190,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move TO</string>
               </property>
              </widget>
             </item>
@@ -2387,7 +2407,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move BY</string>
               </property>
              </widget>
             </item>
@@ -2413,7 +2433,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move TO</string>
               </property>
              </widget>
             </item>
@@ -2550,7 +2570,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move BY</string>
               </property>
              </widget>
             </item>
@@ -2589,7 +2609,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>move</string>
+               <string>move TO</string>
               </property>
              </widget>
             </item>
@@ -2636,10 +2656,24 @@
              </widget>
             </item>
             <item row="2" column="2">
-             <widget class="QDoubleSpinBox" name="uAxisStepDoubleSpinBox"/>
+             <widget class="QDoubleSpinBox" name="uAxisStepDoubleSpinBox">
+              <property name="minimum">
+               <double>-360.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>360.000000000000000</double>
+              </property>
+             </widget>
             </item>
             <item row="1" column="2">
-             <widget class="QDoubleSpinBox" name="uAxisPositionMoveDoubleSpinBox"/>
+             <widget class="QDoubleSpinBox" name="uAxisPositionMoveDoubleSpinBox">
+              <property name="minimum">
+               <double>-360.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>360.000000000000000</double>
+              </property>
+             </widget>
             </item>
             <item row="0" column="0">
              <widget class="QPushButton" name="EnableButton_U">
@@ -2805,14 +2839,14 @@
             <item row="1" column="3">
              <widget class="QPushButton" name="z_2_AxisPositionMoveButton">
               <property name="text">
-               <string>move</string>
+               <string>move TO</string>
               </property>
              </widget>
             </item>
             <item row="2" column="3">
              <widget class="QPushButton" name="z_2_AxisStepMoveButton">
               <property name="text">
-               <string>move</string>
+               <string>move BY</string>
               </property>
              </widget>
             </item>

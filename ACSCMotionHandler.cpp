@@ -760,7 +760,7 @@ bool ACSCMotionHandler::moveUBy(double u, double speed) {
     qInfo("moving U axis to %.3f <set angle units> at %.3f <set angle units>/s speed", u, speed);
     if(acsc_SetVelocity(gantry,U_axis,speed,ACSC_SYNCHRONOUS) == 0)
         qWarning("Error gantry, setting speed U axis: %d ",acsc_GetLastError());
-    if (acsc_ToPoint(gantry,0,U_axis,u,ACSC_SYNCHRONOUS) != 0) { //move to destination here
+    if (acsc_ToPoint(gantry,ACSC_AMF_RELATIVE,U_axis,u,ACSC_SYNCHRONOUS) != 0) { //move to destination here
         return true;
     } else {
         qWarning("Error gantry, motion U axis: %d ",acsc_GetLastError());
