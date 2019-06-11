@@ -70,7 +70,6 @@ private slots:
     void enableJoystickStepMotion(bool checked);
     void stepMotion();
     void positionMove();
-    void axisStepRepeatBoxClicked(bool checked);
     void AxisEnableDisableButton();
     void led_label(QLabel *label, bool value);
     void led_label(QLabel *label, bool value, const std::vector<QString> &input);

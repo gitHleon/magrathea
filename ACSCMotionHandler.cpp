@@ -1188,7 +1188,6 @@ bool ACSCMotionHandler::validate_target_pos_y(double val){
         qWarning("ERROR!! Target Y position is NOT valid, aborting motion.");
         return false;
     } else {
-        //add control on step
         return true;
     }
 }
@@ -1214,7 +1213,6 @@ bool ACSCMotionHandler::validate_target_pos_z_1(double val){
         qWarning("ERROR!! Target Z1 position is NOT valid, aborting motion.");
         return false;
     } else {
-        //add control on step
         return true;
     }
 }
@@ -1240,7 +1238,6 @@ bool ACSCMotionHandler::validate_target_pos_z_2(double val){
         qWarning("ERROR!! Target Z2 position is NOT valid, aborting motion.");
         return false;
     } else {
-        //add control on step
         return true;
     }
 }

@@ -328,13 +328,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->z_2_AxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
     connect(ui->uAxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
 
-    //step motion autorepeat box
-    connect(ui->xAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->yAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->zAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->z_2_AxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->uAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-
     //test
     connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
@@ -1424,55 +1417,23 @@ void Magrathea::positionMove()
     return;
 }
 
-//------------------------------------------
-//step motion autorepeat
-void Magrathea::axisStepRepeatBoxClicked(bool checked)
-{
-    if (sender() == ui->xAxisStepRepeatBox) {
-        ui->xAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveXButton->setAutoRepeat(checked);
-        ui->negativeXButton->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->yAxisStepRepeatBox) {
-        ui->yAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveYButton->setAutoRepeat(checked);
-        ui->negativeYButton->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->zAxisStepRepeatBox) {
-        ui->zAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveZButton->setAutoRepeat(checked);
-        ui->negativeZButton->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->z_2_AxisStepRepeatBox) {
-        ui->z_2_AxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveZ_2_Button->setAutoRepeat(checked);
-        ui->negativeZ_2_Button->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->uAxisStepRepeatBox) {
-        ui->uAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveUButton->setAutoRepeat(checked);
-        ui->negativeUButton->setAutoRepeat(checked);
-    }
-    return;
-}
-
 void Magrathea::AxisEnableDisableButton(){
     std::vector <bool> status_axes;
     if(sender() == ui->EnableButton_X){
         mMotionHandler->getXAxisState(status_axes);
-        mMotionHandler->enableXAxis(status_axes[0]);
+        mMotionHandler->enableXAxis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_Y){
         mMotionHandler->getYAxisState(status_axes);
-        mMotionHandler->enableYAxis(status_axes[0]);
+        mMotionHandler->enableYAxis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_Z){
         mMotionHandler->getZAxisState(status_axes);
-        mMotionHandler->enableZAxis(status_axes[0]);
+        mMotionHandler->enableZAxis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_Z_2){
         mMotionHandler->getZ_2_AxisState(status_axes);
-        mMotionHandler->enableZ_2_Axis(status_axes[0]);
+        mMotionHandler->enableZ_2_Axis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_U){
         mMotionHandler->getUAxisState(status_axes);
-        mMotionHandler->enableUAxis(status_axes[0]);
+        mMotionHandler->enableUAxis(!status_axes[0]);
     }else
         qWarning("Warning! Improper use of function AxisEnableDisableButton.");
 }
@@ -1547,18 +1508,18 @@ void Magrathea::destroy_all(){
 
 bool Magrathea::loop_test_pressure(){
 
-    if(!mMotionHandler->moveZ_2_To(-47.100,1.))
+    if(!mMotionHandler->moveZTo(-47.100,1.))
         return false;
-    if(!mMotionHandler->WaitZ_2())
+    if(!mMotionHandler->WaitZ())
         return false;
     std::cout<<"start!! "<<std::endl;
     for(int j=0;j<100;j++){//set appropriate value of the loop limit
         std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> iteration : "<<j<<std::endl;
         if(!touchDown(0.018))
             return false;
-        if(!mMotionHandler->moveZ_2_To(-47.100,1.))
+        if(!mMotionHandler->moveZTo(-47.100,1.))
             return false;
-        if(!mMotionHandler->WaitZ_2())
+        if(!mMotionHandler->WaitZ())
             return false;
     }
     return true;
@@ -2231,7 +2192,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     if(!mMotionHandler->moveUBy(45,5))
         return false;
 
-    if(!mMotionHandler->moveZBy(-7,1))
+    if(!mMotionHandler->moveZBy(-7,1))//touchdown again?
         return false;
 
     //turn ON gantry vacuum
@@ -2460,17 +2421,11 @@ bool Magrathea::Survey(const int &selected_module_index, const double &PetalAngl
         //Check axis index after setup is complete
         cv::Point3d temp_point (Real_Module_On_Petal_Positions[i][0],Real_Module_On_Petal_Positions[i][1],Real_Module_On_Petal_Positions[i][2]);
         Module_offsets.push_back(Petal_Rotated_coordinates.at(i) - temp_point);
-
-
     }
-
     //Do something with the values?
     //Print them and decide if going on or not?
-
     return true;
 }
-
-
 
 //L2520
 // Function for adjusting placed module and waiting for glue ot dry
@@ -2525,7 +2480,7 @@ bool Magrathea::touchDown(const double &threshold){
     const double maximum_distance = 1.5; //[mm]
     const int millisec_wait       = 100;
     std::cout<<"Start, T: "<<threshold<<std::endl;
-    if(!mMotionHandler->moveZ_2_By(-maximum_distance,velocity))
+    if(!mMotionHandler->moveZBy(-maximum_distance,velocity))
         return false;
     Sleeper::msleep(1500); //need to wait for inductance of the engine to charge, corresponds to 150 um of travel
     double current0 = mMotionHandler->CurrentAmI(2);
@@ -2563,7 +2518,7 @@ bool Magrathea::touchDown(const double &threshold){
         // --> if they are, break from the loop and stop motion
         if (compare0 > threshold){
             if (compare1 > threshold){
-                mMotionHandler->endRunZ_2();
+                mMotionHandler->endRunZ();
                 flag = -1;
             }
         }
