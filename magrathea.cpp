@@ -342,8 +342,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
     //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
-    //connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
-    connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(loop_test_pressure()));
+    connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
+    //connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(loop_test_pressure()));
 }
 
 //******************************************
