@@ -144,8 +144,8 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->yAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->zAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->zAxisPositionMoveDoubleSpinBox->setValue(0.0);
-    ui->zAxisPositionMoveDoubleSpinBox->setMinimum(-300.0);
-    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(300.0);
+    ui->zAxisPositionMoveDoubleSpinBox->setMinimum(-100.0);
+    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(100.0);
     ui->zAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->zAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->z_2_AxisPositionMoveDoubleSpinBox->setFont(font);
@@ -156,7 +156,7 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->z_2_AxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->uAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->uAxisPositionMoveDoubleSpinBox->setValue(0.0);
-    ui->uAxisPositionMoveDoubleSpinBox->setMinimum(0.0);
+    ui->uAxisPositionMoveDoubleSpinBox->setMinimum(-360.0);
     ui->uAxisPositionMoveDoubleSpinBox->setMaximum(360.0);
     ui->uAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->uAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
@@ -2008,9 +2008,21 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     //This has to be evaluated as function of the position in Z
     //of the petal. i.e. using Z_coordinates from FindPetal function
     double safe_Z_ModulePlace_height = -50;
-    double PickUpTool_angle = 45.;
+    double PickUpTool_angle = 0.;
+    double module_angle = 0.;
+    std::vector <double> pos_t_1(4);
+    std::vector <double> pos_t_2(4);
     QMessageBox::StandardButton reply;
     QMessageBox::StandardButton info_step;
+    enum Step {AllSteps, LocateModule, PickUpTool, PickUpModule, PlaceModule};//enum to run segment of code without splitting the code.
+    Step m_step = AllSteps;
+    if (sender() == ui->PickUp_Button)
+        m_step = PickUpTool;
+    else if (sender() == ui->PickUp_Module_Button)
+        m_step = PickUpModule;
+    else if(sender() == ui->PlaceModule_Button)
+        m_step = PlaceModule;
+
     //Think of how we want the drawing of the petal to be made
     //Maybe load several pictures showing the different steps of the loading.
 
@@ -2030,7 +2042,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     std::vector<cv::Point3d> R4_LEFT_jig_coordinates (5);
     std::vector<cv::Point3d> R4_RIGHT_jig_coordinates (5);
     std::vector<cv::Point3d> R5_LEFT_jig_coordinates (5);
-    std::vector<cv::Point3d> R6_RIGHT_jig_coordinates (5);
+    std::vector<cv::Point3d> R5_RIGHT_jig_coordinates (5);
 
     std::vector<std::vector< cv::Point3d> > Jig_coordinates(9);
     Jig_coordinates.at(0)= R0_jig_coordinates;
@@ -2041,7 +2053,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     Jig_coordinates.at(5)= R4_LEFT_jig_coordinates;
     Jig_coordinates.at(6)= R4_RIGHT_jig_coordinates;
     Jig_coordinates.at(7)= R5_LEFT_jig_coordinates;
-    Jig_coordinates.at(8)= R6_RIGHT_jig_coordinates;
+    Jig_coordinates.at(8)= R5_RIGHT_jig_coordinates;
 
     std::vector<cv::Point3d> R0_Petal_coordinates (5);
     std::vector<cv::Point3d> R1_Petal_coordinates (5);
@@ -2051,24 +2063,25 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     std::vector<cv::Point3d> R4_LEFT_Petal_coordinates (5);
     std::vector<cv::Point3d> R4_RIGHT_Petal_coordinates (5);
     std::vector<cv::Point3d> R5_LEFT_Petal_coordinates (5);
-    std::vector<cv::Point3d> R6_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_RIGHT_Petal_coordinates (5);
 
     std::vector<double> Module_Petal_angles (9);
     std::vector<std::vector< cv::Point3d> > Petal_coordinates(9);
-    Petal_coordinates.at(0)= R0_Petal_coordinates;
-    Petal_coordinates.at(1)= R1_Petal_coordinates;
-    Petal_coordinates.at(2)= R2_Petal_coordinates;
-    Petal_coordinates.at(3)= R3_LEFT_Petal_coordinates;
-    Petal_coordinates.at(4)= R3_RIGHT_Petal_coordinates;
-    Petal_coordinates.at(5)= R4_LEFT_Petal_coordinates;
-    Petal_coordinates.at(6)= R4_RIGHT_Petal_coordinates;
-    Petal_coordinates.at(7)= R5_LEFT_Petal_coordinates;
-    Petal_coordinates.at(8)= R6_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(0) = R0_Petal_coordinates;
+    Petal_coordinates.at(1) = R1_Petal_coordinates;
+    Petal_coordinates.at(2) = R2_Petal_coordinates;
+    Petal_coordinates.at(3) = R3_LEFT_Petal_coordinates;
+    Petal_coordinates.at(4) = R3_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(5) = R4_LEFT_Petal_coordinates;
+    Petal_coordinates.at(6) = R4_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(7) = R5_LEFT_Petal_coordinates;
+    Petal_coordinates.at(8) = R5_RIGHT_Petal_coordinates;
 
     std::vector< cv::Point3d > PickUpTool_coordinates(9);
 
     int selected_module_index = ui->Module_comboBox->currentIndex();
 
+    if(m_step == AllSteps || m_step == LocateModule){//<<<<<<<
     reply = QMessageBox::question(this, "Warning", "Is module on jig and vacuum available?",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::No) {
@@ -2081,13 +2094,16 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
         return false;
     if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][0].z,3))
         return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+    mMotionHandler->WaitZ();
     if(!focusButtonClicked())
         return false;
     if(!loop_fid_finder(0))
         return false;
 
     //Store real position of fiducial
-    std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+    pos_t_1 = mMotionHandler->whereAmI(1);
 
     //Move to second (upper-right) 'F' fiducial on sensor
     if(!mMotionHandler->moveXTo(Jig_coordinates[selected_module_index][1].x,12))
@@ -2096,45 +2112,49 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
         return false;
     if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][1].z,3))
         return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+    mMotionHandler->WaitZ();
     if(!focusButtonClicked())
         return false;
     if(!loop_fid_finder(0))
         return false;
 
     //Store real position of fiducial
-    std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
+    pos_t_2 = mMotionHandler->whereAmI(1);
 
-    //Add maybe a message box?
-    qInfo("Module orientation determined. \n Moving to pick-up tool...");
-
+    QMessageBox::information(this, "Information", "Module orientation determined.  \n Moving to pick-up tool...");
     //verify calculation after deciding how the setup is placed on the gantry table
-    double module_angle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
+    //take into account properly the position of the fiducials
+    module_angle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
+    } //<<<<<<<
 
     //setting ifs to allow partial run of the code, without splitting the function
-    if (sender() == ui->PickUp_Button){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
+    if (m_step == AllSteps || m_step == PickUpTool){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         //Move to correct pick-up tool
         //Fix axis according to final camera setup
         if(!mMotionHandler->moveZTo(safe_Z_height,3))
             return false;
-
+        mMotionHandler->WaitZ();
         if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
             return false;
+        mMotionHandler->WaitX();
         if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
             return false;
-
+        mMotionHandler->WaitY();
         //understand what the velocity means for the U axis
         if(!mMotionHandler->moveUTo(PickUpTool_angle,5))
             return false;
+        mMotionHandler->WaitU();
 
         //Fix axis according to final camera setup
-        if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z+2,5))
+        if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z,5))
             return false;
+        mMotionHandler->WaitU();
         //Slowly touch the pickup tool
-        if(!mMotionHandler->moveZBy(-2,0.75))
-            return false;
-
+        //        if(!mMotionHandler->moveZBy(-2,0.75))
+        //            return false;
+        touchDown(0.018);
         //turn ON gantry vacuum
         info_step = QMessageBox::information(this,
                                              "Step to be taken by user",
@@ -2145,11 +2165,11 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
         //Fix axis according to final camera setup
         if(!mMotionHandler->moveZTo(safe_Z_height,3))
             return false;
-    } // end if sender pickup_button<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    //////////////////////////////////////////////////////////////////////////
+        mMotionHandler->WaitZ();
 
-    if (sender() == ui->PickUp_Module_Button){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        //////////////////////////////////////////////////////////////////////////
+    } // end if sender pickup_button<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    if (m_step == AllSteps || m_step == PickUpModule){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
         reply = QMessageBox::question(this, "Warning", "Is pick-up tool properly attached to the loading head?",
                                       QMessageBox::Yes|QMessageBox::No);
@@ -2168,15 +2188,19 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
         return false;
     if(!mMotionHandler->moveYTo(target_y,12))
         return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
     //rotate pickup tool to align with the sensor
     //understand what the velocity means for the U axis
     //verify the calculation after the setup is designed
     if(!mMotionHandler->moveUBy(module_angle,5))
         return false;
+    mMotionHandler->WaitU();
 
     //Pick up module
     if(!mMotionHandler->moveZTo(safe_Z_ModulePickUp_height,3))
         return false;
+    mMotionHandler->WaitZ();
 
     touchDown(0.018);
 
@@ -2186,14 +2210,17 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
                                          "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
 
     //Lift up and rotate gantry-vacuum over holes
-    if(!mMotionHandler->moveZBy(7,2))
+    if(!mMotionHandler->moveZBy(5,1))
         return false;
+    mMotionHandler->WaitZ();
 
     if(!mMotionHandler->moveUBy(45,5))
         return false;
+    mMotionHandler->WaitU();
 
-    if(!mMotionHandler->moveZBy(-7,1))//touchdown again?
+    if(!mMotionHandler->moveZBy(-5,1))//touchdown again?
         return false;
+    mMotionHandler->WaitZ();
 
     //turn ON gantry vacuum
     info_step = QMessageBox::information(this,
@@ -2203,9 +2230,10 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     // Move over petal and place sensor
     if(!mMotionHandler->moveZTo(safe_Z_height,3))
         return false;
+    mMotionHandler->WaitZ();
     }//End if PickUp module button<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    if(sender() == ui->PlaceModule_Button){
+
+    if(m_step == AllSteps || m_step == PlaceModule){//<<<<<<<
         reply = QMessageBox::question(this, "Warning", "Is module properly attached to the loading head?",
                                       QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::No)
@@ -2222,24 +2250,30 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
         return false;
     if(!mMotionHandler->moveYTo(target_y,5))
         return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+
 
     //align module with petal
     if(!mMotionHandler->moveUTo(PetalAngle + Module_Petal_angles[selected_module_index],5))
         return false;
+    mMotionHandler->WaitU();
 
     // Move over petal and place sensor
     if(!mMotionHandler->moveZTo(safe_Z_ModulePlace_height,3))
         return false;
+    mMotionHandler->WaitZ();
 
-    touchDown(0.016);
+    touchDown(0.018);
 
     // Once petal has been found, slowly move down 50 um more to ensure contact
-    if(!mMotionHandler->moveZBy(-0.05,0.2))
-        return false;
+    //if(!mMotionHandler->moveZBy(-0.05,0.1))//necessary in our case?
+    //    return false;
+    //mMotionHandler->WaitZ();
 
     } //end if place module
 
-    if(sender() == ui->PickUp_Button || sender() == ui->PickUp_Module_Button || sender() == ui->PlaceModule_Button)
+    if(m_step != AllSteps)
         return true; //finish here if running testing
 
     //Store position for module adjustment
@@ -2258,6 +2292,7 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     // Lift gantry head up (slowly)
     if(!mMotionHandler->moveZBy(2,0.2))
         return false;
+    mMotionHandler->WaitZ();
 
     qInfo("Proceeding to survey placement...");
     std::vector <cv::Point3d> Module_offsets;
@@ -2290,24 +2325,29 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
 
     if(!mMotionHandler->moveZTo(safe_Z_height,3))
         return false;
+    mMotionHandler->WaitZ();
+
 
     //Turn lamp over module on petal to green, indicating module has been successfully placed
     //PetalUpdate(app,app.ModuleDropDown.Value, 2);
 
     //Putting back the pick up tool
 
-
     if(!mMotionHandler->moveUBy(45,5))
         return false;
+    mMotionHandler->WaitU();
     if(!mMotionHandler->moveXTo(module_bridge_coordinates.x,5))
         return false;
+    mMotionHandler->WaitX();
     if(!mMotionHandler->moveYTo(module_bridge_coordinates.y,5))
         return false;
+    mMotionHandler->WaitY();
     if(!mMotionHandler->moveZTo(module_bridge_coordinates.z+1,5))
         return false;
-
+    mMotionHandler->WaitZ();
     if(!mMotionHandler->moveZBy(-1,0.25))
         return false;
+    mMotionHandler->WaitZ();
 
     //turn ON gantry vacuum
     QMessageBox::information(this,
@@ -2316,21 +2356,28 @@ int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv:
     //Slowly lift tool off of module
     if(!mMotionHandler->moveZBy(0.5,0.1))
         return false;
+    mMotionHandler->WaitZ();
     if(!mMotionHandler->moveZBy(2,0.5))
         return false;
+    mMotionHandler->WaitZ();
     if(!mMotionHandler->moveZTo(safe_Z_height,5))
         return false;
+    mMotionHandler->WaitZ();
 
     //Move tool back to tool holder
     if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
         return false;
+    mMotionHandler->WaitX();
     if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
         return false;
+    mMotionHandler->WaitY();
     if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z+2,5))
         return false;
+    mMotionHandler->WaitZ();
     //Slowly drop the pickup tool
     if(!mMotionHandler->moveZBy(-2,0.75))
         return false;
+    mMotionHandler->WaitZ();
 
     //turn OFF gantry vacuum
     info_step = QMessageBox::information(this,
@@ -2398,15 +2445,19 @@ bool Magrathea::Survey(const int &selected_module_index, const double &PetalAngl
 
         if(!mMotionHandler->moveZTo(safe_Z_height,3))
             return false;
+        mMotionHandler->WaitZ();
 
         //Move to correct location over petal
         if(!mMotionHandler->moveXTo(Petal_Rotated_coordinates.at(i).x,5))
             return false;
+        mMotionHandler->WaitX();
         if(!mMotionHandler->moveYTo(Petal_Rotated_coordinates.at(i).y,5))
             return false;
+        mMotionHandler->WaitY();
 
         if(!mMotionHandler->moveZTo(safe_Z_height_To_autofocus,3))
             return false;
+        mMotionHandler->WaitZ();
 
         //autofocus and find fiducial
         if(!focusButtonClicked())
@@ -2438,6 +2489,7 @@ bool Magrathea::Adjust_module(const cv::Point3d &module_bridge_coordinates, cons
     double safe_Z_height = -20;
     if(!mMotionHandler->moveZTo(safe_Z_height,3))
         return false;
+    mMotionHandler->WaitZ();
 
     //Functio does not make sense. Rewrite it!!!
 
@@ -2587,10 +2639,13 @@ bool Magrathea::GlueLines( const std::vector<cv::Point3d> &line_points){
     //Move to correct location over petal
     if(!mMotionHandler->moveXTo(line_points[0].x,5))
         return false;
+    mMotionHandler->WaitX();
     if(!mMotionHandler->moveYTo(line_points[0].y,5))
         return false;
+    mMotionHandler->WaitY();
     if(!mMotionHandler->moveZTo(safe_gluing_Z_height,5))
         return false;
+    mMotionHandler->WaitZ();
 
     //send start dispensing to dispeser
     //(Ultimus needs to be in steady "mode", see sec 2.2.27 of manual )
@@ -2598,11 +2653,14 @@ bool Magrathea::GlueLines( const std::vector<cv::Point3d> &line_points){
     arguments.push_back("DI  ");
     TalkSR232(arguments);
     //move symultaneously the two axis (verify if this works,
-    //or use the appropriate function to move two axis at a time)
+    //or use the appropriate function (that need to be implemented in ACSCMotionhandler) to move two axis at a time)
     mMotionHandler->moveXTo(line_points[0].x,glue_speed);
     mMotionHandler->moveYTo(line_points[0].y,glue_speed);
 
     //send end dispensing to dispeser
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+
     TalkSR232(arguments);
 
     return true;
@@ -2635,9 +2693,7 @@ bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
     serialPort.setStopBits(QSerialPort::OneStop); //set
     serialPort.setDataBits(QSerialPort::Data8); //DataBits to 8
     serialPort.setFlowControl(QSerialPort::NoFlowControl);
-    std::cout<<"OK!!!!!"<<std::endl;
     serialPort.close();
-    std::cout<<"fail !!!!!"<<std::endl;
     if (!serialPort.open(QIODevice::ReadWrite)) {
         std::cout<<"FAIL!!!!!"<<std::endl;
         qWarning("Failed to open port %s, error: %s",serialPortName.toLocal8Bit().constData(),serialPort.errorString().toLocal8Bit().constData());
