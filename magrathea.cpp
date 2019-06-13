@@ -2535,31 +2535,17 @@ bool Magrathea::touchDown(const double &threshold){
     if(!mMotionHandler->moveZBy(-maximum_distance,velocity))
         return false;
     Sleeper::msleep(1500); //need to wait for inductance of the engine to charge, corresponds to 150 um of travel
-    double current0 = mMotionHandler->CurrentAmI(2);
+    double current0 = mMotionHandler->CurrentAmI(1);
     Sleeper::msleep(millisec_wait);
-    double current1 = mMotionHandler->CurrentAmI(2);
+    double current1 = mMotionHandler->CurrentAmI(1);
     //VALENCIA ONLY: current is returned in % of maximum motor capability
     int flag = 1;
     int iterations =0;
-    ///////////////////////////////////////////
-    //    cv::destroyAllWindows();
-    //    mCamera->stop(); //closing QCamera
-    //    cv::Mat mat_from_camera;
-    //    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-    //    if (!cap.isOpened()){
-    //        //Opening opencv-camera, needed for easier image manipulation
-    //        QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-    //        return false;}
-    //    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-    //    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
-    //    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
-    //    cap.set(cv::CAP_PROP_FPS, 5.0);
-    ////////////////////////////////////////////
     while (flag > 0){
         Sleeper::msleep(millisec_wait);
         //QApplication::processEvents(); ???
         iterations++;
-        double current2 = mMotionHandler->CurrentAmI(2);
+        double current2 = mMotionHandler->CurrentAmI(1);
         //Take the difference of two consecutive current measurements
         //(spaced 100 ms apart) average time of the current in the motor in Valencia, may be different in other sites
         double compare0 = current1 - current0;
@@ -2580,37 +2566,19 @@ bool Magrathea::touchDown(const double &threshold){
         }
         current0 = current1;
         current1 = current2;
-        ////////////////////////////////////////////////
-        //Debugging and calibration
-        //        auto one = std::to_string(ui->spinBox_plate_position->value());
-        //        QTime now = QTime::currentTime();
-        //        QString time_now = now.toString("hhmmss");
-        //        std::string timestamp = time_now.toLocal8Bit().constData();
-        //        bool bSuccess = cap.read(mat_from_camera);
-        //        if (!bSuccess){ //if not success
-        //            qInfo("Cannot read a frame from video stream");
-        //            return false;
-        //        }
-        //        int window_size = mat_from_camera.rows;
-        //double Z_value_d = mMotionHandler->whereAmI(1).at(4);
-        //        std::string Z_value_s = std::to_string(Z_value_d);
-        //        std::string dummy = std::to_string(iterations);
-        //        cv::putText(mat_from_camera,Z_value_s,cv::Point(2,window_size-2), cv::FONT_HERSHEY_PLAIN,3,cv::Scalar(0,0,255),2);
-        //        cv::imwrite("EXPORT/TouchDown_"+timestamp+"_"+dummy+".jpg",mat_from_camera);
         if(flag < 0){
             Sleeper::msleep(100);
             std::string file_name = "touchDown_good.txt";
             std::ofstream ofs (file_name, std::ofstream::app);
-            ofs <<"T: "<<threshold<<" : "<<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
+            ofs <<"T: "<<threshold<<" : "<<iterations<<"  "<<mMotionHandler->whereAmI(1).at(2)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
             ofs.close();
             if(iterations<=140)
                 std::cout<<"Touch down!!!!!"<<std::endl;
         }
         std::string file_name = "touchDown.txt";
         std::ofstream ofs (file_name, std::ofstream::app);
-        ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(4)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
+        ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(2)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
         ofs.close();
-        ////////////////////////////////////////////////////
     }
     //////////////////////////////////////
     //    //Stop motion and move 50 um away to reduce pressure
