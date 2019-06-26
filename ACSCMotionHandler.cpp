@@ -114,7 +114,6 @@ bool ACSCMotionHandler::stop(){
         qInfo("Error : %d ",acsc_GetLastError());
         return false;
     }
-    return true;
 }
 
 //------------------------------------------
@@ -128,8 +127,7 @@ bool ACSCMotionHandler::acknowledgeMotionFaultGantry()
         qWarning("could not reset errors");
         return false;
     }
-    return true;}
-
+}
 
 //------------------------------------------
 bool ACSCMotionHandler::enableAxes(bool flag)
@@ -157,7 +155,6 @@ bool ACSCMotionHandler::enableAxes(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -186,7 +183,6 @@ bool ACSCMotionHandler::enableXAxis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -215,7 +211,6 @@ bool ACSCMotionHandler::enableYAxis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -244,7 +239,6 @@ bool ACSCMotionHandler::enableZAxis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -273,7 +267,6 @@ bool ACSCMotionHandler::enableZ_2_Axis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -302,7 +295,6 @@ bool ACSCMotionHandler::enableUAxis(bool flag)
             return false;
         }
     }
-    return true;
 }
 
 //------------------------------------------
@@ -970,16 +962,13 @@ bool ACSCMotionHandler::endRunU()
 }
 
 //******************************************
-//gantry current position
+//gantry feedback position
 std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
     std::vector<double> position = {-99990.0,-99990.0,-99990.0,-99990.0,-99990.0};
     double position_tmp = -99999.9;
     if(!gantryConnected)
         return position;
-    //try difference with acsc_GetTargetPosition sec 4.16 C library manual
-    //try also APOS variable with acsc_ReadReal function (4.4.3)
-    //try difference with acsc_GetRPosition sec 4.12 C library manual
-    //try difference with acsc_GetFPosition sec 4.12 C library manual
+    //APOS variable with acsc_ReadReal function (4.4.3)
     if(ific_value == 0){
         if(acsc_GetFPosition(gantry,X_axis,&position_tmp,ACSC_SYNCHRONOUS) == 0)
             qWarning("Error get position X axis: %d ",acsc_GetLastError());
@@ -1027,6 +1016,7 @@ std::vector<double> ACSCMotionHandler::whereAmI(int ific_value) {
     return position;
 }
 
+//current in z motors
 double ACSCMotionHandler::CurrentAmI(int ific_value) {
     double current_tmp = -8888.8;
 

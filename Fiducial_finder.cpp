@@ -73,6 +73,7 @@ cv::Mat FiducialFinder::get_component(const cv::Mat &input_mat,const unsigned in
 }
 
 cv::Mat FiducialFinder::change_gamma(const cv::Mat &input_mat, const double &gamma){
+    //change the gamma of an image
     if(gamma < 0 || gamma > 255){
         std::cout<<"enance_contrast: Error in gamma range"<<std::endl;
         return input_mat;
@@ -121,9 +122,6 @@ cv::Mat FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max
     threshold_steps.push_back(mean_t[0]-1*stddev_t[0]);
     threshold_steps.push_back(mean_t[0]+1*stddev_t[0]);
     threshold_steps.push_back(mean_t[0]+2*stddev_t[0]);
-
-    //    for(int i=1;i<(steps-1);i++)
-    //        threshold_steps.push_back(i*threshold_step);
     threshold_steps.push_back(255);
 
     matrices.push_back(input_mat);
@@ -183,7 +181,6 @@ void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int st
 
 bool FiducialFinder::Is_equal(const double &one, const double &two){
     //function needed when searching for fiducial not using SURF
-    //Tolerance 3um, the precision of the gantry
     double tolerance = 10*Calibration; //[px]
     return ( fabs(one-two) <= tolerance);
 }
@@ -247,9 +244,6 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Vec4f> &Circl
             }
         }
     }
-//    std::cout<<"Iterations  : "<<Iteration<<std::endl;
-//    std::cout<<"# Squares   : "<<Squares.size()<<std::endl;
-//    std::cout<<"# Triangles : "<<Triangles.size()<<std::endl;
 }
 
 bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3, const cv::Point &P_4)
@@ -524,7 +518,6 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
         Find_SquareAndTriangles(circles,Squares,Triangles);
         if(debug)
             std::cout<<"Squares.size() "<<Squares.size()<<std::endl;
-        //cv::circle(RoiImage_out, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
         //define square center variables, to be used later in the fit
         double square_center_x = 0.;
         double square_center_y = 0.;
@@ -777,7 +770,7 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
                             int &fail_code,
                             const int &input_1, const int &input_2, const int &input_3,
                             cv::Mat &transform_out){
-    //main function for finding fiducials
+    //main function for finding fiducials using surf
     //https://gitlab.cern.ch/guescini/fiducialFinder/blob/master/fiducialFinder.py
 
     bool debug = false;
@@ -1125,18 +1118,10 @@ bool FiducialFinder::Find_F(const int &DescriptorAlgorithm, double &X_distance, 
     cv::circle(image, cv::Point(center_cols,center_rows), 3, cv::Scalar(0,0,255), -1, 8, 0 );
 
     if(debug){
-        //cv::namedWindow(algo_name +" Match", CV_WINDOW_KEEPRATIO);
-        //cv::imshow(algo_name +" Match", result);
         cv::imshow(algo_name +" Match - RoI", RoiImage);
-        //cv::imshow(algo_name +" Match - original", image);
     }
     //putting labels on output image
     std::string time_now_str = "";
-//    int start_x = 15;
-//    int start_y = 5;
-//    std::cout<<"ok 1x"<<std::endl;
-//    addInfo(RoiImage,algo_name,start_x,start_y,3,2,time_now_str);
-//    std::cout<<"ok 2x"<<std::endl;
     std::string one      = std::to_string(input_1);
     std::string two      = std::to_string(input_2);
     std::string three    = std::to_string(input_3);
