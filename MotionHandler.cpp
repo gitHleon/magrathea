@@ -295,51 +295,62 @@ bool MotionHandler::GetLimitsController(std::vector <double> & limits){
 };
 
 
-int  MotionHandler::GetfaultSateXAxis(){
+bool  MotionHandler::GetfaultSateXAxis(){
  qInfo("Info on X axis.");
- return 1;
+ return 0;
 };
 
-int  MotionHandler::GetfaultSateYAxis(){
+bool  MotionHandler::GetfaultSateYAxis(){
  qInfo("Info on Y axis.");
- return 1;
+ return 0;
 };
 
-int  MotionHandler::GetfaultSateZ1Axis(){
+bool  MotionHandler::GetfaultSateZAxis(){
  qInfo("Info on Z1 axis.");
- return 1;
+ return 0;
 };
 
-int  MotionHandler::GetfaultSateZ2Axis(){
+bool  MotionHandler::GetfaultSateZ2Axis(){
  qInfo("Info on Z2 axis.");
- return 1;
+ return 0;
 };
 
 //******************************************
 //Get Axis states
 //------------------------------------------
-bool MotionHandler::getXAxisState(){
-    return xAxisEnabled;
+void MotionHandler::getXAxisState(std::vector <bool> &state){
+    state.clear();
+    state.push_back(false);
+    state.push_back(false);
+
 }
 
 //------------------------------------------
-bool MotionHandler::getYAxisState(){
-    return yAxisEnabled;
+void MotionHandler::getYAxisState(std::vector <bool> &state){
+    state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //------------------------------------------
-bool MotionHandler::getZAxisState(){
-    return zAxisEnabled;
+void MotionHandler::getZAxisState(std::vector <bool> &state){
+    state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //------------------------------------------
-bool MotionHandler::getZ_2_AxisState(){
-    return z_2_AxisEnabled;
+void MotionHandler::getZ_2_AxisState(std::vector <bool> &state){
+    state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //------------------------------------------
-bool MotionHandler::getUAxisState(){
-    return uAxisEnabled;
+void MotionHandler::getUAxisState(std::vector <bool> &state){
+    state.clear();
+    state.push_back(false);
+    state.push_back(false);
 }
 
 //******************************************
@@ -589,6 +600,29 @@ bool MotionHandler::moveUBy(double u, double speed) {
     return true;
 }
 
+//******************************************
+// wait motion to end
+
+bool MotionHandler::WaitX(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitY(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitZ(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitZ_2(int timeout){
+    return true;
+}
+
+bool MotionHandler::WaitU(int timeout){
+    return true;
+}
+
 
 //******************************************
 // free run
@@ -725,13 +759,20 @@ bool MotionHandler::endRunU()
 }
 
 //******************************************
-//gantry current position
+//gantry position
 std::vector<double> MotionHandler::whereAmI(int ific_value) {
     std::vector<double> position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     if (gantryConnected) {
         position = {qQNaN(), qQNaN(), qQNaN(), qQNaN()};
     }
     return position;
+}
+
+//******************************************
+//gantry current position
+double MotionHandler::CurrentAmI(int ific_value) {
+    double current = qQNaN();
+    return current;
 }
 
 //******************************************

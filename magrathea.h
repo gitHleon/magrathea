@@ -5,7 +5,6 @@
 #include <QTextEdit>
 #include <QLabel>
 #include <QPushButton>
-//#include <QShortcut>
 #include <opencv2/opencv.hpp>
 #include "fiducial_locations.h"
 
@@ -55,6 +54,7 @@ private slots:
     void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
+    bool loop_fid_finder(int input);
     bool CVCaptureButtonClicked();
     bool loop_find_circles();
     void J_translator(int index, int button, bool pressed);
@@ -70,28 +70,40 @@ private slots:
     void enableJoystickStepMotion(bool checked);
     void stepMotion();
     void positionMove();
-    void axisStepRepeatBoxClicked(bool checked);
     void AxisEnableDisableButton();
     void led_label(QLabel *label, bool value);
+    void led_label(QLabel *label, bool value, const std::vector<QString> &input);
+
+    //Loading
+    int FindPetal(double &Petalangle, std::vector<cv::Point3d> &Coordinates );
+    int PickAndPlaceModule(const double &PetalAngle,const std::vector<cv::Point3d> &Coordinates );
+    bool touchDown(const double &threshold);
+    bool Survey(const int &selected_module_index, const double &PetalAngle, std::vector<cv::Point3d> &Module_offsets);
+    bool Adjust_module(const cv::Point3d &module_bridge_coordinates, const std::vector<cv::Point3d> &Module_offsets);
+    bool GlueLines(const std::vector<cv::Point3d> &line_points);
+    bool TalkSR232(const std::vector<std::string> &arguments);
 
     //test
     void color_test();
     void destroy_all();
     bool loop_test();
+    bool loop_test_pressure();
     bool loop_test_images();
     void createTemplate_F();
     bool calibration_plate_measure();
     bool fiducial_chip_measure();
-    int FitTestButtonClick();
+    int TestButtonClick();
 
 signals:
     void Run_focus_signal();
+    void Test_signal();
 
 private:
     Ui::Magrathea *ui;
 
     cv::Mat sub_frame;
 
+    double mCamera_angle =  1.268;
     double mCalibration = 3.62483; //SCT optics 10.035;//3.43;//4.5; //[px/um]
     QCamera *mCamera;
     QCameraViewfinder *mCameraViewfinder;
@@ -107,19 +119,6 @@ private:
     bool J_control_Z_1      = true;
     bool J_control_Rotation = true;
     double J_axis_speed     = 1.0;
-
-    //keyboard shortcut for joystick
-//    QShortcut *shortcut_PX;
-//    QShortcut *shortcut_NX;
-//    QShortcut *shortcut_PY;
-//    QShortcut *shortcut_NY;
-//    QShortcut *shortcut_PZ;
-//    QShortcut *shortcut_NZ;
-//    QShortcut *shortcut_PZ_2;
-//    QShortcut *shortcut_NZ_2;
-//    QShortcut *shortcut_PU;
-//    QShortcut *shortcut_NU;
-//    QShortcut *shortcut_STOP;
 
 };
 

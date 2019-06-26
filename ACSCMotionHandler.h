@@ -53,12 +53,13 @@ public slots:
     //******************************************
     // gantry current position
     virtual std::vector<double> whereAmI(int ific_value = 0);
-    // gantry current status
-    virtual bool getXAxisState();
-    virtual bool getYAxisState();
-    virtual bool getZAxisState();
-    virtual bool getZ_2_AxisState();
-    virtual bool getUAxisState();
+    virtual double CurrentAmI(int ific_value = 0);
+    // gantry axis status
+    virtual void getXAxisState(std::vector <bool> &state);
+    virtual void getYAxisState(std::vector <bool> &state);
+    virtual void getZAxisState(std::vector <bool> &state);
+    virtual void getZ_2_AxisState(std::vector <bool> &state);
+    virtual void getUAxisState(std::vector <bool> &state);
 
     //******************************************
     // home axes
@@ -92,6 +93,14 @@ public slots:
     virtual bool moveUBy(double u=0, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
+    // wait motion to end
+    virtual bool WaitX  (int timeout = -1); //timeout in milliseconds
+    virtual bool WaitY  (int timeout = -1);
+    virtual bool WaitZ  (int timeout = -1);
+    virtual bool WaitZ_2(int timeout = -1);
+    virtual bool WaitU  (int timeout = -1);
+
+    //******************************************
     // free run
     virtual bool runX(double direction, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool endRunX();
@@ -112,10 +121,10 @@ public slots:
     virtual bool SetLimitsController();
     virtual bool SetLimitsController(std::vector <double> & limits);
     virtual bool GetLimitsController(std::vector <double> & limits);
-    virtual int  GetfaultSateXAxis();
-    virtual int  GetfaultSateYAxis();
-    virtual int  GetfaultSateZ1Axis();
-    virtual int  GetfaultSateZ2Axis();
+    virtual bool GetfaultSateXAxis();
+    virtual bool GetfaultSateYAxis();
+    virtual bool GetfaultSateZAxis();
+    virtual bool GetfaultSateZ2Axis();
 
 signals:
 
@@ -126,12 +135,10 @@ private:
     HANDLE gantry;
     const int X_axis = ACSC_AXIS_0;
     const int Y_axis = ACSC_AXIS_1;
-    //AXIS 2 is y axis jog, AXIS 3 does not exists
-    const int Z_axis = ACSC_AXIS_5;//I need the camera to stay on axis z1
-    const int Z_2_axis = ACSC_AXIS_4;
+    //AXIS 2 is y axis yaw, AXIS 3 does not exists
+    const int Z_axis = ACSC_AXIS_4;//I need the camera to stay on axis z1
+    const int Z_2_axis = ACSC_AXIS_5;
     const int U_axis = ACSC_AXIS_6;
-
-    const int TimeOut = 10000;//timeout in ms
 
     double Home_coord[5]          = {0.,0.,0.,0.,0.};
     double default_speed         = 15;
@@ -141,9 +148,9 @@ private:
     double x_max =  500.0;
     double y_min = -350.0;
     double y_max =  500.;
-    double z_1_min =  -10.0;
+    double z_1_min =  -70.0;
     double z_1_max =  90.0;
-    double z_2_min =  5.0;
+    double z_2_min =  -70.0;
     double z_2_max =  90.0;
 
 };

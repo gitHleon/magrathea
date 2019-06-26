@@ -48,14 +48,15 @@ public slots:
     virtual bool disableUAxis();
 
     //******************************************
-    // gantry current position
+    // gantry position
     virtual std::vector<double> whereAmI(int ific_value = 0);
-    // gantry current status
-    virtual bool getXAxisState();
-    virtual bool getYAxisState();
-    virtual bool getZAxisState();
-    virtual bool getZ_2_AxisState();
-    virtual bool getUAxisState();
+    virtual double CurrentAmI(int ific_value = 0);
+    // gantry axis status
+    virtual void getXAxisState(std::vector <bool> &state);
+    virtual void getYAxisState(std::vector <bool> &state);
+    virtual void getZAxisState(std::vector <bool> &state);
+    virtual void getZ_2_AxisState(std::vector <bool> &state);
+    virtual void getUAxisState(std::vector <bool> &state);
 
     //******************************************
     // home axes
@@ -87,6 +88,14 @@ public slots:
     virtual bool moveUBy(double u=0, double speed=std::numeric_limits<double>::quiet_NaN());
 
     //******************************************
+    // wait motion to end
+    virtual bool WaitX  (int timeout = -1); //timeout in milliseconds
+    virtual bool WaitY  (int timeout = -1);
+    virtual bool WaitZ  (int timeout = -1);
+    virtual bool WaitZ_2(int timeout = -1);
+    virtual bool WaitU  (int timeout = -1);
+
+    //******************************************
     // free run
     virtual bool runX(double direction, double speed=std::numeric_limits<double>::quiet_NaN());
     virtual bool endRunX();
@@ -109,10 +118,10 @@ public slots:
     virtual bool SetLimitsController();
     virtual bool SetLimitsController(std::vector <double> & limits);
     virtual bool GetLimitsController(std::vector <double> & limits);
-    virtual int  GetfaultSateXAxis();
-    virtual int  GetfaultSateYAxis();
-    virtual int  GetfaultSateZ1Axis();
-    virtual int  GetfaultSateZ2Axis();
+    virtual bool GetfaultSateXAxis();
+    virtual bool GetfaultSateYAxis();
+    virtual bool GetfaultSateZAxis();
+    virtual bool GetfaultSateZ2Axis();
     //******************************************
     // default speeds
     // NOTE default unit is mm/s

@@ -18,6 +18,9 @@
 #include "verticalalignmenttool.h"
 #include <conio.h>
 #include <fstream>
+#include <iomanip>
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
 #ifdef VANCOUVER
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
@@ -25,7 +28,30 @@
 #include <QJoysticks.h>
 #endif
 
+//function for debug in opencv, defined elsewhere
 std::string type2str(int type);
+
+//function to write in appropriate way exadecimal number to ultimusV
+QByteArray int_tohexQByteArray_UltimusV(int input){
+    auto && oss = std::ostringstream();
+    oss << std::hex << std::setw(2) << std::setfill('0')
+        << input;
+    auto && buf = oss.str();
+    //add the stx
+    QByteArray writeData = QByteArray(buf.c_str());
+    for(int i=0;i<writeData.size();i++){
+        switch (writeData[i]) {
+        case 'a' : writeData[i] = 'A'; break;
+        case 'b' : writeData[i] = 'B'; break;
+        case 'c' : writeData[i] = 'C'; break;
+        case 'd' : writeData[i] = 'D'; break;
+        case 'e' : writeData[i] = 'E'; break;
+        case 'f' : writeData[i] = 'F'; break;
+        default: break;
+        }
+    }
+    return writeData;
+}
 
 //******************************************
 Magrathea::Magrathea(QWidget *parent) :
@@ -62,6 +88,7 @@ Magrathea::Magrathea(QWidget *parent) :
     QFont font("");
     font.setStyleHint(QFont::Monospace);
 
+    //setup of buttons in the GUI
     //position
     ui->xAxisPositionLine->setFont(font);
     ui->yAxisPositionLine->setFont(font);
@@ -120,8 +147,8 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->yAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->zAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->zAxisPositionMoveDoubleSpinBox->setValue(0.0);
-    ui->zAxisPositionMoveDoubleSpinBox->setMinimum(-300.0);
-    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(300.0);
+    ui->zAxisPositionMoveDoubleSpinBox->setMinimum(-100.0);
+    ui->zAxisPositionMoveDoubleSpinBox->setMaximum(100.0);
     ui->zAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->zAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->z_2_AxisPositionMoveDoubleSpinBox->setFont(font);
@@ -132,7 +159,7 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->z_2_AxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
     ui->uAxisPositionMoveDoubleSpinBox->setFont(font);
     ui->uAxisPositionMoveDoubleSpinBox->setValue(0.0);
-    ui->uAxisPositionMoveDoubleSpinBox->setMinimum(0.0);
+    ui->uAxisPositionMoveDoubleSpinBox->setMinimum(-360.0);
     ui->uAxisPositionMoveDoubleSpinBox->setMaximum(360.0);
     ui->uAxisPositionMoveDoubleSpinBox->setDecimals(3);
     ui->uAxisPositionMoveDoubleSpinBox->setAlignment(Qt::AlignRight);
@@ -170,7 +197,7 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->uAxisSpeedDoubleSpinBox->setAlignment(Qt::AlignRight);
 
     //------------------------------------------
-    //timer
+    //timer for update of feedback position
     mPositionTimer = new QTimer(this);
     connect(mPositionTimer, SIGNAL(timeout()), this, SLOT(updatePosition()));
     mPositionTimer->start(100);//ms
@@ -192,25 +219,24 @@ Magrathea::Magrathea(QWidget *parent) :
     //add the layout to the frame area in the GUI
     ui->frame->setLayout(mCameraLayout);
 
-    //////////////////7
-    f_locations = new fiducial_locations();
+    //////////////////
+    f_locations = new fiducial_locations(); //test to store the module coordinates, never used
     ///////////////////
     //------------------------------------------
-    //Real Joystick - Valencia ONLY
+    //Init of Real Joystick - Valencia ONLY
 #ifdef  VALENCIA
     int J_number = J_instance->count();
-    std::cout<<" J_numebr :"<<J_number<<std::endl;
+    //std::cout<<" J_numebr :"<<J_number<<std::endl;
     QStringList J_list = J_instance->deviceNames();
     J_number = J_list.size();
-    std::cout<<" J_size :"<<J_number<<std::endl;
+    //std::cout<<" J_size :"<<J_number<<std::endl;
     int J_buttons = J_instance->getNumButtons(0);
-    std::cout<<" J_buttons :"<<J_buttons<<std::endl;
+    //std::cout<<" J_buttons :"<<J_buttons<<std::endl;
     connect(J_instance,SIGNAL(buttonChanged(int,int,bool)), this, SLOT(J_translator(int,int,bool)));
     connect(J_instance,SIGNAL(axisChanged(int,int,double)), this, SLOT(J_axes_translator(int,int,double)));
     connect(this,SIGNAL(Run_focus_signal()), this, SLOT(createTemplate_F()));
+    connect(this,SIGNAL(Test_signal()), this, SLOT(TestButtonClick()));
 #endif
-
-
     //------------------------------------------
     //gantry
     autoRepeatDelay=1000;//ms
@@ -234,6 +260,18 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->zAxisPositionLine->setReadOnly(true);
     ui->z_2_AxisPositionLine->setReadOnly(true);
     ui->uAxisPositionLine->setReadOnly(true);
+
+    //------------------------------------------
+    //Create combobox for module loading tab
+    ui->Module_comboBox->addItem("R0");
+    ui->Module_comboBox->addItem("R1");
+    ui->Module_comboBox->addItem("R2");
+    ui->Module_comboBox->addItem("R3 Left");
+    ui->Module_comboBox->addItem("R3 Right");
+    ui->Module_comboBox->addItem("R4 Left");
+    ui->Module_comboBox->addItem("R4 Right");
+    ui->Module_comboBox->addItem("R5 Left");
+    ui->Module_comboBox->addItem("R5 Right");
 
     //------------------------------------------
     //connect signals and slots
@@ -293,13 +331,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->z_2_AxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
     connect(ui->uAxisStepMoveButton, SIGNAL(clicked(bool)), this, SLOT(stepMotion()));
 
-    //step motion autorepeat box
-    connect(ui->xAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->yAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->zAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->z_2_AxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-    connect(ui->uAxisStepRepeatBox, SIGNAL(clicked(bool)), this, SLOT(axisStepRepeatBoxClicked(bool)));
-
     //test
     connect(ui->color_button,SIGNAL(clicked(bool)), this, SLOT(color_test()));
     connect(ui->destroy_Button,SIGNAL(clicked(bool)), this, SLOT(destroy_all()));
@@ -307,7 +338,8 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->DelLogButton,SIGNAL(clicked(bool)),outputLogTextEdit,SLOT(clear()));
     connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(calibration_plate_measure()));
     //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
-    connect(ui->FitTestButton,SIGNAL(clicked(bool)),this,SLOT(FitTestButtonClick()));
+    connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
+    //connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(loop_test_pressure()));
 }
 
 //******************************************
@@ -317,11 +349,10 @@ Magrathea::~Magrathea()
     delete mMotionHandler;
 }
 
-//******************************************
-//timer
-
 //position update
 void Magrathea::updatePosition(){
+
+    //In Valencia calibrated feedback positions need to be accessed with whereAmI(1), non calibrated, with whereAmI(0)
     std::vector <double> pos_t = mMotionHandler->whereAmI(1);
 
     ui->xAxisPositionLine->setText(QString::number(    pos_t[0], 'f', 3));
@@ -335,26 +366,38 @@ void Magrathea::updatePosition(){
     ui->z_2_AxisPositionLine2->setText(QString::number(pos_t[4], 'f', 3));
     ui->uAxisPositionLine2->setText(QString::number(   pos_t[3], 'f', 3));
 
+    double current_t = mMotionHandler->CurrentAmI(1);//reading current in motor of axis Z1
+    ui->lineEdit_Z_1_current->setText(QString::number(current_t, 'f', 6));
+    current_t = mMotionHandler->CurrentAmI(2);//reading current in motor of axis Z2
+    ui->lineEdit_Z_2_current->setText(QString::number(current_t, 'f', 6));
+
     //axes status update
-    bool current =  mMotionHandler->getXAxisState();
-    led_label(ui->label_8,  mMotionHandler->getXAxisState());
-    ui->EnableButton_X->setText((current ? "Disable" : "Enable"));
+    std::vector <bool> status_axes;
+    std::vector <QString> m_labels{"STOP","MOVING"};
+    mMotionHandler->getXAxisState(status_axes);
+    led_label(ui->label_8, status_axes[0]);
+    led_label(ui->label_75, status_axes[1],m_labels);
+    ui->EnableButton_X->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getYAxisState();
-    led_label(ui->label_10, current);
-    ui->EnableButton_Y->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getYAxisState(status_axes);
+    led_label(ui->label_10, status_axes[0]);
+    led_label(ui->label_76, status_axes[1],m_labels);
+    ui->EnableButton_Y->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getZAxisState();
-    led_label(ui->label_12, current);
-    ui->EnableButton_Z->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getZAxisState(status_axes);
+    led_label(ui->label_12, status_axes[0]);
+    led_label(ui->label_77, status_axes[1],m_labels);
+    ui->EnableButton_Z->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getZ_2_AxisState();
-    led_label(ui->label_14, current);
-    ui->EnableButton_Z_2->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getZ_2_AxisState(status_axes);
+    led_label(ui->label_14, status_axes[0]);
+    led_label(ui->label_78, status_axes[1],m_labels);
+    ui->EnableButton_Z_2->setText((status_axes[0] ? "Disable" : "Enable"));
 
-    current =  mMotionHandler->getUAxisState();
-    led_label(ui->label_16, current);
-    ui->EnableButton_U->setText((current ? "Disable" : "Enable"));
+    mMotionHandler->getUAxisState(status_axes);
+    led_label(ui->label_16, status_axes[0]);
+    led_label(ui->label_79, status_axes[1],m_labels);
+    ui->EnableButton_U->setText((status_axes[0] ? "Disable" : "Enable"));
 
     //RealJoystick status update
     if(J_control_Rotation){
@@ -370,53 +413,11 @@ void Magrathea::updatePosition(){
         }
     }
 
-    //return;
-
     //reading fault state for each axis
-    unsigned int mask1 = ((1 << 1) - 1 ) << 5;//Mask for Software Right Limit
-    unsigned int mask2 = ((1 << 1) - 1 ) << 6;//Mask for Software Left  Limit
-    //GETMASK(index, size) (((1 << (size)) - 1) << (index))
-    //READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
-    unsigned int fault_state = mMotionHandler->GetfaultSateXAxis();
-    unsigned int temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    unsigned int temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-    bool axis_fault = (temp1 || temp2 );
-    ui->label_9->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_9->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_9->setStyleSheet("QLabel { background-color : green; color : white; }");
-
-    fault_state = mMotionHandler->GetfaultSateYAxis();
-    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-     axis_fault = (temp1 == 1 || temp2 == 1);
-    ui->label_11->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_11->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_11->setStyleSheet("QLabel { background-color : green; color : white; }");
-
-    fault_state = mMotionHandler->GetfaultSateZ1Axis();
-    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-     axis_fault = (temp1 == 1 || temp2 == 1);
-    ui->label_13->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_13->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_13->setStyleSheet("QLabel { background-color : green; color : white; }");
-
-    fault_state = mMotionHandler->GetfaultSateZ2Axis();
-    temp1 = (fault_state & mask1) >> 5;//Software Right Limit
-    temp2 = (fault_state & mask2) >> 6;//Software Left  Limit
-     axis_fault = (temp1 == 1 || temp2 == 1);
-    ui->label_15->setText((axis_fault ? "Out of Env" : "Good"));
-    if(axis_fault)
-        ui->label_15->setStyleSheet("QLabel { background-color : red; color : black; }");
-    else
-        ui->label_15->setStyleSheet("QLabel { background-color : green; color : white; }");
-
+    led_label(ui->label_9 ,!mMotionHandler->GetfaultSateXAxis(), std::vector<QString>{"Out of Env","Good"});
+    led_label(ui->label_11,!mMotionHandler->GetfaultSateYAxis(), std::vector<QString>{"Out of Env","Good"});
+    led_label(ui->label_13,!mMotionHandler->GetfaultSateZAxis(), std::vector<QString>{"Out of Env","Good"});
+    led_label(ui->label_15,!mMotionHandler->GetfaultSateZ2Axis(),std::vector<QString>{"Out of Env","Good"});
     ui->label_17->setText("Always good");
     ui->label_17->setStyleSheet("QLabel { background-color : yellow; color : black; }");
 
@@ -425,25 +426,20 @@ void Magrathea::updatePosition(){
 
 //******************************************
 //real joystick
-
-//Add an oter translator for the axischanged event
-//Add analogic speed control
-//implement motion via this function of magrathea : FreeRun
-
 void Magrathea::J_axes_translator(int index, int axis, double value){
     const double threshold = 0.15;
     if(index != 0 )
         return; //I want only the main joystick to work
     if(axis == 0 && (value > threshold))
-        mMotionHandler->runX(+1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 0 && (value < -threshold))
         mMotionHandler->runX(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 0 && (value < -threshold))
+        mMotionHandler->runX(+1, ui->spinBox_J_speed->value()*value);
     else if(axis == 0 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunX();
     else if(axis == 1 && (value > threshold))
-        mMotionHandler->runY(+1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 1 && (value < -threshold))
         mMotionHandler->runY(-1, ui->spinBox_J_speed->value()*value);
+    else if(axis == 1 && (value < -threshold))
+        mMotionHandler->runY(+1, ui->spinBox_J_speed->value()*value);
     else if(axis == 1 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunY();
     else if(axis == 2 && !J_control_Rotation && J_control_Z_1){
@@ -527,7 +523,8 @@ void Magrathea::J_translator(int index, int button, bool pressed){
         mMotionHandler->endRunU();
     }
     if(button == 9 && pressed)
-        emit Run_focus_signal();
+        //emit Run_focus_signal();
+        emit Test_signal();
 
 }
 
@@ -547,7 +544,7 @@ void Magrathea::enableCameraBoxClicked(bool clicked)
 //------------------------------------------
 //focus
 
-void Magrathea::FocusAlgoTest_Func(){
+void Magrathea::FocusAlgoTest_Func(){//test of foucus algorithm with library of images
   Focus_finder * FocusFinder = new Focus_finder(this);
   cv::Mat mat_mat;
   std::string file_name = "";
@@ -587,7 +584,7 @@ void Magrathea::FocusAlgoTest_Func(){
     cv::Mat RoI = mat_mat(region);
     std::vector<double> figures_of_merit;
     FocusFinder->eval_stddev(RoI,figures_of_merit);
-    if(figures_of_merit.size() != 0){
+    if(figures_of_merit.size() != 0){//writing output to file
         qInfo("%s  %5.1f  %5.5f  %5.1f  %5.1f",Images[i].c_str(),figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
         std_dev_value.push_back(figures_of_merit[0]);
         std::string file_name = "focus_m.txt";
@@ -609,7 +606,7 @@ void Magrathea::FocusAlgoTest_Func(){
 
     cv::Mat g_hist;
 
-    /// Compute the histograms:
+    /// Compute the histograms of the image:
     calcHist( &mat_mat_g, 1, nullptr, cv::Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
     // Draw the histograms for B, G and R
     int hist_w = 512; int hist_h = 400;
@@ -640,12 +637,11 @@ void Magrathea::FocusAlgoTest_Func(){
   delete FocusFinder;
 }
 
-bool Magrathea::CVCaptureButtonClicked(){
+bool Magrathea::CVCaptureButtonClicked(){//function to capture an image using OpenCV functions
     mCamera->stop(); //closing QCamera
     std::cout<<" ok1 "<<std::endl;
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-    if (!cap.isOpened()){
-        //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
+    if (!cap.isOpened()){ //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
     std::cout<<" ok2 "<<std::endl;
@@ -672,17 +668,16 @@ bool Magrathea::CVCaptureButtonClicked(){
     return true;
 }
 
-bool Magrathea::focusButtonClicked()
+bool Magrathea::focusButtonClicked()//function to perform autofocus
 {
     qInfo(" > camera focus ... ");
     QElapsedTimer timer;
     timer.start();
-    Focus_finder * FocusFinder = new Focus_finder(this);
+    Focus_finder * FocusFinder = new Focus_finder(this);//initiating focus finder class, where all he algorithms are
     mCamera->stop(); //closing QCamera
 
     cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-    if (!cap.isOpened()){
-        //    if(!cap.open(0)){     //Opening opencv-camera, needed for easier image manipulation
+    if (!cap.isOpened()){//Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
         return false;}
     double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
@@ -694,19 +689,19 @@ bool Magrathea::focusButtonClicked()
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
-    //cap.set(cv::CAP_PROP_GAIN, 4.0); ???
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
-
+    //giving focus fnder class control over the camera and the gantry
     FocusFinder->Set_camera(cap);
     FocusFinder->Set_gantry(mMotionHandler);
     FocusFinder->Set_log(outputLogTextEdit);
-    FocusFinder->Set_color_int(ui->ColorBox->value());
-    const int kernel_size = ( (dWidth > 2000 && dHeight > 2000) ? 11 : 5);
+    FocusFinder->Set_color_int(ui->ColorBox->value());//selecting wich color is gong to be used for autofocus, in general shuld be green
+    //in valencia we have a color camera
+    const int kernel_size = ( (dWidth > 2000 && dHeight > 2000) ? 11 : 5);//settng kernel size to evaluate the figure of merit for the focus
     FocusFinder->Set_ksize(kernel_size);
     double focus_position = -1.;
-    if (sender() == ui->std_dev_button){
+    if (sender() == ui->std_dev_button){//just evaluating the figures of merit, without autofocus
         cv::Mat mat_from_camera;
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
@@ -718,9 +713,9 @@ bool Magrathea::focusButtonClicked()
         if(figures_of_merit.size() != 0)
             qInfo(" Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
     } else if(sender() == ui->std_dev_many_button){
-        FocusFinder->Eval_syst_scan();
+        FocusFinder->Eval_syst_scan();//evaluating a scan
     } else {
-        FocusFinder->find_focus(focus_position);
+        FocusFinder->find_focus(focus_position);//running autofocus
     }
     qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;
@@ -728,13 +723,13 @@ bool Magrathea::focusButtonClicked()
     cap.release();
 
     //Going back to QCameraa
-    //mCamera->start();
+    //mCamera->start(); //this is commented because the code crashes when gantry is moving and QCamera is on. Need investigation
 
     return true;
 }
 
 //------------------------------------------
-//capture picture
+//capture picture with QCamera
 void Magrathea::captureButtonClicked()
 {
     auto filename = QFileDialog::getSaveFileName(this, "capture", "/ ","image (*.jpg;*.jpeg)");
@@ -754,10 +749,10 @@ void Magrathea::captureButtonClicked()
     mCamera->unlock();
     return;
 }
-//------------------------------------------
+
 //------------------------------------------
 //https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-open
-void Magrathea::Camera_test(){
+void Magrathea::Camera_test(){//function to test camera settings
     cv::VideoCapture cap(0); // open the video camera no. 0
 
     if (!cap.isOpened())  // if not success, exit program
@@ -881,8 +876,8 @@ void Magrathea::Circles_button_Clicked()
 {   std::vector <double> dummy;
     FiducialFinderCaller(2,dummy); }
 
+//function to find fiducial markers
 bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point){
-
     bool debug = false;
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
@@ -899,6 +894,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
     if(debug)
         qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+    //setting camera in the appropriate way
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
@@ -916,6 +912,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     double distance_x = 0;
     double distance_y = 0;
     std::string timestamp = "";
+    //loading template
     std::string address = "D:/Images/Templates_mytutoyo/";
     //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
     std::string Images[] = {
@@ -953,25 +950,10 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     std::string tmp_filename = "";
     bool success = false;
 
-    if(from_file){
-        //std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/sctcamera_20190111/";
+    if(from_file){//loading image if need to run on loaded image intead than image from the camera
         std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/Calibration_plate_measures/pos_5/";
         std::string Images[] = {
-//            "003.jpg",
-//            "004.jpg",
-//            "005.jpg",
-//            "006.jpg",
-//            "007.jpg",
-//            "008.jpg",
-//            "009.jpg",
-//            "010.jpg",
-//            "011.jpg",
-//            "012.jpg",
-//            "013.jpg",
-//            "014.jpg",
-//            "015.jpg",
             "Circles_0_2_0.jpg",
-            //"017.jpg"
             //"chip_1_1_pos_1.TIF"
         };
 
@@ -979,7 +961,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
                 ,cv::IMREAD_COLOR);
         Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
-    }else{
+    }else{//running on image from the camera
         bool bSuccess = cap.read(mat_from_camera);
         if (!bSuccess){ //if not success
             qInfo("Cannot read a frame from video stream");
@@ -990,7 +972,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     }
     qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
 
-    if(input == 1 || input == 0){
+    if(input == 1 || input == 0){//finding generic template, using SURF
         bool invalid_match = true;
         //here you can apply condition on the found match to evaluate if it is good or bad
         cv::Mat output_H;
@@ -999,11 +981,11 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
                                   ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
         double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
         double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-        //add matched fiducial size control
         std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
-    } else {
+    } else {//finding circles
         bool do_fit = ((input == 2) ? false : true);//do fit when inputis different than 2
-        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),do_fit);
+        bool do_single = ((input == 4) ? true : false);//search for single circle
+        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),do_fit,do_single);
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
@@ -1015,6 +997,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         qInfo("Fiducial fail");
         return false;
     }
+    //writing output to file
     std::vector <double> pos_t = mMotionHandler->whereAmI(1); //get gantry position
     std::string file_name = ((input==0) ? "output_temp.txt" : "output_good.txt");
     std::ofstream ofs (file_name, std::ofstream::app);
@@ -1030,9 +1013,9 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     ///////////////////////////////////////////////////////////////////
 
 #if VALENCIA
-    double camera_angle = 1.268;
-    double target_x_short = - distance_x*0.001*cos(camera_angle) - distance_y*0.001*sin(camera_angle);
-    double target_y_short = distance_x*0.001*sin(camera_angle) - distance_y*0.001*cos(camera_angle);
+    //taking into account orientation of camera wrt gantry
+    double target_x_short = - distance_x*0.001*cos(mCamera_angle) - distance_y*0.001*sin(mCamera_angle);
+    double target_y_short = distance_x*0.001*sin(mCamera_angle) - distance_y*0.001*cos(mCamera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
     ofs.close();
 #else
@@ -1052,11 +1035,11 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
 
 void Magrathea::Calibration_ButtonClicked()
 {    calibrationCaller(0); }
-
+//calibration of px/um of the camera
 void Magrathea::calibrationCaller(int input){
     //Eventually add command to move the gantry to the place where the
     //calibration area is.
-    cv::destroyAllWindows();
+    cv::destroyAllWindows();//closing all openCV windows. Otherwise the code may crash
     mCamera->stop(); //closing QCamera
     Calibrator * calibrator = new Calibrator(this);
 
@@ -1078,13 +1061,12 @@ void Magrathea::calibrationCaller(int input){
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
-    //cap.set(cv::CAP_PROP_GAIN, 363.0); ????
     dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
 
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
     cv::Mat mat_from_camera;
-    if(from_file){
+    if(from_file){//library of images  to test the algorithm
         std::string Images[12] = {"C:/Temporary_files/BNL_images/image_000_600_60_15.png",
                                   "C:/Temporary_files/BNL_images/image_000_600_60_15_rotated_5_degrees.png",
                                   "C:/Temporary_files/BNL_images/image_000_600_60_15_rotated_30_degrees.png",
@@ -1161,11 +1143,21 @@ void Magrathea::connectGantryBoxClicked(bool checked)
         ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
 #endif
     } else {
-        if (    mMotionHandler->getXAxisState() ||
-                mMotionHandler->getYAxisState() ||
-                mMotionHandler->getZAxisState() ||
-                mMotionHandler->getZ_2_AxisState() ||
-                mMotionHandler->getUAxisState()) {
+        std::vector<bool> x_status;
+        mMotionHandler->getXAxisState(x_status);
+        std::vector<bool> y_status;
+        mMotionHandler->getYAxisState(y_status);
+        std::vector<bool> z_status;
+        mMotionHandler->getZAxisState(z_status);
+        std::vector<bool> z2_status;
+        mMotionHandler->getZ_2_AxisState(z2_status);
+        std::vector<bool> u_status;
+        mMotionHandler->getUAxisState(u_status);
+        if (    x_status[0]  ||
+                y_status[0]  ||
+                z_status[0]  ||
+                z2_status[0] ||
+                u_status[0]    ) {
             ui->connectGantryBox->setChecked(true);
             qWarning("disable axes before disconnecting from gantry");
         } else {
@@ -1386,78 +1378,48 @@ void Magrathea::stepMotion()
 //position move proxy function to pass arguments to the MotionHandler
 void Magrathea::positionMove()
 {
-    if (sender() == ui->xAxisPositionMoveButton)
+    std::vector <QString> m_labels{"STOP","MOVING"};
+    if (sender() == ui->xAxisPositionMoveButton){
+        led_label(ui->label_75,true,m_labels);
         mMotionHandler->moveXTo(ui->xAxisPositionMoveDoubleSpinBox->value(), ui->xAxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->yAxisPositionMoveButton)
+    }else if (sender() == ui->yAxisPositionMoveButton){
+        led_label(ui->label_76,true,m_labels);
         mMotionHandler->moveYTo(ui->yAxisPositionMoveDoubleSpinBox->value(), ui->yAxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->zAxisPositionMoveButton)
+    }else if (sender() == ui->zAxisPositionMoveButton){
+        led_label(ui->label_77,true,m_labels);
         mMotionHandler->moveZTo(ui->zAxisPositionMoveDoubleSpinBox->value(), ui->zAxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->z_2_AxisPositionMoveButton)
+    }else if (sender() == ui->z_2_AxisPositionMoveButton){
+        led_label(ui->label_78,true,m_labels);
         mMotionHandler->moveZ_2_To(ui->z_2_AxisPositionMoveDoubleSpinBox->value(), ui->z_2_AxisSpeedDoubleSpinBox->value());
-    else if (sender() == ui->uAxisPositionMoveButton)
+    }else if (sender() == ui->uAxisPositionMoveButton){
+        led_label(ui->label_79,true,m_labels);
         mMotionHandler->moveUTo(ui->uAxisPositionMoveDoubleSpinBox->value(), ui->uAxisSpeedDoubleSpinBox->value());
-    return;
-}
-
-//------------------------------------------
-//step motion autorepeat
-void Magrathea::axisStepRepeatBoxClicked(bool checked)
-{
-    if (sender() == ui->xAxisStepRepeatBox) {
-        ui->xAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveXButton->setAutoRepeat(checked);
-        ui->negativeXButton->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->yAxisStepRepeatBox) {
-        ui->yAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveYButton->setAutoRepeat(checked);
-        ui->negativeYButton->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->zAxisStepRepeatBox) {
-        ui->zAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveZButton->setAutoRepeat(checked);
-        ui->negativeZButton->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->z_2_AxisStepRepeatBox) {
-        ui->z_2_AxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveZ_2_Button->setAutoRepeat(checked);
-        ui->negativeZ_2_Button->setAutoRepeat(checked);
-    }
-    else if (sender() == ui->uAxisStepRepeatBox) {
-        ui->uAxisStepMoveButton->setAutoRepeat(checked);
-        ui->positiveUButton->setAutoRepeat(checked);
-        ui->negativeUButton->setAutoRepeat(checked);
     }
     return;
 }
 
 void Magrathea::AxisEnableDisableButton(){
-    bool current = false;
+    std::vector <bool> status_axes;
     if(sender() == ui->EnableButton_X){
-        current = mMotionHandler->getXAxisState();
-        mMotionHandler->enableXAxis(!current);
-        ui->EnableButton_X->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getXAxisState(status_axes);
+        mMotionHandler->enableXAxis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_Y){
-        current = mMotionHandler->getYAxisState();
-        mMotionHandler->enableYAxis(!current);
-        ui->EnableButton_Y->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getYAxisState(status_axes);
+        mMotionHandler->enableYAxis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_Z){
-        current = mMotionHandler->getZAxisState();
-        mMotionHandler->enableZAxis(!current);
-        ui->EnableButton_Z->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getZAxisState(status_axes);
+        mMotionHandler->enableZAxis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_Z_2){
-        current = mMotionHandler->getZ_2_AxisState();
-        mMotionHandler->enableZ_2_Axis(!current);
-        ui->EnableButton_Z_2->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getZ_2_AxisState(status_axes);
+        mMotionHandler->enableZ_2_Axis(!status_axes[0]);
     }else if (sender() == ui->EnableButton_U){
-        current = mMotionHandler->getUAxisState();
-        mMotionHandler->enableUAxis(!current);
-        ui->EnableButton_U->setText((current ? "Enable" : "Disable"));
+        mMotionHandler->getUAxisState(status_axes);
+        mMotionHandler->enableUAxis(!status_axes[0]);
     }else
         qWarning("Warning! Improper use of function AxisEnableDisableButton.");
 }
 
-
+//functions to change color of labels
 void Magrathea::led_label(QLabel *label, bool value){
     if(value){
         label->setStyleSheet("QLabel { background-color : green; color : black; }");
@@ -1468,7 +1430,21 @@ void Magrathea::led_label(QLabel *label, bool value){
     }
 }
 
-void Magrathea::color_test(){
+void Magrathea::led_label(QLabel *label, bool value, const std::vector <QString> &input){
+    if(input.size() ==2){
+        if(value){
+            label->setStyleSheet("QLabel { background-color : green; color : black; }");
+            label->setText(input[1]);
+        }else{
+            label->setStyleSheet("QLabel { background-color : red; color : white; }");
+            label->setText(input[0]);
+        }
+    } else
+        led_label(label,value);
+
+}
+
+void Magrathea::color_test(){//test of opencv camera selecting one color channel
     std::cout<<"here"<<std::endl;
 
     cv::destroyAllWindows();
@@ -1512,6 +1488,24 @@ void Magrathea::destroy_all(){
     cv::destroyAllWindows();
 }
 
+bool Magrathea::loop_test_pressure(){
+    //function to test the touchdown function systematically
+    if(!mMotionHandler->moveZTo(-47.100,1.))
+        return false;
+    if(!mMotionHandler->WaitZ())
+        return false;
+    std::cout<<"start!! "<<std::endl;
+    for(int j=0;j<100;j++){//set appropriate value of the loop limit
+        std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> iteration : "<<j<<std::endl;
+        if(!touchDown(0.018))
+            return false;
+        if(!mMotionHandler->moveZTo(-47.100,1.))
+            return false;
+        if(!mMotionHandler->WaitZ())
+            return false;
+    }
+    return true;
+}
 bool Magrathea::loop_test(){
     //run fiducial finding algo automatically
     //and move to the fiducial position
@@ -1519,7 +1513,11 @@ bool Magrathea::loop_test(){
         ui->chip_number_spinBox->setValue(j);
         if(!mMotionHandler->moveXBy(0.070,1.))//dispalacement added for systematic testing of the algorithm
             return false;
+        if(!mMotionHandler->WaitX())
+            return false;
         if(!mMotionHandler->moveYBy(0.070,1.))
+            return false;
+        if(!mMotionHandler->WaitY())
             return false;
         for(int i=0;i<5;i++){//set appropriate value of the loop limit
             std::cout<<"j "<<j<<" ; i "<<i<<std::endl;
@@ -1532,9 +1530,8 @@ bool Magrathea::loop_test(){
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double camera_angle =  1.268;
-            double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
-            double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+            double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+            double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
             //std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
             if(!mMotionHandler->moveXBy(-target_x_short,1.))
@@ -1562,7 +1559,7 @@ bool Magrathea::loop_find_circles(){
 }
 
 bool Magrathea::loop_test_images(){
-    //run fiducial finding algo automatically
+    //run fiducial finding algo automatically on CNM chip
     cv::destroyAllWindows();
     std::string timestamp = "";
     std::string address_images = "C:/Users/Silicio/cernbox/Gantry_2018_BIG/Fiducial_chip_images_NewOptics_20190306/";
@@ -1615,6 +1612,7 @@ bool Magrathea::loop_fid_finder(){
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int i=0;i<4;i++){//set appropriate value of the loop limit
+         QApplication::processEvents();
         std::cout<<"It "<<i<<std::endl;
         std::vector <double> distances;
         int input = ((i==3) ? 3 : 2);
@@ -1623,14 +1621,57 @@ bool Magrathea::loop_fid_finder(){
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double camera_angle =  1.268;
-        double target_x_short = - distances[0]*cos(camera_angle) - distances[1]*sin(camera_angle);
-        double target_y_short = distances[0]*sin(camera_angle) - distances[1]*cos(camera_angle);
+        double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+        double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
         if(!mMotionHandler->moveXBy(-target_x_short,1.))
             return false;
+        if(!mMotionHandler->WaitX(-1))
+            return false;
         if(!mMotionHandler->moveYBy(-target_y_short,1.))
             return false;
+        if(!mMotionHandler->WaitY(-1))
+            return false;
+    }
+    if(sender() == ui->button_measure_1_well){
+        auto one = std::to_string(ui->spinBox_plate_position->value());
+        QTime now = QTime::currentTime();
+        QString time_now = now.toString("hhmmss");
+        std::string timestamp = time_now.toLocal8Bit().constData();
+
+        std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+        std::string file_name = "Calibration_plate_position_"+one+".txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs<<timestamp<<" "<<ui->chip_number_spinBox->value()<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
+        ofs.close();
+        ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value()+1);
+    }
+    return true;
+}
+
+bool Magrathea::loop_fid_finder(int input){
+    //run fiducial finding algo automatically
+    //and move to the fiducial position
+    for(int i=0;i<3;i++){//set appropriate value of the loop limit
+        QApplication::processEvents();
+        std::vector <double> distances;
+        if(!FiducialFinderCaller(input,distances))
+        {
+            std::cout<<"FAIL!!"<<std::endl;
+            return false;
+        }
+        double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+        double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
+        //ATTENTION! distances[0] is cols, distances[1] is rows of the image
+        if(!mMotionHandler->moveXBy(-target_x_short,1.))
+            return false;
+        if(!mMotionHandler->WaitX(-1))
+            return false;
+        if(!mMotionHandler->moveYBy(-target_y_short,1.))
+            return false;
+        if(!mMotionHandler->WaitY(-1))
+            return false;
+
     }
     return true;
 }
@@ -1707,6 +1748,7 @@ bool Magrathea::calibration_plate_measure(){
     for(int i=0;i<10;i++){//y
         ui->chip_number_spinBox->setValue(i);
         for(int j=0;j<10;j++){//x
+            QApplication::processEvents();
             speed = (i!=0 && j==0) ? 6. : 3.;
             ui->spinBox_input->setValue(j);
             double target_x = points[0][0] + step_x*j*cos(angle) - step_y*i*sin(angle);
@@ -1714,7 +1756,11 @@ bool Magrathea::calibration_plate_measure(){
             std::cout<<j<<" "<<i<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
             if(!mMotionHandler->moveXTo(target_x,speed))
                 return false;
+            if(!mMotionHandler->WaitX(-1))
+                return false;
             if(!mMotionHandler->moveYTo(target_y,3.))
+                return false;
+            if(!mMotionHandler->WaitY(-1))
                 return false;
             if(!focusButtonClicked())
                 return false;
@@ -1778,7 +1824,11 @@ bool Magrathea::fiducial_chip_measure(){
         std::cout<<m<<" BIG : target_x "<<big_target_x<<" target_y "<<big_target_y<<std::endl;
         if(!mMotionHandler->moveXTo(big_target_x,speed))
             return false;
+        if(!mMotionHandler->WaitX(-1))
+            return false;
         if(!mMotionHandler->moveYTo(big_target_y,3.))
+            return false;
+        if(!mMotionHandler->WaitY(-1))
             return false;
         for(int i=0;i<12;i++){
             ui->chip_number_spinBox->setValue(i);
@@ -1790,7 +1840,11 @@ bool Magrathea::fiducial_chip_measure(){
                 std::cout<<i<<" "<<j<<" target_x "<<target_x<<" target_y "<<target_y<<std::endl;
                 if(!mMotionHandler->moveXTo(target_x,speed))
                     return false;
+                if(!mMotionHandler->WaitX(-1))
+                    return false;
                 if(!mMotionHandler->moveYTo(target_y,3.))
+                    return false;
+                if(!mMotionHandler->WaitY(-1))
                     return false;
                 if(!focusButtonClicked())
                     return false;
@@ -1817,9 +1871,934 @@ bool Magrathea::fiducial_chip_measure(){
     return true;
 }
 
-int Magrathea::FitTestButtonClick(){
-    FiducialFinder * Ffinder = new FiducialFinder(this);
-    Ffinder->Set_log(outputLogTextEdit);
-    Ffinder->dumb_test();
+int Magrathea::TestButtonClick(){//dummy function to perform simple tests
+
+    //touchDown(0.018);
+    touchDown(ui->doubleSpinBox_thresholdTouch->value());
+
+    return 0;
+    std::vector<std::string> arguments;
+    arguments.push_back("DI  ");
+    //arguments.push_back("PS  ");
+    //arguments.push_back("0500");
+    TalkSR232(arguments);
+    //    Sleeper::msleep(500);
+//    if(!mMotionHandler->moveYBy(30,5.))
+//        return 1;
+
+
+    return 0;
+
+    //try to add three buttons to mimic the
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Warning", "Module placement error is greater than 20 um! Would you like to adjust the module?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes){
+        std::cout<<" Yes!!!"<<std::endl;
+    }else if(reply == QMessageBox::No){
+        std::cout<<" No!!!"<<std::endl;
+    }
+    std::cout<<" Something something!"<<std::endl;
+
+    QMessageBox::information(this,
+                             "Step to be taken by user 2",
+                             "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+    std::cout<<" Something something!"<<std::endl;
+
+    //    FiducialFinder * Ffinder = new FiducialFinder(this);
+    //    Ffinder->Set_log(outputLogTextEdit);
+    //    Ffinder->dumb_test();
+
+    //touchDown(2,0.5,0.2);
+
     return 0;
 }
+
+//--------------------------------------------------------
+// Porting from Scott code.
+//Function L744 FindPetal()
+int Magrathea::FindPetal( double &Petalangle, std::vector<cv::Point3d> &Coordinates ){
+    cv::destroyAllWindows();
+
+    //Finding first fiducial
+    double petal_1_X = 1234.5; //expected position in absolute gantry coordinates
+    double petal_1_Y = 1234.5;
+    //set these values in an appropriate archive.
+
+    if(!mMotionHandler->moveXTo(petal_1_X,1.))
+        return 1;
+    if(!mMotionHandler->moveYTo(petal_1_Y,1.))
+        return 1;
+    if(!mMotionHandler->WaitX(-1))
+        return false;
+    if(!mMotionHandler->WaitY(-1))
+        return false;
+
+    //turn on the light (if needed in setup) and autofocus
+    if(!focusButtonClicked())
+        return 1;
+    //find a circle of 300 um diameter
+    if(!loop_fid_finder(4))
+        return false;
+    //Store position somewhere...
+    std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
+
+    //Finding second fiducial
+    double petal_2_X = 1234.5;  //expected position in absolute gantry coordinates
+    double petal_2_Y = 1234.5;
+    //set these values in an appropriate archive.
+
+    if(!mMotionHandler->moveXTo(petal_2_X,1.))
+        return 1;
+    if(!mMotionHandler->moveYTo(petal_2_Y,1.))
+        return 1;
+    if(!mMotionHandler->WaitX(-1))
+        return false;
+    if(!mMotionHandler->WaitY(-1))
+        return false;
+
+    //turn on the light (if needed in setup) and autofocus
+    if(!focusButtonClicked())
+        return 1;
+    //find a circle of 300 um diameter
+    if(!loop_fid_finder(4))
+        return false;
+
+    //Store position somewhere...
+    std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
+
+    //Calculate angle of petal
+    //verify calculation after deciding how the setup is placed on the gantry table
+    Petalangle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
+    //In case of issue, maybe split the function in two equal parts that look for a circle.
+    //Then make the result write into a variable. The latter being used for petal angle evaluation and sequent steps.
+    Coordinates.clear();
+    // !!!WARNING!!! fix index according to final camera setup!!!
+    Coordinates.push_back(cv::Point3d(pos_t_1[0],pos_t_1[1],pos_t_1[2]));
+    Coordinates.push_back(cv::Point3d(pos_t_2[0],pos_t_2[1],pos_t_2[2]));
+    return 0;
+}
+
+// Porting from Scott code.
+//Function L1204 Place()
+int Magrathea::PickAndPlaceModule(const double &PetalAngle,const std::vector<cv::Point3d> &Coordinates ){
+    cv::destroyAllWindows();
+    double safe_Z_height = -20;
+    double safe_Z_ModulePickUp_height = -40;
+    double Camera_offset_X = 4321.0;
+    double Camera_offset_Y = 4321.0;
+    //This has to be evaluated as function of the position in Z
+    //of the petal. i.e. using Z_coordinates from FindPetal function
+    double safe_Z_ModulePlace_height = -50;
+    double PickUpTool_angle = 0.;
+    double module_angle = 0.;
+    std::vector <double> pos_t_1(4);
+    std::vector <double> pos_t_2(4);
+    QMessageBox::StandardButton reply;
+    QMessageBox::StandardButton info_step;
+    enum Step {AllSteps, LocateModule, PickUpTool, PickUpModule, PlaceModule};//enum to run segment of code without splitting the code.
+    Step m_step = AllSteps;
+    if (sender() == ui->PickUp_Button)
+        m_step = PickUpTool;
+    else if (sender() == ui->PickUp_Module_Button)
+        m_step = PickUpModule;
+    else if(sender() == ui->PlaceModule_Button)
+        m_step = PlaceModule;
+
+    //Think of how we want the drawing of the petal to be made
+    //Maybe load several pictures showing the different steps of the loading.
+
+    //need to load expected positions of the module on the jig and on the petal
+    //then need to adjust expected module position by the mesured rotation of the petal
+
+    //Add lockdown of petal location button
+
+    //Move to first (lower-left) 'F' fiducial on sensor (sensor is still in the jig)
+    //Add motion with the joystick. May avoid problems with small misalignement of the sensors
+
+    std::vector<cv::Point3d> R0_jig_coordinates (5);
+    std::vector<cv::Point3d> R1_jig_coordinates (5);
+    std::vector<cv::Point3d> R2_jig_coordinates (5);
+    std::vector<cv::Point3d> R3_LEFT_jig_coordinates (5);
+    std::vector<cv::Point3d> R3_RIGHT_jig_coordinates (5);
+    std::vector<cv::Point3d> R4_LEFT_jig_coordinates (5);
+    std::vector<cv::Point3d> R4_RIGHT_jig_coordinates (5);
+    std::vector<cv::Point3d> R5_LEFT_jig_coordinates (5);
+    std::vector<cv::Point3d> R5_RIGHT_jig_coordinates (5);
+
+    std::vector<std::vector< cv::Point3d> > Jig_coordinates(9);
+    Jig_coordinates.at(0)= R0_jig_coordinates;
+    Jig_coordinates.at(1)= R1_jig_coordinates;
+    Jig_coordinates.at(2)= R2_jig_coordinates;
+    Jig_coordinates.at(3)= R3_LEFT_jig_coordinates;
+    Jig_coordinates.at(4)= R3_RIGHT_jig_coordinates;
+    Jig_coordinates.at(5)= R4_LEFT_jig_coordinates;
+    Jig_coordinates.at(6)= R4_RIGHT_jig_coordinates;
+    Jig_coordinates.at(7)= R5_LEFT_jig_coordinates;
+    Jig_coordinates.at(8)= R5_RIGHT_jig_coordinates;
+
+    std::vector<cv::Point3d> R0_Petal_coordinates (5);
+    std::vector<cv::Point3d> R1_Petal_coordinates (5);
+    std::vector<cv::Point3d> R2_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_RIGHT_Petal_coordinates (5);
+
+    std::vector<double> Module_Petal_angles (9);
+    std::vector<std::vector< cv::Point3d> > Petal_coordinates(9);
+    Petal_coordinates.at(0) = R0_Petal_coordinates;
+    Petal_coordinates.at(1) = R1_Petal_coordinates;
+    Petal_coordinates.at(2) = R2_Petal_coordinates;
+    Petal_coordinates.at(3) = R3_LEFT_Petal_coordinates;
+    Petal_coordinates.at(4) = R3_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(5) = R4_LEFT_Petal_coordinates;
+    Petal_coordinates.at(6) = R4_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(7) = R5_LEFT_Petal_coordinates;
+    Petal_coordinates.at(8) = R5_RIGHT_Petal_coordinates;
+
+    std::vector< cv::Point3d > PickUpTool_coordinates(9);
+
+    int selected_module_index = ui->Module_comboBox->currentIndex();
+
+    if(m_step == AllSteps || m_step == LocateModule){//<<<<<<<
+    reply = QMessageBox::question(this, "Warning", "Is module on jig and vacuum available?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return 1;
+    }
+
+    if(!mMotionHandler->moveXTo(Jig_coordinates[selected_module_index][0].x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(Jig_coordinates[selected_module_index][0].y,12))
+        return false;
+    if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][0].z,3))
+        return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+    mMotionHandler->WaitZ();
+    if(!focusButtonClicked())
+        return false;
+    if(!loop_fid_finder(0))
+        return false;
+
+    //Store real position of fiducial
+    pos_t_1 = mMotionHandler->whereAmI(1);
+
+    //Move to second (upper-right) 'F' fiducial on sensor
+    if(!mMotionHandler->moveXTo(Jig_coordinates[selected_module_index][1].x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(Jig_coordinates[selected_module_index][1].y,12))
+        return false;
+    if(!mMotionHandler->moveZTo(Jig_coordinates[selected_module_index][1].z,3))
+        return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+    mMotionHandler->WaitZ();
+    if(!focusButtonClicked())
+        return false;
+    if(!loop_fid_finder(0))
+        return false;
+
+    //Store real position of fiducial
+    pos_t_2 = mMotionHandler->whereAmI(1);
+
+    QMessageBox::information(this, "Information", "Module orientation determined.  \n Moving to pick-up tool...");
+    //verify calculation after deciding how the setup is placed on the gantry table
+    //take into account properly the position of the fiducials
+    module_angle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
+    } //<<<<<<<
+
+    //setting ifs to allow partial run of the code, without splitting the function
+    if (m_step == AllSteps || m_step == PickUpTool){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        //Move to correct pick-up tool
+        //Fix axis according to final camera setup
+        if(!mMotionHandler->moveZTo(safe_Z_height,3))
+            return false;
+        mMotionHandler->WaitZ();
+        if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
+            return false;
+        mMotionHandler->WaitX();
+        if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
+            return false;
+        mMotionHandler->WaitY();
+        //understand what the velocity means for the U axis
+        if(!mMotionHandler->moveUTo(PickUpTool_angle,5))
+            return false;
+        mMotionHandler->WaitU();
+
+        //Fix axis according to final camera setup
+        if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z,5))
+            return false;
+        mMotionHandler->WaitU();
+        //Slowly touch the pickup tool
+        //        if(!mMotionHandler->moveZBy(-2,0.75))
+        //            return false;
+        touchDown(0.018);
+        //turn ON gantry vacuum
+        info_step = QMessageBox::information(this,
+                                             "Step to be taken by user",
+                                             "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+        qInfo("Pick-up tool obtained. \n Moving to module...");
+        //Lift pick-up tool up
+        //Fix axis according to final camera setup
+        if(!mMotionHandler->moveZTo(safe_Z_height,3))
+            return false;
+        mMotionHandler->WaitZ();
+
+    } // end if sender pickup_button<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    if (m_step == AllSteps || m_step == PickUpModule){ //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+        reply = QMessageBox::question(this, "Warning", "Is pick-up tool properly attached to the loading head?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::No)
+            return 1;
+
+        // Calculate x,y coordinates of sensor location
+    //rotating by module_angle the fift element of the array, which should be an offset wrt the first fiducial
+    //verify the calculation after the setup is designed
+        //make position T1 and T2 a defaualt in case of testing
+    double target_x = pos_t_1[0] + Jig_coordinates[selected_module_index][5].x*cos(module_angle) - Jig_coordinates[selected_module_index][5].y*sin(module_angle) - Camera_offset_X;
+    double target_y = pos_t_1[1] + Jig_coordinates[selected_module_index][5].x*sin(module_angle) - Jig_coordinates[selected_module_index][5].y*cos(module_angle) - Camera_offset_Y;
+
+    //Move to correct location over sensor
+    if(!mMotionHandler->moveXTo(target_x,12))
+        return false;
+    if(!mMotionHandler->moveYTo(target_y,12))
+        return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+    //rotate pickup tool to align with the sensor
+    //understand what the velocity means for the U axis
+    //verify the calculation after the setup is designed
+    if(!mMotionHandler->moveUBy(module_angle,5))
+        return false;
+    mMotionHandler->WaitU();
+
+    //Pick up module
+    if(!mMotionHandler->moveZTo(safe_Z_ModulePickUp_height,3))
+        return false;
+    mMotionHandler->WaitZ();
+
+    touchDown(0.018);
+
+    //turn OFF gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user 2",
+                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    //Lift up and rotate gantry-vacuum over holes
+    if(!mMotionHandler->moveZBy(5,1))
+        return false;
+    mMotionHandler->WaitZ();
+
+    if(!mMotionHandler->moveUBy(45,5))
+        return false;
+    mMotionHandler->WaitU();
+
+    if(!mMotionHandler->moveZBy(-5,1))//touchdown again?
+        return false;
+    mMotionHandler->WaitZ();
+
+    //turn ON gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user 3",
+                                         "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    // Move over petal and place sensor
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+    mMotionHandler->WaitZ();
+    }//End if PickUp module button<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    if(m_step == AllSteps || m_step == PlaceModule){//<<<<<<<
+        reply = QMessageBox::question(this, "Warning", "Is module properly attached to the loading head?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::No)
+            return 1;
+
+    // Calculate x,y coordinates of sensor location
+    //rotating by module_angle the fift coordinate, which should be an offset wrt the first fiducial
+    //verify the calculation after the setup is designed
+    double target_x = Petal_coordinates[selected_module_index][5].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) - Camera_offset_X;
+    double target_y = Petal_coordinates[selected_module_index][5].y*sin(PetalAngle) + Petal_coordinates[selected_module_index][5].y*cos(PetalAngle) - Camera_offset_Y;
+
+    //Move to correct location over petal
+    if(!mMotionHandler->moveXTo(target_x,5))
+        return false;
+    if(!mMotionHandler->moveYTo(target_y,5))
+        return false;
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+
+
+    //align module with petal
+    if(!mMotionHandler->moveUTo(PetalAngle + Module_Petal_angles[selected_module_index],5))
+        return false;
+    mMotionHandler->WaitU();
+
+    // Move over petal and place sensor
+    if(!mMotionHandler->moveZTo(safe_Z_ModulePlace_height,3))
+        return false;
+    mMotionHandler->WaitZ();
+
+    touchDown(0.018);
+
+    // Once petal has been found, slowly move down 50 um more to ensure contact
+    //if(!mMotionHandler->moveZBy(-0.05,0.1))//necessary in our case?
+    //    return false;
+    //mMotionHandler->WaitZ();
+
+    } //end if place module
+
+    if(m_step != AllSteps)
+        return true; //finish here if running testing
+
+    //Store position for module adjustment
+    std::vector <double> pos_t_3 = mMotionHandler->whereAmI(1);
+    cv::Point3d module_bridge_coordinates(pos_t_3[0],pos_t_3[1],pos_t_3[2]);
+
+    //Module in place; waiting 1 minute for glue to settle...
+    //morph it into a window with a timer
+    Sleeper::sleep(60);
+
+    //turn OFF gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user 3",
+                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    // Lift gantry head up (slowly)
+    if(!mMotionHandler->moveZBy(2,0.2))
+        return false;
+    mMotionHandler->WaitZ();
+
+    qInfo("Proceeding to survey placement...");
+    std::vector <cv::Point3d> Module_offsets;
+    Survey(selected_module_index, PetalAngle, Module_offsets);
+    // Check if any of the errors are greater than 20 um
+    bool big_errors = false;
+    for(unsigned int i=0;i<Module_offsets.size();i++){
+        double offset = sqrt(Module_offsets[i].x*Module_offsets[i].x + Module_offsets[i].y*Module_offsets[i].y);
+        if(offset > 0.02){
+            big_errors = true;
+            qInfo("Fiducial %d is out of range : %5.5f",i,offset);
+        }
+    }
+    if(big_errors){
+        //try to add three buttons to mimic the vancouve 3-option messagebox
+        //https://doc.qt.io/qt-5/qmessagebox.html
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Warning", "Module placement error is greater than 20 um! Would you like to adjust the module?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if(reply == QMessageBox::Yes){
+            //If 'Yes', move to adjust and resurvey the placement (below)
+            //call adjust function
+            //Function inVancouver code does not make sense, rewrite it (or try to understand it...)
+            Adjust_module(module_bridge_coordinates,Module_offsets);
+        }else if(reply == QMessageBox::No){
+            //If 'No', just wait for glue to dry
+            qInfo("Module adjustment skipped by user.");
+        }
+    }
+
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+    mMotionHandler->WaitZ();
+
+
+    //Turn lamp over module on petal to green, indicating module has been successfully placed
+    //PetalUpdate(app,app.ModuleDropDown.Value, 2);
+
+    //Putting back the pick up tool
+
+    if(!mMotionHandler->moveUBy(45,5))
+        return false;
+    mMotionHandler->WaitU();
+    if(!mMotionHandler->moveXTo(module_bridge_coordinates.x,5))
+        return false;
+    mMotionHandler->WaitX();
+    if(!mMotionHandler->moveYTo(module_bridge_coordinates.y,5))
+        return false;
+    mMotionHandler->WaitY();
+    if(!mMotionHandler->moveZTo(module_bridge_coordinates.z+1,5))
+        return false;
+    mMotionHandler->WaitZ();
+    if(!mMotionHandler->moveZBy(-1,0.25))
+        return false;
+    mMotionHandler->WaitZ();
+
+    //turn ON gantry vacuum
+    QMessageBox::information(this,
+                             "Step to be taken by user - 4",
+                             "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+    //Slowly lift tool off of module
+    if(!mMotionHandler->moveZBy(0.5,0.1))
+        return false;
+    mMotionHandler->WaitZ();
+    if(!mMotionHandler->moveZBy(2,0.5))
+        return false;
+    mMotionHandler->WaitZ();
+    if(!mMotionHandler->moveZTo(safe_Z_height,5))
+        return false;
+    mMotionHandler->WaitZ();
+
+    //Move tool back to tool holder
+    if(!mMotionHandler->moveXTo(PickUpTool_coordinates[selected_module_index].x,12))
+        return false;
+    mMotionHandler->WaitX();
+    if(!mMotionHandler->moveYTo(PickUpTool_coordinates[selected_module_index].y,12))
+        return false;
+    mMotionHandler->WaitY();
+    if(!mMotionHandler->moveZTo(PickUpTool_coordinates[selected_module_index].z+2,5))
+        return false;
+    mMotionHandler->WaitZ();
+    //Slowly drop the pickup tool
+    if(!mMotionHandler->moveZBy(-2,0.75))
+        return false;
+    mMotionHandler->WaitZ();
+
+    //turn OFF gantry vacuum
+    info_step = QMessageBox::information(this,
+                                         "Step to be taken by user - 5",
+                                         "Please turn OFF the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+    qInfo("Module has been successfully placed!");
+
+    return 0;
+}
+
+//L2383
+// Function for surveying placement results
+// *** When calling function, be sure to check 'motion' in calling
+//     function/callback if motion was complete or stopped
+//function [aveXYZ, motion, cals] = Survey(app, value)
+bool Magrathea::Survey(const int &selected_module_index, const double &PetalAngle, std::vector <cv::Point3d> &Module_offsets){
+    //Load module survey data
+    cv::destroyAllWindows();
+    double safe_Z_height = -20;
+    double safe_Z_height_To_autofocus = -30;
+    std::vector<cv::Point3d> R0_Petal_coordinates (5);
+    std::vector<cv::Point3d> R1_Petal_coordinates (5);
+    std::vector<cv::Point3d> R2_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R3_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R4_RIGHT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_LEFT_Petal_coordinates (5);
+    std::vector<cv::Point3d> R5_RIGHT_Petal_coordinates (5);
+
+    std::vector<double> Module_Petal_angles (9);
+    std::vector<std::vector< cv::Point3d> > Petal_coordinates(9);
+    Petal_coordinates.at(0)= R0_Petal_coordinates;
+    Petal_coordinates.at(1)= R1_Petal_coordinates;
+    Petal_coordinates.at(2)= R2_Petal_coordinates;
+    Petal_coordinates.at(3)= R3_LEFT_Petal_coordinates;
+    Petal_coordinates.at(4)= R3_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(5)= R4_LEFT_Petal_coordinates;
+    Petal_coordinates.at(6)= R4_RIGHT_Petal_coordinates;
+    Petal_coordinates.at(7)= R5_LEFT_Petal_coordinates;
+    Petal_coordinates.at(8)= R5_RIGHT_Petal_coordinates;
+
+    //Fix axis according to final camera setup
+    if(!mMotionHandler->moveZTo(safe_Z_height,10))
+        return false;
+
+    //rotating the expected coordinate of the module on the petal
+    //by the measured angle of the petal: PetalAngle
+
+    //////////////////////////////////////////////////////////////////////////
+    // Calculate x,y coordinates of sensor location
+    //rotating by Petal_angle
+    //verify the calculation after the setup is designed
+
+    //Start survey
+    //Add an "helper" that allows to move the gantry manually
+    //to help the positioning in case of failure
+    std::vector < std::vector <double> > Real_Module_On_Petal_Positions (4);
+    std::vector <cv::Point3d> Petal_Rotated_coordinates(4) ;
+    Module_offsets.clear();
+    for(unsigned int i=0;i<4;i++){//fifth point is the center of the module
+
+        Petal_Rotated_coordinates.at(i).x = Petal_coordinates[selected_module_index][i].x*cos(PetalAngle) - Petal_coordinates[selected_module_index][i].y*sin(PetalAngle) ;
+        Petal_Rotated_coordinates.at(i).y = Petal_coordinates[selected_module_index][i].x*sin(PetalAngle) + Petal_coordinates[selected_module_index][i].y*cos(PetalAngle) ;
+
+        if(!mMotionHandler->moveZTo(safe_Z_height,3))
+            return false;
+        mMotionHandler->WaitZ();
+
+        //Move to correct location over petal
+        if(!mMotionHandler->moveXTo(Petal_Rotated_coordinates.at(i).x,5))
+            return false;
+        mMotionHandler->WaitX();
+        if(!mMotionHandler->moveYTo(Petal_Rotated_coordinates.at(i).y,5))
+            return false;
+        mMotionHandler->WaitY();
+
+        if(!mMotionHandler->moveZTo(safe_Z_height_To_autofocus,3))
+            return false;
+        mMotionHandler->WaitZ();
+
+        //autofocus and find fiducial
+        if(!focusButtonClicked())
+            return false;
+        if(!loop_fid_finder(0))
+            return false;
+
+        //Store position somewhere...
+        Real_Module_On_Petal_Positions[i] = mMotionHandler->whereAmI(1);
+
+        //Calculate offsets
+        //Check axis index after setup is complete
+        cv::Point3d temp_point (Real_Module_On_Petal_Positions[i][0],Real_Module_On_Petal_Positions[i][1],Real_Module_On_Petal_Positions[i][2]);
+        Module_offsets.push_back(Petal_Rotated_coordinates.at(i) - temp_point);
+    }
+    //Do something with the values?
+    //Print them and decide if going on or not?
+    return true;
+}
+
+//L2520
+// Function for adjusting placed module and waiting for glue ot dry
+// *** When calling function, be sure to check 'motion' in calling
+//     function/callback if motion was complete or stopped
+//function motion = Adjust(app, startX,startY,startZ, offsetX,offsetY, adj
+//function [aveXYZ, motion, cals] = Survey(app, value)
+bool Magrathea::Adjust_module(const cv::Point3d &module_bridge_coordinates, const std::vector <cv::Point3d> &Module_offsets){
+    cv::destroyAllWindows();
+    double safe_Z_height = -20;
+    if(!mMotionHandler->moveZTo(safe_Z_height,3))
+        return false;
+    mMotionHandler->WaitZ();
+
+    //Functio does not make sense. Rewrite it!!!
+
+    //    if(!mMotionHandler->moveXTo(module_bridge_coordinates.x,5))
+    //        return false;
+    //    if(!mMotionHandler->moveYTo(module_bridge_coordinates.y,5))
+    //        return false;
+    //    if(!mMotionHandler->moveZTo(module_bridge_coordinates.z+1,3))
+    //        return false;
+    //    if(!mMotionHandler->moveZBy(-1,0.2))
+    //        return false;
+
+    //    //turn ON gantry vacuum
+    //    QMessageBox::StandardButton info_step;
+    //    info_step = QMessageBox::information(this,
+    //                                         "Step to be taken by user - adjustement",
+    //                                         "Please turn ON the vacuum of the gantry. Push ok to continue.",QMessageBox::Ok);
+
+    //    // Lift module 1/3 thickness of glue (150/3 = 50 um) at 5 um/s
+    //    if(!mMotionHandler->moveZBy(0.05,0.005))
+    //        return false;
+
+    //    // Wait for Z-height to be established before moving in x/y
+    //    Sleeper::sleep(12);
+
+    //    if(!mMotionHandler->moveXTo(Module_offsets[0].x,5))
+    //        return false;
+    //    if(!mMotionHandler->moveYTo(Module_offsets[0].y,5))
+    //        return false;
+    //    Sleeper::sleep(5);
+    return true;
+}
+
+//Function for "force-sensing"
+//L1680
+bool Magrathea::touchDown(const double &threshold){
+    mMotionHandler->endRunZ(); //need to ensure all motion has stopped!!
+    //Add asking for axis status
+    const double velocity         = 0.1; //[mm/s]
+    const double maximum_distance = 1.5; //[mm]
+    const int millisec_wait       = 100;
+    std::cout<<"Start, T: "<<threshold<<std::endl;
+    if(!mMotionHandler->moveZBy(-maximum_distance,velocity))
+        return false;
+    Sleeper::msleep(1500); //need to wait for inductance of the engine to charge, corresponds to 150 um of travel
+    double current0 = mMotionHandler->CurrentAmI(1);
+    Sleeper::msleep(millisec_wait);
+    double current1 = mMotionHandler->CurrentAmI(1);
+    //VALENCIA ONLY: current is returned in % of maximum motor capability
+    int flag = 1;
+    int iterations =0;
+    while (flag > 0){
+        Sleeper::msleep(millisec_wait);
+        //QApplication::processEvents(); ???
+        iterations++;
+        double current2 = mMotionHandler->CurrentAmI(1);
+        //Take the difference of two consecutive current measurements
+        //(spaced 100 ms apart) average time of the current in the motor in Valencia, may be different in other sites
+        double compare0 = current1 - current0;
+        double compare1 = current2 - current1;
+        std::cout<<" Comp 0 : "<<compare0<<" ; Comp 1 : "<<compare1<<
+                   " Curr 0 : "<<current0<<" ; Curr 1 : "<<current1<<" ; Curr 2 : "<<current2<<std::endl;
+        //Check to see if the differences are both consistent
+        // --> if they are, break from the loop and stop motion
+        if (compare0 > threshold){
+            if (compare1 > threshold){
+                mMotionHandler->endRunZ();
+                flag = -1;
+            }
+        }
+        if(iterations>140){
+            flag = -1;
+            std::cout<<"NO touch!!!!!"<<std::endl;
+        }
+        current0 = current1;
+        current1 = current2;
+        if(flag < 0){
+            Sleeper::msleep(100);
+            std::string file_name = "touchDown_good.txt";
+            std::ofstream ofs (file_name, std::ofstream::app);
+            ofs <<"T: "<<threshold<<" : "<<iterations<<"  "<<mMotionHandler->whereAmI(1).at(2)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
+            ofs.close();
+            if(iterations<=140)
+                std::cout<<"Touch down!!!!!"<<std::endl;
+        }
+        std::string file_name = "touchDown.txt";
+        std::ofstream ofs (file_name, std::ofstream::app);
+        ofs <<iterations<<"  "<<mMotionHandler->whereAmI(1).at(2)<<"  "<<current2<<" : "<<compare0<<" : "<<compare1<<std::endl;
+        ofs.close();
+    }
+    //////////////////////////////////////
+    //    //Stop motion and move 50 um away to reduce pressure
+    //    if(!mMotionHandler->moveZ_2_By(0.05,velocity)){ //velocity shuld be ~0.2 mm/sec
+    //        return false;
+    //    }
+    return true;
+}
+
+//Function for gluing (lines)
+//L1014
+bool Magrathea::GlueLines( const std::vector<cv::Point3d> &line_points){
+    if(line_points.size()!=2)
+        return false;
+
+    const double safe_gluing_Z_height = -20.0; //add correction for petal real positioning
+    const double glue_speed = 3.0; //[mm/s]
+    //    const std::vector<cv::Point3d> Petal_nominal_coordinates(2);
+    //    double Petal_offset_X = Coordinates[0].x-Petal_nominal_coordinates[0].x;
+    //    double Petal_offset_Y = Coordinates[0].y-Petal_nominal_coordinates[0].y;
+    //evaluate distance between two points
+    //    double distance = sqrt(pow((line_points[0].x-line_points[1].x),2)+
+    //            pow((line_points[0].y-line_points[1].y),2));
+    //double time = distance / glue_speed; //[s]
+
+    //Move to correct location over petal
+    if(!mMotionHandler->moveXTo(line_points[0].x,5))
+        return false;
+    mMotionHandler->WaitX();
+    if(!mMotionHandler->moveYTo(line_points[0].y,5))
+        return false;
+    mMotionHandler->WaitY();
+    if(!mMotionHandler->moveZTo(safe_gluing_Z_height,5))
+        return false;
+    mMotionHandler->WaitZ();
+
+    //send start dispensing to dispeser
+    //(Ultimus needs to be in steady "mode", see sec 2.2.27 of manual )
+    std::vector<std::string> arguments;
+    arguments.push_back("DI  ");
+    TalkSR232(arguments);
+    //move symultaneously the two axis (verify if this works,
+    //or use the appropriate function (that need to be implemented in ACSCMotionhandler) to move two axis at a time)
+    mMotionHandler->moveXTo(line_points[0].x,glue_speed);
+    mMotionHandler->moveYTo(line_points[0].y,glue_speed);
+
+    //send end dispensing to dispeser
+    mMotionHandler->WaitX();
+    mMotionHandler->WaitY();
+
+    TalkSR232(arguments);
+
+    return true;
+}
+
+bool Magrathea::TalkSR232( const std::vector<std::string> &arguments){
+    //    int stx = 2;
+    //    int etx = 3;
+    //    int eot = 4;
+    //    int enq = 5;
+    //    int ack = 6;
+    //    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+    //            std::cout << "Name : " << info.portName().toLocal8Bit().constData()<<std::endl;
+    //            std::cout << "Description : " << info.description().toLocal8Bit().constData()<<std::endl;
+    //            std::cout << "Manufacturer: " << info.manufacturer().toLocal8Bit().constData()<<std::endl;
+    //            // Example use QSerialPort
+    //            QSerialPort serial;
+    //            serial.setPort(info);
+    //            if (serial.open(QIODevice::ReadWrite))
+    //                serial.close();
+    //        }
+    bool debug = true;
+    QByteArray readData;
+    QByteArray writeData;
+    QSerialPort serialPort;
+    const QString serialPortName = "COM1"; //to modify according to the serial port used
+    serialPort.setPortName(serialPortName);
+    serialPort.setBaudRate(QSerialPort::Baud115200); // set BaudRate to 115200
+    serialPort.setParity(QSerialPort::NoParity); //set Parity Bit to None
+    serialPort.setStopBits(QSerialPort::OneStop); //set
+    serialPort.setDataBits(QSerialPort::Data8); //DataBits to 8
+    serialPort.setFlowControl(QSerialPort::NoFlowControl);
+    serialPort.close();
+    if (!serialPort.open(QIODevice::ReadWrite)) {
+        std::cout<<"FAIL!!!!!"<<std::endl;
+        qWarning("Failed to open port %s, error: %s",serialPortName.toLocal8Bit().constData(),serialPort.errorString().toLocal8Bit().constData());
+        return false;
+    }else {
+        if (debug)
+            std::cout<<"Port opened successfully"<<std::endl;
+    }
+
+    writeData = QByteArrayLiteral("\x05"); //sending enquiry command
+    long long int output = 0;
+    output = serialPort.write(writeData);
+    if (debug)
+        std::cout<<"Log >> bytes written   : "<<output<<" : operation : "<<writeData.toStdString()<<std::endl;
+    if(output == -1){
+        std::cout<<"Error write operation : "<<writeData.toStdString()
+                << " => " << serialPort.errorString().toStdString()<<std::endl;
+        return false;
+    }
+
+    readData.clear();
+    int control = 0;
+    while(serialPort.isOpen()){ // READING BYTES FROM SERIAL PORT
+        control += 1;
+        //https://stackoverflow.com/questions/42576537/qt-serial-port-reading
+        if(!serialPort.waitForReadyRead(100)) //block until new data arrives, dangerous, need a fix
+            std::cout << "Read error: " << serialPort.errorString().toStdString()<<std::endl;
+        else{
+            if (debug)
+                std::cout << "New data available: " << serialPort.bytesAvailable()<<std::endl;
+            readData = serialPort.readAll();
+            if (debug)
+                std::cout << readData.toStdString()<<std::endl;
+            break;
+        }
+        if (control > 10){
+            std::cout << "Time out read error"<<std::endl;
+            return false;
+        }
+
+    }// END READING BYTES FROM SERIAL PORT
+
+    if(readData.size() != 0){
+        if (debug)
+            std::cout<<"Read operation ok : "<<readData.toStdString()<<std::endl;
+        if(readData.at(0) != 6){ //expecting acknowledge command (0x06)
+            std::cout<<"Wrong read : "<<readData.toStdString()<<std::endl;
+            return false;
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////////
+    // Composing message in an appropriate way for the Ultimis V (Sec1 of appB of manual)
+    int checksum = 0;
+    int N_bytes = 4*arguments.size();
+    writeData = QByteArrayLiteral("\x02"); //https://stackoverflow.com/questions/36327327/is-there-a-shorter-way-to-initialize-a-qbytearray
+    QByteArray temp_writeData = int_tohexQByteArray_UltimusV(N_bytes);
+
+    for(unsigned int i=0;i<arguments.size();i++)
+        temp_writeData.append(QByteArray(arguments[i].c_str()));
+
+    for(int i=0;i<temp_writeData.size();i++)// evauating checksum quantity
+        checksum -= temp_writeData[i];
+
+    writeData.append(temp_writeData);
+
+    //take tha least significant byte of checksum, i.e. checksum & 0x000000ff
+    temp_writeData.clear();
+    temp_writeData = int_tohexQByteArray_UltimusV(checksum & 0x000000ff);
+    QByteArray qb_checksum;
+    qb_checksum.clear();
+    if(temp_writeData.size() > 2){
+        if (debug)
+            std::cout<<"here : "<<temp_writeData.size()<<"  :  "<<temp_writeData.toStdString();
+        qb_checksum = temp_writeData.remove(0,(temp_writeData.size()-2));
+        if (debug)
+            std::cout<<"CS  :  "<<qb_checksum.toStdString()<<std::endl;
+    } else {
+        qb_checksum = temp_writeData;
+        if (debug)
+            std::cout<<"CS  :  "<<qb_checksum.toStdString()<<std::endl;
+    }
+
+    writeData.append(qb_checksum);
+    writeData.append(QByteArrayLiteral("\x03"));
+    writeData.append(QByteArrayLiteral("\x04"));
+    //// END OF COMMAND CONSTRUCTION
+
+    output = serialPort.write(writeData);// SENDING MESSAGE TO ULTIMUS V
+    if (debug)
+        std::cout<<"Log >> bytes written   : "<<output<<" : "<<writeData.toStdString()<<std::endl;
+    if(output == -1){
+        std::cout<<"Error write operation : "<<writeData.toStdString()<<std::endl;
+        std::cout << "error: " << serialPort.errorString().toStdString()<<std::endl;
+        return false;
+    }
+    //////////// End sending UltimusV command
+    Sleeper::msleep(200);
+
+    readData.clear();
+    control = 0;
+    while(serialPort.isOpen()){ //dangerous, may freez the GUI
+        control += 1;
+        if(!serialPort.waitForReadyRead(100)) //block until new data arrives
+            std::cout << "error: " << serialPort.errorString().toStdString()<<std::endl;
+        else{
+            if (debug)
+                std::cout << "2 New data available: " << serialPort.bytesAvailable()<<std::endl;
+            readData.append(serialPort.readAll());
+            if (debug)
+                std::cout << readData.toStdString()<<std::endl;
+            if(readData.at(0) == 2 && readData.at(readData.size()-1) == 3) //expectin A0 command, may add controls on checksum in future
+                break;
+        }
+        if (control > 10){
+            std::cout << "Time out read error"<<std::endl;
+            return false;
+        }
+    }
+    //////////////////////////////////
+    serialPort.close(); //closing serial port comunication
+    return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

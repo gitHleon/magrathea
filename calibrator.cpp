@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <math.h>
 
+//function for image debugging in opencv
 std::string type2str(int type) {
   std::string r;
 
