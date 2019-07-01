@@ -1,5 +1,6 @@
 #include "ACSCMotionHandler.h"
 #include <QtMessageHandler>
+#include <QtMath>
 
 //******************************************
 ACSCMotionHandler::ACSCMotionHandler() :
@@ -825,7 +826,7 @@ bool ACSCMotionHandler::WaitU(int timeout){
 bool ACSCMotionHandler::runX(double direction, double speed)
 {
     double sign = direction<0?-1.:1.;
-    speed = fabs(speed);
+    speed = qFabs(speed);
     qInfo("free running %s X axis at %.1f mm/s", direction<0?"-":"+", speed);
     if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,X_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running X axis");
@@ -853,7 +854,7 @@ bool ACSCMotionHandler::endRunX()
 bool ACSCMotionHandler::runY(double direction, double speed)
 {
     double sign = direction<0?-1.:1.;
-    speed = fabs(speed);
+    speed = qFabs(speed);
     qInfo("free running %s Y axis at %.1f mm/s", direction<0?"-":"+", speed);
     if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,Y_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running Y axis");
@@ -881,7 +882,7 @@ bool ACSCMotionHandler::endRunY()
 bool ACSCMotionHandler::runZ(double direction, double speed)
 {
     double sign = direction<0?-1.:1.;
-    speed = fabs(speed);
+    speed = qFabs(speed);
     qInfo("free running %s Z axis at %.1f mm/s", direction<0?"-":"+", speed);
     if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running Z axis");
@@ -909,7 +910,7 @@ bool ACSCMotionHandler::endRunZ()
 bool ACSCMotionHandler::runZ_2(double direction, double speed)
 {
     double sign = direction<0?-1.:1.;
-    speed = fabs(speed);
+    speed = qFabs(speed);
     qInfo("free running %s Z 2 axis at %.1f mm/s", direction<0?"-":"+", speed);
     if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,Z_2_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running Z 2 axis");
@@ -937,7 +938,7 @@ bool ACSCMotionHandler::endRunZ_2()
 bool ACSCMotionHandler::runU(double direction, double speed)
 {
     double sign = direction<0?-1.:1.;
-    speed = fabs(speed);
+    speed = qFabs(speed);
     qInfo("free running %s U axis at %.1f rad/s", direction<0?"-":"+", speed);
     if(acsc_Jog(gantry,ACSC_AMF_VELOCITY,U_axis,sign*speed,ACSC_SYNCHRONOUS) != 0){
         qInfo("running U axis");
