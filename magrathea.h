@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <opencv2/opencv.hpp>
 #include "fiducial_locations.h"
+//#include "camera.h"
 
 namespace Ui {
 class Magrathea;
@@ -18,6 +19,7 @@ class QCameraImageCapture;
 class QVBoxLayout;
 class MotionHandler;
 class QTimer;
+class glue_dispenser;
 
 #ifdef AEROTECH
 class AerotechMotionHandler;
@@ -33,7 +35,7 @@ public:
     explicit Magrathea(QWidget *parent = 0);
     ~Magrathea();
 
-    static QTextEdit *outputLogTextEdit;
+   static QTextEdit *outputLogTextEdit;
 
 private slots:
 
@@ -80,8 +82,8 @@ private slots:
     bool touchDown(const double &threshold);
     bool Survey(const int &selected_module_index, const double &PetalAngle, std::vector<cv::Point3d> &Module_offsets);
     bool Adjust_module(const cv::Point3d &module_bridge_coordinates, const std::vector<cv::Point3d> &Module_offsets);
-    bool GlueLines(const std::vector<cv::Point3d> &line_points);
-    bool TalkSR232(const std::vector<std::string> &arguments);
+//    bool GlueLines(const std::vector<cv::Point3d> &line_points);
+//    bool TalkSR232(const std::vector<std::string> &arguments);
 
     //test
     void color_test();
@@ -92,14 +94,30 @@ private slots:
     void createTemplate_F();
     bool calibration_plate_measure();
     bool fiducial_chip_measure();
-    int TestButtonClick();
+//    int TestButtonClick();
+
+    // glue dispenser
+
+//    bool RS232V(QByteArray command);
+//    bool RS232V();
+//    QByteArray RS232V_fb(QByteArray command);
+//    bool RS232V_fb();
+//    bool dispenser_init();
+//    bool dispenser_mode();
+//    bool dispenser_pressure();
+//    bool dispenser_pressureUnits();
+//    bool dispenser_time();
+//    bool dispenser_vacuum();
+//    bool patternLine();
+//    bool dispenseCycle();
+
 
 signals:
     void Run_focus_signal();
     void Test_signal();
 
 private:
-    Ui::Magrathea *ui;
+
 
     cv::Mat sub_frame;
 
@@ -109,9 +127,12 @@ private:
     QCameraViewfinder *mCameraViewfinder;
     QCameraImageCapture *mCameraImageCapture;
     QVBoxLayout *mCameraLayout;
+//    Camera *mCamera;
     MotionHandler *mMotionHandler;
     QTimer *mPositionTimer;
     fiducial_locations *f_locations;
+    glue_dispenser *pGlue;
+
 
     int autoRepeatDelay;
     int autoRepeatInterval;
@@ -119,6 +140,12 @@ private:
     bool J_control_Z_1      = true;
     bool J_control_Rotation = true;
     double J_axis_speed     = 1.0;
+
+protected:
+    Ui::Magrathea *ui;
+
+
+
 
 };
 
