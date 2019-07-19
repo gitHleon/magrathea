@@ -619,7 +619,7 @@ bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const i
             };
             limiting_conditions.setcontent(12,17,c_1);
 
-            int ct_1[] = {
+            const alglib::ae_int_t ct_1[] = {
                 0,0,0,0,0,  0,0,0,0,0, 0,0
             };
             conditions_relation.setcontent(12,ct_1);

@@ -16,7 +16,7 @@
 #include "focus_finder.h"
 #include "Fiducial_finder.h"
 #include "verticalalignmenttool.h"
-#include <conio.h>
+//#include <conio.h>
 #include <fstream>
 #include <iomanip>
 #include <QtSerialPort/QSerialPort>
@@ -758,7 +758,7 @@ void Magrathea::Camera_test(){//function to test camera settings
     if (!cap.isOpened())  // if not success, exit program
     {
         qWarning("Cannot open the video cam");
-        _getch();
+        getchar();
         return;
     }
 
@@ -832,7 +832,7 @@ void Magrathea::Camera_test(){//function to test camera settings
     }
     cap.release();
     qInfo("end");
-    _getch();
+    getchar();
     return;
 }
 

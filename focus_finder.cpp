@@ -9,6 +9,8 @@
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
 #include <ACSCMotionHandler.h>
+#else
+#include <MotionHandler.h>
 #endif
 
 //add thresholds and indeces as Valencia and Vancouver variables

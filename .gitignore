@@ -39,3 +39,6 @@ CMakeLists.txt.user*
 
 #MacOS
 .DS_Store
+.project
+.cproject
+.settings

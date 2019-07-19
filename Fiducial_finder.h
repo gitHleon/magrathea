@@ -14,8 +14,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <fstream>
-#include "optimization.h"
 #endif
+#include <ap.h>
+#include "optimization.h"
 
 class FiducialFinder : public QWidget
 {

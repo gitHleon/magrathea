@@ -25,6 +25,8 @@
 #include <AerotechMotionhandler.h>
 #elif VALENCIA
 #include <ACSCMotionHandler.h>
+#else
+#include <MotionHandler.h>
 #endif
 #include <QTextEdit>
 #include <vector>
