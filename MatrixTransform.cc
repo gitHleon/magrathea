@@ -75,7 +75,7 @@ MatrixTransform operator*(const MatrixTransform &a, const MatrixTransform &b)
     return MatrixTransform::matrix_multiply(a,  b);
 }
 
-Point MatrixTransform::operator*(const Point &P)
+Point MatrixTransform::operator*(const Point &P) const
 {
     return Point(_M[0]*P.x() + _M[2]*P.y() + _M[4], _M[1]*P.x() + _M[3]*P.y() + _M[5]);
 }

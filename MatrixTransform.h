@@ -51,8 +51,8 @@ class MatrixTransform
 
         MatrixTransform rotation() const;
         MatrixTransform operator*(const MatrixTransform &M);
-        Point operator*(const Point &P);
-        Point transform(const Point &P) { return (*this)*P; }
+        Point operator*(const Point &P) const;
+        Point transform(const Point &P) const { return (*this)*P; }
         double operator[](int i) const { return _M[i]; }
 
         /*

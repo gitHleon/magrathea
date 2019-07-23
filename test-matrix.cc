@@ -57,29 +57,54 @@ int main(int argc, char **argv)
     std::cout << m3 << std::endl;
 
 
-    Point upper_locator(131.104, 968.526);
-    Point lower_locator(0, 382.000);
-    MatrixTransform Rm;
-    Rm.translate(Point(randuniform(-50, 50), randuniform(-150, 150)));
-    Rm.rotate(randuniform(M_PI_2 - 20.0*degree, M_PI_2 + 20.0*degree));
+//    Point upper_locator(131.104, 968.526);
+//    Point lower_locator(0, 382.000);
+//    MatrixTransform Rm;
+//    Rm.translate(Point(randuniform(-50, 50), randuniform(-150, 150)));
+//    Rm.rotate(randuniform(M_PI_2 - 20.0*degree, M_PI_2 + 20.0*degree));
+//
+//    Point Pl1 = Rm*upper_locator;
+//    Point Pl2 = Rm*lower_locator;
+//
+//    PetalCoordinates Petal(Pl1, Pl2);
 
-    Point Pl1 = Rm*upper_locator;
-    Point Pl2 = Rm*lower_locator;
-
-    PetalCoordinates Petal(Pl1, Pl2);
+    Point upper_locator(23.8152, 1059.4657);
+    Point lower_locator(48.9825, 458.9928);
+    PetalCoordinates Petal(upper_locator, lower_locator);
     std::cout << "------ Petal Coordinates ------- " << std::endl
               << Petal
               << std::endl;
     for (int i=0; i<PetalCoordinates::LAST; ++i)
     {
-        std::cout << Petal.get_sensor_pos_in_petal((PetalCoordinates::Sensor)i)
+        std::cout << "Sensor R" << i << " "
+                  << Petal.get_sensor_pos_in_petal((PetalCoordinates::Sensor)i)
                   << " - "
                   << Petal.get_sensor_pos_in_gantry((PetalCoordinates::Sensor)i) << std::endl;
     }
 
     std::cout << std::endl
-              << "origin in gantry " << Pl2 << Petal.petal_to_gantry(Point(0,0)) << std::endl;
+              << "origin in gantry " << lower_locator << Petal.petal_to_gantry(Point(0,0)) << std::endl;
 
+    std::cout << "F fiducials" << std::endl;
+    for (int iring=0; iring<6; ++iring)
+    {
+        int nsensor = 1;
+        if (iring>2)
+            nsensor = 2;
+
+        for (int j=0; j<nsensor; ++j)
+        {
+            for (int ik =0; ik < 4; ++ik)
+            {
+                std::cout << "R" << iring << "_T4_" << ik << "_" << j << ": "
+                        << "  \tP " << Petal.get_fiducial_in_petal("T4", iring, j, ik)
+                        << "  \tG " << Petal.get_fiducial_in_gantry("T4", iring, j, ik)
+                        << "  \tX " << Petal.gantry_to_petal( Petal.get_fiducial_in_gantry("T4", iring, j, ik) )
+                        << std::endl;
+            }
+            std::cout << std::endl;
+        }
+    }
     return 0;
 }
 

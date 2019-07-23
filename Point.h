@@ -40,6 +40,13 @@ class Point
             _v[1] = P._v[1];
         }
 
+        Point &operator=(const Point &P)
+        {
+            _v[0] = P._v[0];
+            _v[1] = P._v[1];
+            return *this;
+        }
+
         double x() const
         {
             return _v[0];
