@@ -12,14 +12,24 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #
 find_package( OpenCV REQUIRED )
 
+#
+# Create xlnt for reading XLSX files
+#
+set( STATIC ON CACHE BOOL "XNLT static library" FORCE)
+set( TESTS OFF CACHE BOOL "disable tests" FORCE) 
+add_subdirectory(xlnt)
+find_library(xlnt_LIB xlnt PATHS ${CMAKE_CURRENT_BINARY_DIR}/xlnt/source)
+set(xlnt_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/xlnt/include)
 
 #
 # Create alglib library
 #
 set(alglib_DIR alglib-3.15.0/cpp/src)
-include_directories(${alglib_DIR})
 FILE(GLOB alglib_SOURCES ${alglib_DIR}/*.cpp)	
 add_library(alglib STATIC ${alglib_SOURCES})
+
+# Set include directories
+include_directories(${alglib_DIR} ${xlnt_INCLUDE})
 
 # Test flatness
 add_executable(test-flatness test-flatness.cc flatness.cc alglibtools.cc)
@@ -27,7 +37,8 @@ target_link_libraries(test-flatness alglib)
 
 # Test transforms
 add_executable(test-matrix test-matrix.cc MatrixTransform.cc PetalCoordinates.cc)
-
+target_link_libraries(test-matrix ${xlnt_LIB})
+add_dependencies (test-matrix xlnt)	
 
 
 #
@@ -75,6 +86,7 @@ set(magrathea_SOURCES
 	)
 	
 add_executable(magrathea ${magrathea_SOURCES})
+
 # CHOSE IFIC MOTION CONTROLLER
 #target_compile_definitions(magrathea PUBLIC -DACSC=1 -DVALENCIA=1)
 # Use the Widgets module from Qt 5
@@ -85,6 +97,6 @@ target_link_libraries(magrathea
 	Qt5::Multimedia 
 	Qt5::MultimediaWidgets 
 	Qt5::SerialPort
-	${OpenCV_LIBS} alglib)
-	
+	${OpenCV_LIBS} alglib ${xlnt_LIB})
+add_dependencies (magrathea xlnt)	
 	

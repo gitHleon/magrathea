@@ -11,6 +11,7 @@
 #include <MatrixTransform.h>
 #include <vector>
 #include <map>
+#include <string>
 #include <exception>
 
 class PetalCoordException : public std::exception
@@ -31,9 +32,18 @@ class PetalCoordException : public std::exception
 };
 
 /**
- * This class allows to transfrom from grantry to petal coordinates
+ * This class allows to transform from gantry to petal coordinates
  * and back. It will also provide the coordinates of the sensor
  * centers in the petal as well as the sensor fiducial coordinates.
+ *
+ * The petal reference system will be defined by the two fiducials in
+ * the petal locators and the Y axis. We assume that the Y axis goes
+ * along the radius of the petal. The X axis goes across the petal
+ * sensors.
+ *
+ * The origin of the petal reference will be the fiducial in the lower
+ * petal locator.
+ *
  */
 class PetalCoordinates: public MatrixTransform
 {
@@ -67,8 +77,17 @@ class PetalCoordinates: public MatrixTransform
 
     public:
         /**
-         * Constructor. REceives as input the tow fiducials of the
-         * petal locator. This will define the petal coordinates.
+         * Constructor. Receives as input the two fiducials of the
+         * petal locators. This will define the petal coordinate
+         * system. In this system we assume that the petal in
+         * "vertical".
+         *
+         * @param upper_locator Position in Gantry of the upper
+         *                      locator (wide part of petal)
+         *
+         * @param lower_locator Position in gantry of the lower
+         *                      locator. This will be, in fact, the
+         *                      origin of the petal reference system.
          */
         PetalCoordinates(const Point &upper_locator, const Point &lower_locator);
         virtual ~PetalCoordinates();
@@ -89,18 +108,18 @@ class PetalCoordinates: public MatrixTransform
         Point gantry_to_petal(const Point &P) const;
         Point petal_to_gantry(const Point &P) const;
 
+
         /**
-         * Methods to get fiducial coordinates 
-         * 
-         * type: T1, T2, T3, T4 for type 1, 2, 3, or 4. H1, .. H5 for
-         * HPK fiducials
+         * Methods to get fiducial coordinates
          *
-         * iring: sensor number (R0:0, R1:1, etc) 
+         * @param  type   T1, T2, T3, T4 for type 1, 2, 3, or 4.
+         *                H1 ... H5 for HPK fiducials
+         * @param  iring  sensor number (R0:0, R1:1, etc)
+         * @param  side   (0: right, 1:left)
+         * @param  cntr   The index of the possible various fiducials of
+         *                this kind
          *
-         * side: (0: right, 1:left) cntr: (counter)
-         *
-         * Throws an exception if name not found
-         *
+         * @return        A Point with the position of the fiducial.
          */
         Point get_fiducial_in_petal(const std::string &type, int iring, int side, int cntr) const
             throw(PetalCoordException);
