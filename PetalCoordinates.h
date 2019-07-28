@@ -56,6 +56,11 @@ class PetalCoordinates: public MatrixTransform
 
     private:
         void cpy(const PetalCoordinates &PC);
+        void clear_maps();
+
+        Point top; // Gantry coordinates of top locator as given
+        Point bottom; // Gantry coordinates of top locator as given
+
 
         // The list if sensor transformations. Indices are like in
         // Sensor enum.
@@ -77,7 +82,25 @@ class PetalCoordinates: public MatrixTransform
 
     public:
         /**
+         * Default constructor
+         */
+        PetalCoordinates();
+
+        /**
          * Constructor. Receives as input the two fiducials of the
+         * petal locators.
+         *
+         * See set_reference method.
+         */
+        PetalCoordinates(const Point &upper_locator, const Point &lower_locator);
+        PetalCoordinates(const PetalCoordinates &other);
+        PetalCoordinates& operator=(const PetalCoordinates &other);
+        virtual ~PetalCoordinates();
+
+
+        /**
+         * Sets the petal reference.
+         * Receives as input the two fiducials of the
          * petal locators. This will define the petal coordinate
          * system. In this system we assume that the petal in
          * "vertical".
@@ -89,10 +112,7 @@ class PetalCoordinates: public MatrixTransform
          *                      locator. This will be, in fact, the
          *                      origin of the petal reference system.
          */
-        PetalCoordinates(const Point &upper_locator, const Point &lower_locator);
-        virtual ~PetalCoordinates();
-        PetalCoordinates(const PetalCoordinates &other);
-        PetalCoordinates& operator=(const PetalCoordinates &other);
+        void set_reference(const Point &upper_locator, const Point &lower_locator);
 
         /**
          * These methods return the coordinates of the sensor center

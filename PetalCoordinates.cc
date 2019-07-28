@@ -88,12 +88,6 @@ void read_xlsx_file(const char *fname, std::map<std::string, Point> &fiducials)
     {
         try
         {
-//            std::cout << irow << " - "
-//                      << ws.cell(1, irow).value<std::string>()  << " "
-//                      << ws.cell(2, irow).value<double>()  << " "
-//                      << ws.cell(3, irow).value<double>()  << " "
-//                      << ws.cell(4, irow).value<std::string>()  << " "
-//                      << ws.cell(5, irow).value<std::string>()  << std::endl;
             double X = ws.cell(2, irow).value<double>();
             double Y = ws.cell(3, irow).value<double>();
             std::string name = ws.cell(5, irow).value<std::string>();
@@ -107,10 +101,37 @@ void read_xlsx_file(const char *fname, std::map<std::string, Point> &fiducials)
 }
 
 
+PetalCoordinates::PetalCoordinates()
+{
 
+}
 
 PetalCoordinates::PetalCoordinates(const Point &upper_locator, const Point &lower_locator)
+    : top(upper_locator), bottom(lower_locator)
 {
+    set_reference(upper_locator, lower_locator);
+}
+
+void PetalCoordinates::clear_maps()
+{
+    sensor_transform.clear();
+    sensor_positions.clear();
+    sensor_positions_gantry.clear();
+    fiducials.clear();
+    fiducials_gantry.clear();
+}
+
+void PetalCoordinates::set_reference(const Point &upper_locator, const Point &lower_locator)
+{
+    // Save coordinates
+    top = upper_locator;
+    bottom = lower_locator;
+
+    /**
+     * clear the existing coordinate maps
+     */
+    clear_maps();
+
     /*
      * upper_locator and lower_locator, together with the Y axis
      * define the petal coordinate system
@@ -125,8 +146,10 @@ PetalCoordinates::PetalCoordinates(const Point &upper_locator, const Point &lowe
     rotate(__nominal_phi__ - transform(upper_locator).phi());
     _inv = inverse();
 
-    // read the fiducial file
-    // TODO: find a way (QSettings?) to store the path to this file
+    /*
+     * read the fiducial file
+     * TODO: find a way (QSettings?) to store the path to this file
+     */
     std::map<std::string, Point> _fiducials;
     //read_csv_file("EC-sensor-fiducials.csv", _fiducials);
     read_xlsx_file("EC-sensor-fiducials.xlsx", _fiducials);
@@ -238,6 +261,7 @@ throw(PetalCoordException)
 
     return it->second;
 }
+
 Point PetalCoordinates::get_fiducial_in_gantry(const std::string &type, int iring, int side, int cntr) const
 throw(PetalCoordException)
 {
