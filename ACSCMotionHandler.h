@@ -12,7 +12,7 @@ class ACSCMotionHandler : public MotionHandler
 public:
 
     ACSCMotionHandler();
-    ~ACSCMotionHandler();
+    virtual ~ACSCMotionHandler();
 
     bool gantryConnected;
     bool xAxisEnabled;
