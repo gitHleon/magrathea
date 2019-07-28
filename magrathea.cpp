@@ -1,3 +1,5 @@
+#include <iomanip>
+#include <sstream>
 #include "magrathea.h"
 #include "ui_magrathea.h"
 #include <QTimer>
@@ -18,7 +20,6 @@
 #include "verticalalignmenttool.h"
 //#include <conio.h>
 #include <fstream>
-#include <iomanip>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 #ifdef VANCOUVER
@@ -27,6 +28,8 @@
 #include <ACSCMotionHandler.h>
 #include <QJoysticks.h>
 #endif
+
+#include <QPetalLocator.h>
 
 //function for debug in opencv, defined elsewhere
 std::string type2str(int type);
@@ -219,8 +222,11 @@ Magrathea::Magrathea(QWidget *parent) :
     //add the layout to the frame area in the GUI
     ui->frame->setLayout(mCameraLayout);
 
-    //////////////////
-    f_locations = new fiducial_locations(); //test to store the module coordinates, never used
+    /**
+     * TODO: need to implement a mechanism to provide the petal locator coordinates
+     */
+    //petal_locations.set_reference()
+
     ///////////////////
     //------------------------------------------
     //Init of Real Joystick - Valencia ONLY
@@ -340,6 +346,11 @@ Magrathea::Magrathea(QWidget *parent) :
     //connect(ui->Run_calib_plate_button,SIGNAL(clicked(bool)),this,SLOT(fiducial_chip_measure()));
     connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(TestButtonClick()));
     //connect(ui->TestButton,SIGNAL(clicked(bool)),this,SLOT(loop_test_pressure()));
+
+    /*
+     * Petal location
+     */
+    connect(ui->btn_locate_petal, SIGNAL(clicked(bool)),this,SLOT(set_petal_coordinates()));
 }
 
 //******************************************
@@ -1612,7 +1623,7 @@ bool Magrathea::loop_fid_finder(){
     //run fiducial finding algo automatically
     //and move to the fiducial position
     for(int i=0;i<4;i++){//set appropriate value of the loop limit
-         QApplication::processEvents();
+        QApplication::processEvents();
         std::cout<<"It "<<i<<std::endl;
         std::vector <double> distances;
         int input = ((i==3) ? 3 : 2);
@@ -1914,68 +1925,111 @@ int Magrathea::TestButtonClick(){//dummy function to perform simple tests
     return 0;
 }
 
+
+Point Magrathea::find_coordinates_at_position(const Point &estimated_point, int fiducial_type)
+    throw(MagratheaException)
+{
+    if(!mMotionHandler->moveXTo(estimated_point.x(),1.))
+        throw(MagratheaException("Cannot move to given X postion"));
+
+    if(!mMotionHandler->moveYTo(estimated_point.y(),1.))
+        throw(MagratheaException("Cannot move to given Y postion"));
+
+    if(!mMotionHandler->WaitX(-1))
+        throw(MagratheaException("Error waiting to X movement to finish"));;
+
+    if(!mMotionHandler->WaitY(-1))
+        throw(MagratheaException("Error waiting to Y movement to finish"));
+
+    //turn on the light (if needed in setup) and autofocus
+    if(!focusButtonClicked())
+        throw(MagratheaException("Error while focusing in Z"));
+
+    //find a circle of 300 um diameter
+    if(!loop_fid_finder(fiducial_type))
+        throw(MagratheaException("Error while Finding fiducial"));
+
+    //Get the current positon
+    std::vector <double> the_position = mMotionHandler->whereAmI(1);
+    return Point(the_position[0], the_position[1], the_position[2]);
+}
+
+/**
+ * This is called when the "Locate Petal" button is clicked.
+ * The idea is that this opens a dialog that allows to get, via joystick, a first estimate of the petal locators.
+ */
+bool Magrathea::set_petal_coordinates()
+{
+    std::cout << "set petal coordinates" << std::endl;
+    QPetalLocator P(mMotionHandler);
+    P.show();
+    if ( P.exec() == QDialog::Accepted )
+    {
+        Point Pup = P.get_top_position();
+        Point Pbot = P.get_bottom_position();
+        std::cout << Pup << Pbot << std::endl;
+        if (Pup.is_nan() || Pbot.is_nan())
+        {
+            std::ostringstream ostr;
+            ostr << "Invalid Locator coorditates:" << std::endl
+                    << "+ Top: " << Pup << std::endl
+                    << "+ Bot: " << Pbot << std::endl;
+
+            QMessageBox msgBox;
+
+            msgBox.setText(ostr.str().c_str());
+            msgBox.exec();
+        }
+        else
+        {
+            FindPetal(Pup, Pbot);
+        }
+    }
+    std::cout << "####" << std::endl;
+    /*
+     * Say we have two petal coordinates we got by inspecting with the joystick.
+     */
+    return true;
+}
+
+
+
 //--------------------------------------------------------
 // Porting from Scott code.
 //Function L744 FindPetal()
-int Magrathea::FindPetal( double &Petalangle, std::vector<cv::Point3d> &Coordinates ){
+int Magrathea::FindPetal(Point &top_locator, Point &bottom_locator )
+{
     cv::destroyAllWindows();
 
-    //Finding first fiducial
-    double petal_1_X = 1234.5; //expected position in absolute gantry coordinates
-    double petal_1_Y = 1234.5;
-    //set these values in an appropriate archive.
+    std::vector<double> current_pos( mMotionHandler->whereAmI(1) );
+    Point here(current_pos[0], current_pos[1]);
+    Point top, bottom;
 
-    if(!mMotionHandler->moveXTo(petal_1_X,1.))
+    /*
+     * Find the locators. Start with the closer one.
+     */
+    try
+    {
+        if ( here.distance(top_locator) < here.distance(bottom_locator) )
+        {
+            top = find_coordinates_at_position(top_locator, 4);
+            bottom = find_coordinates_at_position(bottom_locator, 4);
+        }
+        else
+        {
+            bottom = find_coordinates_at_position(bottom_locator, 4);
+            top = find_coordinates_at_position(top_locator, 4);
+        }
+    }
+    catch ( MagratheaException &e )
+    {
         return 1;
-    if(!mMotionHandler->moveYTo(petal_1_Y,1.))
-        return 1;
-    if(!mMotionHandler->WaitX(-1))
-        return false;
-    if(!mMotionHandler->WaitY(-1))
-        return false;
+    }
 
-    //turn on the light (if needed in setup) and autofocus
-    if(!focusButtonClicked())
-        return 1;
-    //find a circle of 300 um diameter
-    if(!loop_fid_finder(4))
-        return false;
-    //Store position somewhere...
-    std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
-
-    //Finding second fiducial
-    double petal_2_X = 1234.5;  //expected position in absolute gantry coordinates
-    double petal_2_Y = 1234.5;
-    //set these values in an appropriate archive.
-
-    if(!mMotionHandler->moveXTo(petal_2_X,1.))
-        return 1;
-    if(!mMotionHandler->moveYTo(petal_2_Y,1.))
-        return 1;
-    if(!mMotionHandler->WaitX(-1))
-        return false;
-    if(!mMotionHandler->WaitY(-1))
-        return false;
-
-    //turn on the light (if needed in setup) and autofocus
-    if(!focusButtonClicked())
-        return 1;
-    //find a circle of 300 um diameter
-    if(!loop_fid_finder(4))
-        return false;
-
-    //Store position somewhere...
-    std::vector <double> pos_t_2 = mMotionHandler->whereAmI(1);
-
-    //Calculate angle of petal
-    //verify calculation after deciding how the setup is placed on the gantry table
-    Petalangle = atan((pos_t_2[1]-pos_t_1[1])/(pos_t_2[0]-pos_t_1[0]));
-    //In case of issue, maybe split the function in two equal parts that look for a circle.
-    //Then make the result write into a variable. The latter being used for petal angle evaluation and sequent steps.
-    Coordinates.clear();
-    // !!!WARNING!!! fix index according to final camera setup!!!
-    Coordinates.push_back(cv::Point3d(pos_t_1[0],pos_t_1[1],pos_t_1[2]));
-    Coordinates.push_back(cv::Point3d(pos_t_2[0],pos_t_2[1],pos_t_2[2]));
+    /*
+     * Compute the new reference system
+     */
+    petal_locations.set_reference(top, bottom);
     return 0;
 }
 
