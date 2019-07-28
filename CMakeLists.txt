@@ -6,6 +6,7 @@ endif()
 project(Magrathea)
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #
 # Find OpenCV
@@ -38,13 +39,13 @@ target_link_libraries(test-flatness alglib)
 # Test transforms
 add_executable(test-matrix test-matrix.cc MatrixTransform.cc PetalCoordinates.cc)
 target_link_libraries(test-matrix ${xlnt_LIB})
+target_include_directories(test-matrix PUBLIC ${OpenCV_INCLUDE_DIRS} )
 add_dependencies (test-matrix xlnt)	
 
 
 #
 # Setup Qt stuff
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(QT5_DIR /usr/local/Cellar/qt/5.13.0)
 list(APPEND CMAKE_PREFIX_PATH ${QT5_DIR})
 set(Qt5Widgets_DIR ${QT5_DIR}/lib/cmake/Qt5Core)
@@ -55,16 +56,26 @@ set(Qt5MultimediaWidgets_DIR ${QT5_DIR}/lib/cmake/Qt5MultimediaWidgets)
 
 
 # Find the QtWidgets library
-find_package(Qt5Core CONFIG REQUIRED)
-find_package(Qt5Gui CONFIG REQUIRED)
-find_package(Qt5Widgets CONFIG REQUIRED)
-find_package(Qt5Multimedia CONFIG REQUIRED)
-find_package(Qt5MultimediaWidgets CONFIG REQUIRED)
-find_package(Qt5SerialPort CONFIG REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia MultimediaWidgets SerialPort REQUIRED)
+message("QtWidgets ${Qt5Widgets_FOUND}")
+message("QtWidgets ${Qt5Widgets_INCLUDE_DIRS}")
 
+
+# Include the QJoysticks
+find_package(SDL2 REQUIRED)
+set(qjoystick_DIR QJoysticks-master)
+set(qjoystick_INCLUDES ${qjoystick_DIR}/src)
+set(qjoystick_SOURCES 
+	${qjoystick_DIR}/src/QJoysticks.cpp
+   	${qjoystick_DIR}/src/QJoysticks/SDL_Joysticks.cpp
+    ${qjoystick_DIR}/src/QJoysticks/VirtualJoystick.cpp
+    ${qjoystick_DIR}/src/QJoysticks/Android_Joystick.cpp
+)
+set(QT_RESOURCES ${qjoystick_DIR}/etc/resources/qjoysticks-res.qrc)
 
 # Instruct CMake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 # Create code from a list of Qt designer ui files
 set(CMAKE_AUTOUIC ON)
@@ -83,13 +94,18 @@ set(magrathea_SOURCES
 	alglibtools.cc
 	MatrixTransform.cc
 	PetalCoordinates.cc
+	QPetalLocator.cpp
+	${qjoystick_SOURCES}
+	${QT_RESOURCES}
 	)
 	
 add_executable(magrathea ${magrathea_SOURCES})
 
 # CHOSE IFIC MOTION CONTROLLER
 #target_compile_definitions(magrathea PUBLIC -DACSC=1 -DVALENCIA=1)
-# Use the Widgets module from Qt 5
+target_include_directories(magrathea PUBLIC 
+						 	${Qt5Widgets_INCLUDE_DIRS}
+						 	${qjoystick_INCLUDES} ${SDL2_INCLUDE_DIRS})
 target_link_libraries(magrathea 
 	Qt5::Core 
 	Qt5::Gui 
