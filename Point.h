@@ -10,6 +10,8 @@
 
 #include <iosfwd>
 #include <cmath>
+#include <opencv2/core/types.hpp>
+
 class Point;
 Point operator*(double v, const Point &P);
 Point operator+(const Point &A, const Point &B);
@@ -17,57 +19,90 @@ Point operator-(const Point &A, const Point &B);
 std::ostream &operator<<(std::ostream &os, const Point &P);
 
 /*
- * This class represents a Point
+ * This class represents a Point. It is mainly intended as a 2D Point,
+ * and the operations are just 2D. However it can store a third
+ * coordinate since we assume it "oeprates" on the petal surface.
  */
 class Point
 {
     private:
-        double _v[2];
+        double _v[3];
 
+        void cpy(const double *p)
+        {
+            for (int i=0; i<3; ++i)
+                _v[i] = p[i];
+        }
     public:
-        Point(): _v{ 0.0, 0.0 } {}
+        // Default constructor
+        Point(): _v{ 0.0, 0.0, 0.0 } {}
 
-        Point(double *p)
-        {
-            _v[0] = p[0];
-            _v[1] = p[1];
-        }
-        Point(double x, double y): _v{ x, y} {}
+        // Constructor from double pointer
+        Point(double *p) { cpy(p);}
 
-        Point(const Point &P)
-        {
-            _v[0] = P._v[0];
-            _v[1] = P._v[1];
-        }
+        // Constructor from coordinates
+        Point(double x, double y, double z=0.0): _v{ x, y, z} {}
 
+        // Copy constructor
+        Point(const Point &P) { cpy(P._v); }
+
+        // Assignment operator
         Point &operator=(const Point &P)
         {
-            _v[0] = P._v[0];
-            _v[1] = P._v[1];
+            if (this != &P)
+                cpy(P._v);
+
             return *this;
         }
 
-        double x() const
+        /**
+         * Constructors from OpenCV vectors
+         */
+        template<typename _Tp>
+        Point(const cv::Point_<_Tp> &P)
         {
-            return _v[0];
-        }
-        double y() const
-        {
-            return _v[1];
-        }
-        void x(double v)
-        {
-            _v[0] = v;
-        }
-        void y(double v)
-        {
-            _v[1] = v;
-        }
-        double* ptr()
-        {
-            return _v;
+            _v[0] = P.x; _v[1] = P.y; _v[2] = 0.0;
         }
 
+        template<typename _Tp>
+        Point(const cv::Point3_<_Tp> &P)
+        {
+            _v[0] = P.x; _v[1] = P.y; _v[2] = P.z;
+        }
+
+        /*
+         * Typecast operators
+         */
+        template<typename _Tp>
+        operator cv::Point_<_Tp>() const { return cv::Point_<_Tp>(x(), y()); }
+
+        template<typename _Tp>
+        operator cv::Point3_<_Tp>() const { return cv::Point_<_Tp>(x(), y(), z()); }
+
+
+        /*
+         * Getters/Setters
+         */
+        double x() const { return _v[0]; }
+        double y() const { return _v[1]; }
+        double z() const { return _v[2]; }
+        double* ptr() {  return _v; }
+
+        void x(double v) { _v[0] = v; }
+        void y(double v) { _v[1] = v; }
+        void z(double v) { _v[2] = v; }
+
+        /*
+         * Check if values are OK
+         */
+        bool is_nan() const
+        {
+            return isnan(_v[0]) || isnan(_v[1] || isnan(_v[2]) );
+        }
+
+        /*
+         * Operations, mainly in the XY plane
+         */
         Point operator-() const
         {
             return Point(-x(), -y());
@@ -102,23 +137,23 @@ class Point
             return sqrt(mag2());
         }
 
-        // REturn unit vector
+        // Return unit vector. Z coordinate remains untouched
         Point norm() const
         {
             double vn = mag();
-            return Point(x() / vn, y() / vn);
+            return Point(x() / vn, y() / vn, z());
         }
 
-        // return pooint rotated +90 deg
+        // return point rotated +90 deg
         Point cw() const
         {
-            return Point(-y(), x());
+            return Point(-y(), x(), z());
         }
 
         // return point rotated -90 deg
         Point ccw() const
         {
-            return Point(y(), -x());
+            return Point(y(), -x(), z());
         }
         double dot(const Point &P) const
         {
