@@ -1,14 +1,16 @@
 #pragma once
+#include <vector>
+#include <limits>
 #include <QWidget>
 
-class MotionHandler : public QWidget
+class MotionHandler: public QWidget
 {
-    Q_GADGET
+   Q_GADGET
 
 public:
 
     MotionHandler();
-    ~MotionHandler();
+    virtual ~MotionHandler();
 
     bool gantryConnected;
     bool xAxisEnabled;
