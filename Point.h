@@ -10,6 +10,7 @@
 
 #include <iosfwd>
 #include <cmath>
+#include <vector>
 #include <opencv2/core/types.hpp>
 
 class Point;
@@ -68,6 +69,19 @@ class Point
         Point(const cv::Point3_<_Tp> &P)
         {
             _v[0] = P.x; _v[1] = P.y; _v[2] = P.z;
+        }
+
+        /*
+         * vector<_Tp>
+         * We silently assume that _Tp are objects tha tcanbe casted to a double
+         */
+        template<typename _Tp>
+        Point(const std::vector<_Tp> &V)
+        {
+            _v[0] = V[0];
+            _v[1] = V[1];
+            if (V.size()>2)
+                _v[2] = V[2];
         }
 
         /*
