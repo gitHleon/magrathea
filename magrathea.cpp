@@ -915,10 +915,10 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     if(debug)
         qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
 
-    FiducialFinder * Ffinder = new FiducialFinder(this);
+    FiducialFinder * Ffinder = new FiducialFinder();
 
     bool from_file = ui->calib_from_file_Box->isChecked();
-    Ffinder->Set_log(outputLogTextEdit);
+    // TODO: Ffinder->Set_log(outputLogTextEdit);
 
     double distance_x = 0;
     double distance_y = 0;
@@ -1587,9 +1587,10 @@ bool Magrathea::loop_test_images(){
             for(int m=0;m<8;m++){//chip column
                 std::cout<<"i "<<i<<" ; j "<<j<<" ; m "<<m<<std::endl;
                 cv::destroyAllWindows();
-                FiducialFinder * Ffinder = new FiducialFinder(this);
+                FiducialFinder * Ffinder = new FiducialFinder();
                 Ffinder->Set_calibration(1.);
-                Ffinder->Set_log(outputLogTextEdit);
+
+                // TODO - Ffinder->Set_log(outputLogTextEdit);
                 Ffinder->SetImageFiducial(Images_fiducial[j]
                         ,cv::IMREAD_COLOR);
                 std::string one     = std::to_string(i);
