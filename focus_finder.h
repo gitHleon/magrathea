@@ -3,7 +3,7 @@
 
 /******************************************************************** /
  * Focus_finder V2.0 Daniele Madaffari xx/05/2018
- * Class with functions to serach the height of the focus of the camera.
+ * Class with functions to serch the height of the focus of the camera.
  *
  * The main function find_focus() scans several heights for the coord
  * giving the image with highest laplacian variance. At last itaration
