@@ -58,6 +58,20 @@ main(int argc, char **argv)
     std::cout << "---\n" << std::endl;
     std::cout << m3 << std::endl;
 
+    std::cout << "Testing Point" << std::endl;
+    std::cout << "OpenCV Points" << std::endl;
+    cv::Point2d cvP(3., 4.);
+    Point Pcv(cvP);
+    cv::Point2d cvQ = Pcv;
+
+    std::cout << "CV: " << cvP.x << ", " << cvP.y << " - " << Pcv << std::endl;
+    std::cout << "Q " << cvQ.x << ", " << cvQ.y << std::endl;
+
+    std::cout << "std::vector<double>" << std::endl;
+    std::vector<double> vV = {1.,2, 3};
+    Point PvV(vV);
+    std::cout << vV << " - " << PvV << std::endl;
+
     //    Point upper_locator(131.104, 968.526);
     //    Point lower_locator(0, 382.000);
     //    MatrixTransform Rm;
