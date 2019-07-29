@@ -42,6 +42,11 @@ target_link_libraries(test-matrix ${xlnt_LIB})
 target_include_directories(test-matrix PUBLIC ${OpenCV_INCLUDE_DIRS} )
 add_dependencies (test-matrix xlnt)	
 
+# Test Fiducial Finder
+add_executable(test-f-finder test_f_finder.cc Fiducial_finder.cpp logger.cc)
+target_include_directories(test-f-finder PUBLIC ${OpenCV_INCLUDE_DIRS} )
+target_link_libraries(test-f-finder ${OpenCV_LIBS} alglib)
+
 
 #
 # Setup Qt stuff
@@ -92,6 +97,7 @@ set(magrathea_SOURCES
 	verticalalignmenttool.cpp 
 	flatness.cc
 	alglibtools.cc
+	logger.cc
 	MatrixTransform.cc
 	PetalCoordinates.cc
 	QPetalLocator.cpp
