@@ -1,86 +1,108 @@
 #include "Fiducial_finder.h"
 
-void function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
+void
+function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
 {
     //
     // this callback calculates chi square function for square of circles
     // We will have 8+4+4 variables, 8 for the points coordinates and 4 for the paremeters we want to fit.
     // Legend of the valiables : x[0], x[1], etc.. => x_1, y_1, x_2, y_2, etc.. coordinates of the points of the image;
-    // variables x[8] , ... ,  x[11] are the score of the circles, this are used as weights to give more importance to good circles (i.e. the one with high score)
-    // variables x[12], ... ,  x[15] are the fit prameters
+    // variables x[8] , ... ,  x[11] are the score of the circles, this are used as weights to give more importance to good circles
+    // (i.e. the one with high score) variables x[12], ... ,  x[15] are the fit prameters
     double calibration_value = 10.5; //[px/um]
-    //double one_over_sigma_square = 1./(5*calibration_value); //error of 2 um, calibration is 10 px / um and measures are in pixels
+    // double one_over_sigma_square = 1./(5*calibration_value); //error of 2 um, calibration is 10 px / um and measures are in
+    // pixels
     double real_side_size = 50 * calibration_value;
-    double real_side_size_err = real_side_size*0.2;
-    func =
-              pow(x[0]-(x[12]-(x[15]/sqrt(2))*cos(x[14]+M_PI/4)),2)*pow(x[8],2)+pow(x[1]-(x[13]-(x[15]/sqrt(2))*sin(x[14]+M_PI/4)),2)*pow(x[8],2)
-            + pow(x[2]-(x[12]-(x[15]/sqrt(2))*cos(M_PI/4-x[14])),2)*pow(x[9],2)+pow(x[3]-(x[13]+(x[15]/sqrt(2))*sin(M_PI/4-x[14])),2)*pow(x[9],2)
-            + pow(x[4]-(x[12]+(x[15]/sqrt(2))*cos(M_PI/4+x[14])),2)*pow(x[10],2)+pow(x[5]-(x[13]+(x[15]/sqrt(2))*sin(M_PI/4+x[14])),2)*pow(x[10],2)
-            + pow(x[6]-(x[12]+(x[15]/sqrt(2))*cos(M_PI/4-x[14])),2)*pow(x[11],2)+pow(x[7]-(x[13]-(x[15]/sqrt(2))*sin(M_PI/4-x[14])),2)*pow(x[11],2)
-            +(pow(x[15]-real_side_size,2)/(real_side_size_err*real_side_size))
-            ;
+    double real_side_size_err = real_side_size * 0.2;
+    func = pow(x[0] - (x[12] - (x[15] / sqrt(2)) * cos(x[14] + M_PI / 4)), 2) * pow(x[8], 2) +
+           pow(x[1] - (x[13] - (x[15] / sqrt(2)) * sin(x[14] + M_PI / 4)), 2) * pow(x[8], 2) +
+           pow(x[2] - (x[12] - (x[15] / sqrt(2)) * cos(M_PI / 4 - x[14])), 2) * pow(x[9], 2) +
+           pow(x[3] - (x[13] + (x[15] / sqrt(2)) * sin(M_PI / 4 - x[14])), 2) * pow(x[9], 2) +
+           pow(x[4] - (x[12] + (x[15] / sqrt(2)) * cos(M_PI / 4 + x[14])), 2) * pow(x[10], 2) +
+           pow(x[5] - (x[13] + (x[15] / sqrt(2)) * sin(M_PI / 4 + x[14])), 2) * pow(x[10], 2) +
+           pow(x[6] - (x[12] + (x[15] / sqrt(2)) * cos(M_PI / 4 - x[14])), 2) * pow(x[11], 2) +
+           pow(x[7] - (x[13] - (x[15] / sqrt(2)) * sin(M_PI / 4 - x[14])), 2) * pow(x[11], 2) +
+           (pow(x[15] - real_side_size, 2) / (real_side_size_err * real_side_size));
 }
 
-bool Distance_sorter(cv::DMatch m_1,cv::DMatch m_2){
+bool Distance_sorter(cv::DMatch m_1, cv::DMatch m_2)
+{
     return m_1.distance < m_2.distance;
 }
 
-bool Point_sorter(cv::Point2d m_1,cv::Point2d m_2){
+bool Point_sorter(cv::Point2d m_1, cv::Point2d m_2)
+{
     return m_1.x < m_2.x;
 }
 
 std::string type2str(int type);
 
-FiducialFinder::FiducialFinder(QWidget *parent) : QWidget(parent)
-{}
+FiducialFinder::FiducialFinder(QWidget *parent)
+        : QWidget(parent), log(0)
+{
+}
 
 FiducialFinder::~FiducialFinder()
-{}
+{
+}
 
-void FiducialFinder::SetImage(const cv::Mat &input){
+void FiducialFinder::SetImage(const cv::Mat &input)
+{
     image = input.clone();
 }
 
-void FiducialFinder::SetImage(const std::string& filename, int flags){
-    image = cv::imread( filename, flags);
+void FiducialFinder::SetImage(const std::string &filename, int flags)
+{
+    image = cv::imread(filename, flags);
 }
 
-void FiducialFinder::SetImageFiducial(const cv::Mat &input){
+void FiducialFinder::SetImageFiducial(const cv::Mat &input)
+{
     image_fiducial = input.clone();
 }
 
-void FiducialFinder::SetImageFiducial(const std::string& filename, int flags){
-    image_fiducial = cv::imread( filename, flags);
+void FiducialFinder::SetImageFiducial(const std::string &filename, int flags)
+{
+    image_fiducial = cv::imread(filename, flags);
 }
 
-bool FiducialFinder::IsImageEmpty(){
+bool FiducialFinder::IsImageEmpty()
+{
     return image.empty();
 }
 
-void FiducialFinder::Set_log(QTextEdit *m_log){
+void FiducialFinder::Set_log(QTextEdit *m_log)
+{
     log = m_log;
 }
 
-void FiducialFinder::Set_calibration(double m_calib){
+void FiducialFinder::Set_calibration(double m_calib)
+{
     Calibration = m_calib;
 }
 
-cv::Mat FiducialFinder::get_component(const cv::Mat &input_mat,const unsigned int &input){
-    cv::Mat bgr[3];   //destination array
-    cv::split(input_mat,bgr);//split source
+cv::Mat
+FiducialFinder::get_component(const cv::Mat &input_mat, const unsigned int &input)
+{
+    cv::Mat bgr[3];            // destination array
+    cv::split(input_mat, bgr); // split source
     return bgr[input];
-    //Note: OpenCV uses BGR color order
+    // Note: OpenCV uses BGR color order
 }
 
-cv::Mat FiducialFinder::change_gamma(const cv::Mat &input_mat, const double &gamma){
-    //change the gamma of an image
-    if(gamma < 0 || gamma > 255){
-        std::cout<<"enance_contrast: Error in gamma range"<<std::endl;
+cv::Mat
+FiducialFinder::change_gamma(const cv::Mat &input_mat, const double &gamma)
+{
+    // change the gamma of an image
+    if (gamma < 0 || gamma > 255)
+    {
+        std::cout << "enance_contrast: Error in gamma range" << std::endl;
         return input_mat;
     }
+
     cv::Mat lookUpTable(1, 256, CV_8U);
-    uchar* p = lookUpTable.ptr();
-    for( int i = 0; i < 256; ++i)
+    uchar *p = lookUpTable.ptr();
+    for (int i = 0; i < 256; ++i)
         p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, gamma) * 255.0);
 
     cv::Mat output = input_mat.clone();
@@ -89,151 +111,216 @@ cv::Mat FiducialFinder::change_gamma(const cv::Mat &input_mat, const double &gam
     return output;
 }
 
-cv::Mat FiducialFinder::enance_contrast(const cv::Mat &input_mat, const double &alpha, const double &beta = 0){
-    if(alpha < 0 || alpha > 3){
-        std::cout<<"enance_contrast: Error in alpha range"<<std::endl;
+cv::Mat
+FiducialFinder::enance_contrast(const cv::Mat &input_mat, const double &alpha, const double &beta = 0)
+{
+    if (alpha < 0 || alpha > 3)
+    {
+        std::cout << "enance_contrast: Error in alpha range" << std::endl;
         return input_mat;
     }
     cv::Mat output;
-    cv::Mat betas = cv::Mat::ones(input_mat.rows,input_mat.cols,input_mat.type());
-    betas = betas*beta;
+    cv::Mat betas = cv::Mat::ones(input_mat.rows, input_mat.cols, input_mat.type());
+    betas = betas * beta;
     output = input_mat.clone();
-    output = output*alpha + betas;
+    output = output * alpha + betas;
     return output;
 }
 
-cv::Mat FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max_alpha){
-    if(max_alpha < 0 || max_alpha > 3){
-        std::cout<<"dan_contrast: Error in alpha range"<<std::endl;
+cv::Mat
+FiducialFinder::dan_contrast(const cv::Mat &input_mat, const double &max_alpha)
+{
+    if (max_alpha < 0 || max_alpha > 3)
+    {
+        std::cout << "dan_contrast: Error in alpha range" << std::endl;
         return input_mat;
     }
     cv::Mat output;
-    cv::Scalar  mean_t;
-    cv::Scalar  stddev_t;
-    cv::meanStdDev(input_mat,mean_t,stddev_t);
+    cv::Scalar mean_t;
+    cv::Scalar stddev_t;
+    cv::meanStdDev(input_mat, mean_t, stddev_t);
     const int steps = 5;
-    double alpha_steps = max_alpha/(steps-2);
+    double alpha_steps = max_alpha / (steps - 2);
     bool debug = false;
 
     std::vector<cv::Mat> matrices;
     std::vector<cv::Mat> matrices_mod;
     std::vector<double> threshold_steps;
     threshold_steps.push_back(0);
-    threshold_steps.push_back(mean_t[0]-1*stddev_t[0]);
-    threshold_steps.push_back(mean_t[0]+1*stddev_t[0]);
-    threshold_steps.push_back(mean_t[0]+2*stddev_t[0]);
+    threshold_steps.push_back(mean_t[0] - 1 * stddev_t[0]);
+    threshold_steps.push_back(mean_t[0] + 1 * stddev_t[0]);
+    threshold_steps.push_back(mean_t[0] + 2 * stddev_t[0]);
     threshold_steps.push_back(255);
 
     matrices.push_back(input_mat);
-    for(unsigned int i=1;i<(steps-1);i++){
+    for (unsigned int i = 1; i < (steps - 1); i++)
+    {
         cv::Mat temp_thr;
-        cv::threshold(input_mat,temp_thr,threshold_steps.at(i),255,cv::THRESH_TOZERO);
+        cv::threshold(input_mat, temp_thr, threshold_steps.at(i), 255, cv::THRESH_TOZERO);
         matrices.push_back(temp_thr);
     }
-    matrices.push_back(cv::Mat::zeros(input_mat.rows,input_mat.cols,input_mat.type()));
+    matrices.push_back(cv::Mat::zeros(input_mat.rows, input_mat.cols, input_mat.type()));
 
-    for(unsigned int i=0;i<(steps-1);i++){
+    for (unsigned int i = 0; i < (steps - 1); i++)
+    {
         cv::Mat temp_thr;
-        temp_thr = matrices.at(i) - matrices.at(i+1);
-        double square_step = i/(steps-2);
-        std::cout<<" value "<< square_step<<" square "<<pow(square_step,2.)<<std::endl;
-        matrices_mod.push_back(enance_contrast(temp_thr,alpha_steps*pow(square_step,2)));
-        //matrices_mod.push_back(enance_contrast(temp_thr,alpha_steps*sqrt(square_step)));
+        temp_thr = matrices.at(i) - matrices.at(i + 1);
+        double square_step = i / (steps - 2);
+        std::cout << " value " << square_step << " square " << pow(square_step, 2.) << std::endl;
+        matrices_mod.push_back(enance_contrast(temp_thr, alpha_steps * pow(square_step, 2)));
+        // matrices_mod.push_back(enance_contrast(temp_thr,alpha_steps*sqrt(square_step)));
     }
 
-    if(debug){
-        cv::imshow("test 1",matrices_mod.at(0));
-        cv::imshow("test 2",matrices_mod.at(1));
-        cv::imshow("test 3",matrices_mod.at(2));
-        cv::imshow("test 4",matrices_mod.at(3));
+    if (debug)
+    {
+        cv::imshow("test 1", matrices_mod.at(0));
+        cv::imshow("test 2", matrices_mod.at(1));
+        cv::imshow("test 3", matrices_mod.at(2));
+        cv::imshow("test 4", matrices_mod.at(3));
     }
 
     output = matrices_mod.at(0).clone();
-    for(unsigned int i=1;i<matrices_mod.size();i++){
+    for (unsigned int i = 1; i < matrices_mod.size(); i++)
+    {
         output = output + matrices_mod.at(i);
     }
     return output;
 }
 
 
-void FiducialFinder::addInfo(cv::Mat &image,const std::string &algo_name, int start_x, int start_y,int text_font_size ,int text_thikness,std::string &timestamp){
+void
+FiducialFinder::addInfo(cv::Mat &image,
+                        const std::string &algo_name,
+                        int start_x, int start_y,
+                        int text_font_size,
+                        int text_thikness, std::string &timestamp)
+{
     int baseline = 0;
-    //int text_font_size = 2;
-    //int text_thikness = 2;
+    // int text_font_size = 2;
+    // int text_thikness = 2;
 
     int window_size = image.rows;
     std::string um_str = " 50um";
-    cv::putText(image,algo_name,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size,cv::Scalar(255,255,255),text_thikness);
-    cv::Size text_size = cv::getTextSize(algo_name, cv::FONT_HERSHEY_PLAIN,text_font_size,text_thikness,&baseline);
+    cv::putText(image, algo_name,
+                cv::Point(start_x, window_size - start_y),
+                cv::FONT_HERSHEY_PLAIN,
+                text_font_size,
+                cv::Scalar(255, 255, 255),
+                text_thikness);
+
+    cv::Size text_size = cv::getTextSize(algo_name,
+                                         cv::FONT_HERSHEY_PLAIN,
+                                         text_font_size,
+                                         text_thikness,
+                                         &baseline);
+
     QTime now = QTime::currentTime();
     QString time_now = now.toString("hhmmss");
     std::string time_now_str = time_now.toLocal8Bit().constData();
     timestamp = time_now_str;
+
     start_x += text_size.width;
-    cv::putText(image,time_now_str,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-    cv::Size time_size = cv::getTextSize(time_now_str, cv::FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    cv::putText(image, time_now_str,
+                cv::Point(start_x, window_size - start_y),
+                cv::FONT_HERSHEY_PLAIN,
+                text_font_size - 1,
+                cv::Scalar(255, 255, 255),
+                text_thikness);
+
+    cv::Size time_size = cv::getTextSize(time_now_str,
+                                         cv::FONT_HERSHEY_PLAIN,
+                                         text_font_size - 1,
+                                         text_thikness, &baseline);
+
     start_x += time_size.width;
-    cv::putText(image,um_str,cv::Point(start_x,window_size-start_y), cv::FONT_HERSHEY_PLAIN,text_font_size-1,cv::Scalar(255,255,255),text_thikness);
-    cv::Size um_size = cv::getTextSize(um_str, cv::FONT_HERSHEY_PLAIN,text_font_size-1,text_thikness,&baseline);
+    cv::putText(image, um_str,
+                cv::Point(start_x, window_size - start_y),
+                cv::FONT_HERSHEY_PLAIN,
+                text_font_size - 1,
+                cv::Scalar(255, 255, 255),
+                text_thikness);
+
+    cv::Size um_size = cv::getTextSize(um_str,
+                                       cv::FONT_HERSHEY_PLAIN, text_font_size - 1,
+                                       text_thikness,
+                                       &baseline);
     start_x += um_size.width;
-    cv::line(image,cv::Point(start_x,window_size-start_y),cv::Point(start_x+(50*Calibration),window_size-start_y),cv::Scalar(255,255,255),text_thikness);
+    cv::line(image,
+             cv::Point(start_x, window_size - start_y),
+             cv::Point(start_x + (50 * Calibration), window_size - start_y),
+             cv::Scalar(255, 255, 255), text_thikness);
 }
 
-bool FiducialFinder::Is_equal(const double &one, const double &two){
-    //function needed when searching for fiducial not using SURF
-    double tolerance = 10*Calibration; //[px]
-    return ( fabs(one-two) <= tolerance);
+bool
+FiducialFinder::Is_equal(const double &one, const double &two)
+{
+    // function needed when searching for fiducial not using SURF
+    double tolerance = 10 * Calibration; //[px]
+    return (fabs(one - two) <= tolerance);
 }
 
-bool FiducialFinder::Is_a_triangle(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3){
-    //function needed when searching for fiducial not using SURF
-    //http://en.cppreference.com/w/cpp/language/range-for
-    //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
-    //Distances between points are 22 - 20 um
-    const double threshold_H = 27*Calibration;
-    const double threshold_L = 15*Calibration;
-    cv::Vec2i p_1 = {P_1.x,P_1.y};
-    cv::Vec2i p_2 = {P_2.x,P_2.y};
-    cv::Vec2i p_3 = {P_3.x,P_3.y};
+bool
+FiducialFinder::Is_a_triangle(const cv::Point2d &P_1, const cv::Point2d &P_2, const cv::Point2d &P_3)
+{
+    // function needed when searching for fiducial not using SURF
+    // http://en.cppreference.com/w/cpp/language/range-for
+    // https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
+    // Distances between points are 22 - 20 um
+    const double threshold_H = 27 * Calibration;
+    const double threshold_L = 15 * Calibration;
+    cv::Vec2d p_1 = {P_1.x, P_1.y};
+    cv::Vec2d p_2 = {P_2.x, P_2.y};
+    cv::Vec2d p_3 = {P_3.x, P_3.y};
 
-    if(Is_equal(cv::norm(p_1,p_2),cv::norm(p_2,p_3)) &&
-            Is_equal(cv::norm(p_2,p_3),cv::norm(p_3,p_1)) &&
-            Is_equal(cv::norm(p_3,p_1),cv::norm(p_1,p_2)) &&
-            (cv::norm(p_1,p_3) < threshold_H) &&
-            (cv::norm(p_1,p_3) > threshold_L))
+    if (Is_equal(cv::norm(p_1, p_2), cv::norm(p_2, p_3)) &&
+        Is_equal(cv::norm(p_2, p_3), cv::norm(p_3, p_1)) &&
+        Is_equal(cv::norm(p_3, p_1), cv::norm(p_1, p_2)) &&
+        (cv::norm(p_1, p_3) < threshold_H) &&
+        (cv::norm(p_1, p_3) > threshold_L))
     {
         return true;
-    }else{
+    }
+    else
+    {
         return false;
     }
 }
 
-void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Vec4f> &Circles, std::vector<std::vector<unsigned int> > &Squares, std::vector<std::vector<unsigned int> > &Triangles){
-    //function needed when searching for fiducial not using SURF
+void
+FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Vec4f> &Circles, std::vector<std::vector<unsigned int>> &Squares,
+                                        std::vector<std::vector<unsigned int>> &Triangles)
+{
+    // function needed when searching for fiducial not using SURF
     int Iteration = 0;
     Squares.clear();
     Triangles.clear();
     unsigned int num_points = Circles.size();
-    for(unsigned int i=0;i<num_points;i++){
-        for(unsigned int j=i+1;j<num_points;j++){
-            for(unsigned int k=j+1;k<num_points;k++){
-                cv::Point point_i = cv::Point(Circles[i][0],Circles[i][1]);
-                cv::Point point_j = cv::Point(Circles[j][0],Circles[j][1]);
-                cv::Point point_k = cv::Point(Circles[k][0],Circles[k][1]);
-                if(Is_a_triangle(point_i,point_j,point_k)){
-                    std::cout<<">> Tria True <<"<<std::endl;
-                    std::vector <unsigned int> indeces (3);
+    for (unsigned int i = 0; i < num_points; i++)
+    {
+        for (unsigned int j = i + 1; j < num_points; j++)
+        {
+            for (unsigned int k = j + 1; k < num_points; k++)
+            {
+                cv::Point point_i = cv::Point(Circles[i][0], Circles[i][1]);
+                cv::Point point_j = cv::Point(Circles[j][0], Circles[j][1]);
+                cv::Point point_k = cv::Point(Circles[k][0], Circles[k][1]);
+                if (Is_a_triangle(point_i, point_j, point_k))
+                {
+                    std::cout << ">> Tria True <<" << std::endl;
+                    std::vector<unsigned int> indeces(3);
                     indeces.at(0) = i;
                     indeces.at(1) = j;
                     indeces.at(2) = k;
                     Triangles.push_back(indeces);
                 }
-                for(unsigned int l=k+1;l<num_points;l++){
-                    cv::Point point_l = cv::Point(Circles[l][0],Circles[l][1]);
+                for (unsigned int l = k + 1; l < num_points; l++)
+                {
+                    cv::Point point_l = cv::Point(Circles[l][0], Circles[l][1]);
                     Iteration++;
-                    if(Is_a_square(point_i,point_j,point_k,point_l)){
-                        std::cout<<">> True <<"<<std::endl;
-                        std::vector <unsigned int> indeces (4);
+                    if (Is_a_square(point_i, point_j, point_k, point_l))
+                    {
+                        std::cout << ">> True <<" << std::endl;
+                        std::vector<unsigned int> indeces(4);
                         indeces.at(0) = i;
                         indeces.at(1) = j;
                         indeces.at(2) = k;
@@ -246,98 +333,119 @@ void FiducialFinder::Find_SquareAndTriangles(const std::vector<cv::Vec4f> &Circl
     }
 }
 
-bool FiducialFinder::Is_a_square(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3, const cv::Point &P_4)
+bool
+FiducialFinder::Is_a_square(const cv::Point2d &P_1,
+                            const cv::Point2d &P_2,
+                            const cv::Point2d &P_3,
+                            const cv::Point2d &P_4)
 {
     bool debug = false;
-    //function needed when searching for fiducial not using SURF
-    //http://en.cppreference.com/w/cpp/language/range-for
-    //https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
-    //Distances between points are 50 um. threshold is on the diagonal i.e. 50*1.4
-    const int threshold_H = 85*Calibration;
-    const int threshold_L = 55*Calibration;
-    cv::Vec2i p_1 = {P_1.x,P_1.y};
-    cv::Vec2i p_2 = {P_2.x,P_2.y};
-    cv::Vec2i p_3 = {P_3.x,P_3.y};
-    cv::Vec2i p_4 = {P_4.x,P_4.y};
-    enum Diagonals {NONE, P1P2 , P1P3 , P1P4};
+    // function needed when searching for fiducial not using SURF
+    // http://en.cppreference.com/w/cpp/language/range-for
+    // https://softwareengineering.stackexchange.com/questions/176938/how-to-check-if-4-points-form-a-square
+    // Distances between points are 50 um. threshold is on the diagonal i.e. 50*1.4
+    const int threshold_H = 85 * Calibration;
+    const int threshold_L = 55 * Calibration;
+    cv::Vec2d p_1 = {P_1.x, P_1.y};
+    cv::Vec2d p_2 = {P_2.x, P_2.y};
+    cv::Vec2d p_3 = {P_3.x, P_3.y};
+    cv::Vec2d p_4 = {P_4.x, P_4.y};
+    enum Diagonals
+    {
+        NONE,
+        P1P2,
+        P1P3,
+        P1P4
+    };
     Diagonals diagonal = NONE;
-    if(debug){
-        std::cout<< "cv::norm(p_1,p_2)" << cv::norm(p_1,p_2)<< std::endl;
-        std::cout<< "cv::norm(p_1,p_3)" << cv::norm(p_1,p_3)<< std::endl;
-        std::cout<< "cv::norm(p_1,p_4)" << cv::norm(p_1,p_4)<< std::endl;
-        std::cout<< "cv::norm(p_2,p_3)" << cv::norm(p_2,p_3)<< std::endl;
-        std::cout<< "cv::norm(p_2,p_4)" << cv::norm(p_2,p_4)<< std::endl;
-        std::cout<< "cv::norm(p_3,p_4)" << cv::norm(p_3,p_4)<< std::endl;
+    if (debug)
+    {
+        std::cout << "cv::norm(p_1,p_2)" << cv::norm(p_1, p_2) << std::endl;
+        std::cout << "cv::norm(p_1,p_3)" << cv::norm(p_1, p_3) << std::endl;
+        std::cout << "cv::norm(p_1,p_4)" << cv::norm(p_1, p_4) << std::endl;
+        std::cout << "cv::norm(p_2,p_3)" << cv::norm(p_2, p_3) << std::endl;
+        std::cout << "cv::norm(p_2,p_4)" << cv::norm(p_2, p_4) << std::endl;
+        std::cout << "cv::norm(p_3,p_4)" << cv::norm(p_3, p_4) << std::endl;
     }
-    //searching for two equal diagonals
-    //Diagonal is longer than the sides ;)
-    if(cv::norm(p_1,p_2) < cv::norm(p_1,p_3)){
-        if(cv::norm(p_1,p_3) < cv::norm(p_1,p_4))
+    // searching for two equal diagonals
+    // Diagonal is longer than the sides ;)
+    if (cv::norm(p_1, p_2) < cv::norm(p_1, p_3))
+    {
+        if (cv::norm(p_1, p_3) < cv::norm(p_1, p_4))
             diagonal = P1P4;
         else
             diagonal = P1P3;
-    } else {
-        if(cv::norm(p_1,p_2) < cv::norm(p_1,p_4))
+    }
+    else
+    {
+        if (cv::norm(p_1, p_2) < cv::norm(p_1, p_4))
             diagonal = P1P4;
         else
             diagonal = P1P2;
     }
 
-    if(diagonal == P1P2 && Is_equal(cv::norm(p_1,p_2),cv::norm(p_3,p_4))){
-        //If diagonals are equal, all the sides needs to be equal
-        if(
-                Is_equal(cv::norm(p_1,p_3),cv::norm(p_3,p_2)) &&
-                Is_equal(cv::norm(p_3,p_2),cv::norm(p_2,p_4)) &&
-                Is_equal(cv::norm(p_2,p_4),cv::norm(p_4,p_1)) &&
-                Is_equal(cv::norm(p_4,p_1),cv::norm(p_1,p_3)) &&
-                (cv::norm(p_1,p_2) < threshold_H) &&
-                (cv::norm(p_1,p_2) > threshold_L))
-                {
+    if (diagonal == P1P2 && Is_equal(cv::norm(p_1, p_2), cv::norm(p_3, p_4)))
+    {
+        // If diagonals are equal, all the sides needs to be equal
+        if (Is_equal(cv::norm(p_1, p_3), cv::norm(p_3, p_2)) &&
+            Is_equal(cv::norm(p_3, p_2), cv::norm(p_2, p_4)) &&
+            Is_equal(cv::norm(p_2, p_4), cv::norm(p_4, p_1)) &&
+            Is_equal(cv::norm(p_4, p_1), cv::norm(p_1, p_3)) &&
+            (cv::norm(p_1, p_2) < threshold_H) && (cv::norm(p_1, p_2) > threshold_L))
+        {
             return true;
         }
-    }else if(diagonal == P1P3 && Is_equal(cv::norm(p_1,p_3),cv::norm(p_2,p_4))){
-        //If diagonals are equal, all the sides needs to be equal
-        if(
-                Is_equal(cv::norm(p_1,p_2),cv::norm(p_2,p_3)) &&
-                Is_equal(cv::norm(p_2,p_3),cv::norm(p_3,p_4)) &&
-                Is_equal(cv::norm(p_3,p_4),cv::norm(p_4,p_1)) &&
-                Is_equal(cv::norm(p_4,p_1),cv::norm(p_1,p_2)) &&
-                (cv::norm(p_1,p_3) < threshold_H) &&
-                (cv::norm(p_1,p_3) > threshold_L))
-                {
+    }
+    else if (diagonal == P1P3 && Is_equal(cv::norm(p_1, p_3), cv::norm(p_2, p_4)))
+    {
+        // If diagonals are equal, all the sides needs to be equal
+        if (Is_equal(cv::norm(p_1, p_2), cv::norm(p_2, p_3)) &&
+            Is_equal(cv::norm(p_2, p_3), cv::norm(p_3, p_4)) &&
+            Is_equal(cv::norm(p_3, p_4), cv::norm(p_4, p_1)) &&
+            Is_equal(cv::norm(p_4, p_1), cv::norm(p_1, p_2)) &&
+            (cv::norm(p_1, p_3) < threshold_H) && (cv::norm(p_1, p_3) > threshold_L))
+        {
             return true;
         }
-    }else if(diagonal == P1P4 && Is_equal(cv::norm(p_1,p_4),cv::norm(p_2,p_3))){
-        //If diagonals are equal, all the sides needs to be equal
-        if(
-                Is_equal(cv::norm(p_1,p_2),cv::norm(p_2,p_4)) &&
-                Is_equal(cv::norm(p_2,p_4),cv::norm(p_4,p_3)) &&
-                Is_equal(cv::norm(p_4,p_3),cv::norm(p_3,p_1)) &&
-                Is_equal(cv::norm(p_3,p_1),cv::norm(p_1,p_2)) &&
-                (cv::norm(p_1,p_4) < threshold_H) &&
-                (cv::norm(p_1,p_4) > threshold_L))
-                {
+    }
+    else if (diagonal == P1P4 && Is_equal(cv::norm(p_1, p_4), cv::norm(p_2, p_3)))
+    {
+        // If diagonals are equal, all the sides needs to be equal
+        if (Is_equal(cv::norm(p_1, p_2), cv::norm(p_2, p_4)) &&
+            Is_equal(cv::norm(p_2, p_4), cv::norm(p_4, p_3)) &&
+            Is_equal(cv::norm(p_4, p_3), cv::norm(p_3, p_1)) &&
+            Is_equal(cv::norm(p_3, p_1), cv::norm(p_1, p_2)) &&
+            (cv::norm(p_1, p_4) < threshold_H) && (cv::norm(p_1, p_4) > threshold_L))
+        {
             return true;
         }
-    }else{
+    }
+    else
+    {
         return false;
     }
-    //if you reach here, it is not a square...
+    // if you reach here, it is not a square...
     return false;
 }
 
-cv::Point FiducialFinder::Square_center(const cv::Point &P_1, const cv::Point &P_2, const cv::Point &P_3, const cv::Point &P_4){
+cv::Point2d
+FiducialFinder::Square_center(const cv::Point2d &P_1,
+                              const cv::Point2d &P_2,
+                              const cv::Point2d &P_3,
+                              const cv::Point2d &P_4)
+{
     float X_coord = P_1.x + P_2.x + P_3.x + P_4.x;
     X_coord /= 4;
     float Y_coord = P_1.y + P_2.y + P_3.y + P_4.y;
     Y_coord /= 4;
-    cv::Point Out;
+    cv::Point2d Out;
     Out.x = X_coord;
     Out.y = Y_coord;
     return Out;
 }
 
-bool FiducialFinder::Find_circles(double &X_distance, double &Y_distance,const int &input_1, const int &input_2, bool fit, bool single){
+bool
+FiducialFinder::Find_circles(double &X_distance, double &Y_distance, const int &input_1, const int &input_2, bool fit, bool single){
     //function needed when searching for fiducial not using SURF
     //to find the 4 dot fiducial
     bool debug = false;
@@ -1194,6 +1302,3 @@ int FiducialFinder::dumb_test()
     printf("%s\n", x.tostring(2).c_str()); // EXPECTED: [-3,3]
     return 0;
 }
-
-
-
