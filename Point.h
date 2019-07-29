@@ -138,7 +138,7 @@ class Point
         }
 
         // Return unit vector. Z coordinate remains untouched
-        Point norm() const
+        Point unit() const
         {
             double vn = mag();
             return Point(x() / vn, y() / vn, z());
@@ -174,6 +174,9 @@ class Point
 
 };
 
+/*
+ * scalar multiplication
+ */
 inline Point operator*(double v, const Point &P)
 {
     return Point(v*P.x(), v*P.y());
@@ -183,15 +186,28 @@ inline double operator*(const Point &A, const Point &B)
     return A.dot(B);
 }
 
-
+/*
+ * Point addition
+ */
 inline Point operator+(const Point &A, const Point &B)
 {
     return Point(A.x()+B.x(), A.y()+B.y());
 }
 
+/*
+ * Point difference
+ */
 inline Point operator-(const Point &A, const Point &B)
 {
     return Point(A.x()-B.x(), A.y()-B.y());
+}
+
+/*
+ * Calculates difference norm
+ */
+inline double norm(const Point &A, const Point &B)
+{
+    return (A-B).mag2();
 }
 
 
