@@ -71,6 +71,8 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->leftTabWidget->addTab(outputLogTextEdit, "log");
     ui->leftTabWidget->setCurrentWidget(outputLogTextEdit);
 
+    log_viewer.set_text_view(outputLogTextEdit);
+
     //------------------------------------------
 #ifdef VANCOUVER
     qInfo("Vancouver, Aerotech A3200 gantry");
@@ -302,7 +304,6 @@ Magrathea::Magrathea(QWidget *parent) :
     connect(ui->Fiducial_finder_button,SIGNAL(clicked(bool)), this, SLOT(Fiducial_finder_button_Clicked()));
     connect(ui->Circles_button,SIGNAL(clicked(bool)), this, SLOT(Circles_button_Clicked()));
     connect(ui->VignetteButton,SIGNAL(clicked(bool)),this,SLOT(VignetteButton_clicked()));
-    connect(ui->ArucoButton,SIGNAL(clicked(bool)),this,SLOT(Aruco_test()));
     connect(ui->F_fid_gen_button,SIGNAL(clicked(bool)),this,SLOT(createTemplate_F()));
     connect(ui->focusalgotest_pushButton,SIGNAL(clicked(bool)),this,SLOT(FocusAlgoTest_Func()));
     connect(ui->button_measure_30,SIGNAL(clicked(bool)),this,SLOT(loop_find_circles()));
@@ -2001,14 +2002,15 @@ Point Magrathea::find_coordinates_at_position(const Point &estimated_point, int 
  */
 bool Magrathea::set_petal_coordinates()
 {
-    std::cout << "set petal coordinates" << std::endl;
+    LoggerStream os;
+    os << loglevel(Log::info) << "set petal coordinates" << std::endl;
     QPetalLocator P(mMotionHandler);
     P.show();
     if ( P.exec() == QDialog::Accepted )
     {
         Point Pup = P.get_top_position();
         Point Pbot = P.get_bottom_position();
-        std::cout << Pup << Pbot << std::endl;
+        os << loglevel(Log::info) << Pup << Pbot << std::endl;
         if (Pup.is_nan() || Pbot.is_nan())
         {
             std::ostringstream ostr;
@@ -2026,7 +2028,7 @@ bool Magrathea::set_petal_coordinates()
             FindPetal(Pup, Pbot);
         }
     }
-    std::cout << "####" << std::endl;
+    os << loglevel(Log::info) << "####" << std::endl;
     /*
      * Say we have two petal coordinates we got by inspecting with the joystick.
      */

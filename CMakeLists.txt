@@ -70,8 +70,6 @@ set(Qt5MultimediaWidgets_DIR ${QT5_DIR}/lib/cmake/Qt5MultimediaWidgets)
 
 # Find the QtWidgets library
 find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia MultimediaWidgets SerialPort REQUIRED)
-message("QtWidgets ${Qt5Widgets_FOUND}")
-message("QtWidgets ${Qt5Widgets_INCLUDE_DIRS}")
 
 
 # Include the QJoysticks
@@ -93,6 +91,18 @@ set(CMAKE_AUTORCC ON)
 # Create code from a list of Qt designer ui files
 set(CMAKE_AUTOUIC ON)
 
+
+#
+# The StreamViewer test
+#
+add_executable(test-viewer test-stream-viewer.cc StreamViewer.cc logger.cc)
+target_link_libraries(test-viewer 
+	Qt5::Core 
+	Qt5::Gui 
+	Qt5::Widgets)
+target_include_directories(test-viewer PUBLIC ${Qt5Widgets_INCLUDE_DIRS})	
+
+
 set(magrathea_SOURCES
 	magrathea.ui
 	main.cpp 
@@ -108,6 +118,7 @@ set(magrathea_SOURCES
 	logger.cc
 	PetalCoordinates.cc
 	QPetalLocator.cpp
+	StreamViewer.cc
 	${qjoystick_SOURCES}
 	${QT_RESOURCES}
 	)

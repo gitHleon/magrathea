@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <opencv2/opencv.hpp>
+#include <StreamViewer.h>
 #include <PetalCoordinates.h>
 
 /*
@@ -147,6 +148,7 @@ private:
 
     cv::Mat sub_frame;
 
+    StreamViewer log_viewer;
     /*
      * This will contain the transformation from image to Gantry
      */
