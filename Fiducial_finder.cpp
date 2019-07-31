@@ -1,10 +1,13 @@
 #include <chrono>
 #include <ctime>
 #include <algorithm>
+#include <cmath>
 #include "logger.h"
 #include "Fiducial_finder.h"
 #include "MatrixTransform.h"
-
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
 void
 function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
 {
@@ -1294,9 +1297,10 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
         fail_code = -6;
         return position;
     }
-    outM.set( (double []){ H.at<double>(0,0), H.at<double>(1,0),
+    double tmpV[] = { H.at<double>(0,0), H.at<double>(1,0),
                H.at<double>(0,1), H.at<double>(1,1),
-               H.at<double>(0,2), H.at<double>(1,2)} );
+               H.at<double>(0,2), H.at<double>(1,2)};
+    outM.set(tmpV);
 
     /*
      * Find the fiducial bounding box

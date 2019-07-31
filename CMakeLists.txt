@@ -17,19 +17,19 @@ find_package( OpenCV REQUIRED )
 # Create xlnt for reading XLSX files
 #
 set( STATIC ON CACHE BOOL "XNLT static library" FORCE)
-set( TESTS OFF CACHE BOOL "disable tests" FORCE) 
+set( TESTS OFF CACHE BOOL "disable tests" FORCE)
 add_subdirectory(xlnt)
 find_library(xlnt_LIB xlnt PATHS ${CMAKE_CURRENT_BINARY_DIR}/xlnt/source)
 set(xlnt_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/xlnt/include)
-
+set(xlnt_LIB  ${CMAKE_CURRENT_BINARY_DIR}/xlnt/source/libxlnt.a)
 #
 # Create alglib library
 #
 set(alglib_DIR alglib-3.15.0/cpp/src)
-FILE(GLOB alglib_SOURCES ${alglib_DIR}/*.cpp)	
+FILE(GLOB alglib_SOURCES ${alglib_DIR}/*.cpp)
 add_library(alglib STATIC ${alglib_SOURCES})
 
-# 
+#
 # Create Geom library
 #
 set(geomlib_SOURCES MatrixTransform.cc Point.cc)
@@ -48,7 +48,7 @@ add_dependencies (test-flatness xlnt)
 add_executable(test-matrix test-matrix.cc PetalCoordinates.cc)
 target_link_libraries(test-matrix geomlib ${xlnt_LIB})
 target_include_directories(test-matrix PUBLIC ${OpenCV_INCLUDE_DIRS} )
-add_dependencies (test-matrix xlnt)	
+add_dependencies (test-matrix xlnt)
 
 # Test Fiducial Finder
 add_executable(test-f-finder test_f_finder.cc Fiducial_finder.cpp logger.cc )
@@ -59,7 +59,7 @@ target_link_libraries(test-f-finder ${OpenCV_LIBS} geomlib alglib)
 #
 # Setup Qt stuff
 #
-set(QT5_DIR /usr/local/Cellar/qt/5.13.0)
+set(QT5_DIR d:/Qt/5.9.6/mingw53_32)
 list(APPEND CMAKE_PREFIX_PATH ${QT5_DIR})
 set(Qt5Widgets_DIR ${QT5_DIR}/lib/cmake/Qt5Core)
 set(Qt5Gui_DIR ${QT5_DIR}/lib/cmake/Qt5Gui)
@@ -73,10 +73,12 @@ find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia MultimediaWidgets Serial
 
 
 # Include the QJoysticks
-find_package(SDL2 REQUIRED)
+#find_package(SDL2 )
+set(SDL2_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/QJoysticks-master/lib/SDL/include)
+message( "SDL include ${SDL2_INCLUDE_DIRS}")
 set(qjoystick_DIR QJoysticks-master)
 set(qjoystick_INCLUDES ${qjoystick_DIR}/src)
-set(qjoystick_SOURCES 
+set(qjoystick_SOURCES
 	${qjoystick_DIR}/src/QJoysticks.cpp
    	${qjoystick_DIR}/src/QJoysticks/SDL_Joysticks.cpp
     ${qjoystick_DIR}/src/QJoysticks/VirtualJoystick.cpp
@@ -96,23 +98,24 @@ set(CMAKE_AUTOUIC ON)
 # The StreamViewer test
 #
 add_executable(test-viewer test-stream-viewer.cc StreamViewer.cc logger.cc)
-target_link_libraries(test-viewer 
-	Qt5::Core 
-	Qt5::Gui 
+target_link_libraries(test-viewer
+	Qt5::Core
+	Qt5::Gui
 	Qt5::Widgets)
-target_include_directories(test-viewer PUBLIC ${Qt5Widgets_INCLUDE_DIRS})	
+target_include_directories(test-viewer PUBLIC ${Qt5Widgets_INCLUDE_DIRS})
 
 
 set(magrathea_SOURCES
 	magrathea.ui
-	main.cpp 
-	magrathea.cpp 
-	calibrator.cpp 
-	focus_finder.cpp 
-	MotionHandler.cpp 
-	Fiducial_finder.cpp 
-	fiducial_locations.cpp 
-	verticalalignmenttool.cpp 
+	main.cpp
+	magrathea.cpp
+	calibrator.cpp
+	focus_finder.cpp
+	MotionHandler.cpp
+  ACSCMotionHandler.cpp
+	Fiducial_finder.cpp
+	fiducial_locations.cpp
+	verticalalignmenttool.cpp
 	flatness.cc
 	alglibtools.cc
 	logger.cc
@@ -122,21 +125,21 @@ set(magrathea_SOURCES
 	${qjoystick_SOURCES}
 	${QT_RESOURCES}
 	)
-	
+
 add_executable(magrathea ${magrathea_SOURCES})
 
 # CHOSE IFIC MOTION CONTROLLER
-#target_compile_definitions(magrathea PUBLIC -DACSC=1 -DVALENCIA=1)
-target_include_directories(magrathea PUBLIC 
+target_compile_definitions(magrathea PUBLIC -DACSC=1 -DVALENCIA=1)
+target_include_directories(magrathea PUBLIC
 						 	${Qt5Widgets_INCLUDE_DIRS}
 						 	${qjoystick_INCLUDES} ${SDL2_INCLUDE_DIRS})
-target_link_libraries(magrathea 
-	Qt5::Core 
-	Qt5::Gui 
-	Qt5::Widgets 
-	Qt5::Multimedia 
-	Qt5::MultimediaWidgets 
+target_link_libraries(magrathea
+	Qt5::Core
+	Qt5::Gui
+	Qt5::Widgets
+	Qt5::Multimedia
+	Qt5::MultimediaWidgets
 	Qt5::SerialPort
-	geomlib ${OpenCV_LIBS} alglib ${xlnt_LIB})
-add_dependencies (magrathea xlnt)	
-	
+	geomlib ${OpenCV_LIBS} alglib ${xlnt_LIB}
+D:/Code/magrathea/ACSC/C_CPP/ACSCL_x86.LIB)
+add_dependencies (magrathea xlnt)

@@ -26,28 +26,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 include(QJoysticks-master\QJoysticks.pri)
 
 SOURCES += \
-        main.cpp \
-        magrathea.cpp \
-        calibrator.cpp \
-        focus_finder.cpp \
-        MotionHandler.cpp \
-Fiducial_finder.cpp \
+    MatrixTransform.cc \
+    PetalCoordinates.cc \
+    Point.cc \
+    QPetalLocator.cpp \
+    StreamViewer.cc \
+    alglibtools.cc \
+    flatness.cc \
+    logger.cc \
+    main.cpp \
+    magrathea.cpp \
+    calibrator.cpp \
+    focus_finder.cpp \
+    MotionHandler.cpp \
+    Fiducial_finder.cpp \
     fiducial_locations.cpp \
     verticalalignmenttool.cpp \
-#alglib
-alglib-3.14.0\cpp\src\alglibinternal.cpp \
-alglib-3.14.0\cpp\src\alglibmisc.cpp \
-alglib-3.14.0\cpp\src\ap.cpp \
-alglib-3.14.0\cpp\src\dataanalysis.cpp \
-alglib-3.14.0\cpp\src\diffequations.cpp \
-alglib-3.14.0\cpp\src\fasttransforms.cpp \
-alglib-3.14.0\cpp\src\integration.cpp \
-alglib-3.14.0\cpp\src\interpolation.cpp \
-alglib-3.14.0\cpp\src\linalg.cpp \
-alglib-3.14.0\cpp\src\optimization.cpp \
-alglib-3.14.0\cpp\src\solvers.cpp \
-alglib-3.14.0\cpp\src\specialfunctions.cpp \
-alglib-3.14.0\cpp\src\statistics.cpp \
+
 
 
 HEADERS += \
@@ -55,29 +50,17 @@ HEADERS += \
         calibrator.h \
         focus_finder.h \
         MotionHandler.h \
-Fiducial_finder.h \
-    fiducial_locations.h \
-    verticalalignmenttool.h \
-#alglib
-alglib-3.14.0\cpp\src\alglibinternal.h \
-alglib-3.14.0\cpp\src\alglibmisc.h \
-alglib-3.14.0\cpp\src\ap.h \
-alglib-3.14.0\cpp\src\dataanalysis.h \
-alglib-3.14.0\cpp\src\diffequations.h \
-alglib-3.14.0\cpp\src\fasttransforms.h \
-alglib-3.14.0\cpp\src\integration.h \
-alglib-3.14.0\cpp\src\interpolation.h \
-alglib-3.14.0\cpp\src\linalg.h \
-alglib-3.14.0\cpp\src\optimization.h \
-alglib-3.14.0\cpp\src\solvers.h \
-alglib-3.14.0\cpp\src\specialfunctions.h \
-alglib-3.14.0\cpp\src\statistics.h \
-alglib-3.14.0\cpp\src\stdafx.h \
+        Fiducial_finder.h \
+        fiducial_locations.h \
+        verticalalignmenttool.h \
+        StreamViewer.h \
+        QPetalLocator.h
 
 FORMS += \
         magrathea.ui
 
-INCLUDEPATH += .\alglib-3.14.0\cpp\src
+INCLUDEPATH += D:/Code/include/alglib
+INCLUDEPATH += D:/Code/include
 INCLUDEPATH += .\mvIMPACT_CPP
 INCLUDEPATH += D:\opencv-build\install\include
        LIBS += D:\opencv-build\bin\libopencv_flann401.dll
@@ -90,6 +73,7 @@ INCLUDEPATH += D:\opencv-build\install\include
        LIBS += D:\opencv-build\bin\libopencv_xfeatures2d401.dll
        LIBS += D:\opencv-build\bin\libopencv_calib3d401.dll
        LIBS += D:\opencv-build\bin\libopencv_aruco401.dll
+       LIBS += D:/Code/lib/libxlnt.a D:/Code/lib/libalglib.a
 
 #Vancouver
 win32 : exists(C:/Program Files (x86)/Aerotech/A3200/CLibrary/Include/A3200.h) {
@@ -113,3 +97,4 @@ win32 : exists(ACSC/C_CPP/ACSC.h) {
         LIBS += D:\Code\magrathea\ACSC\C_CPP\ACSCL_x86.LIB
         #LIBS += C:\Users\Silicio\WORK\Opencv_Qt_proj\Loader\ACSC\C_CPP\ACSCL_x86.LIB
 }
+

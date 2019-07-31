@@ -42,3 +42,4 @@ CMakeLists.txt.user*
 .project
 .cproject
 .settings
+/build/
