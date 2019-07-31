@@ -12,7 +12,8 @@
 #include <Point.h>
 
 /*
-  A matrix to perform 2D transformations
+  A matrix to perform 2D transformations (partial affine transforms)
+
   All transformations can be represented as 3x3 transformation
   matrices of the following form:
       | a c e |
@@ -42,13 +43,14 @@ class MatrixTransform
         double _M[6];
     public:
         MatrixTransform();
-        MatrixTransform(double*ptr);
+        MatrixTransform(double* ptr);
         MatrixTransform(const MatrixTransform &T);
 
         virtual ~MatrixTransform();
         static MatrixTransform matrix_multiply(const MatrixTransform &a, const MatrixTransform &b);
         static MatrixTransform identity();
 
+        void set(double *ptr);
         MatrixTransform rotation() const;
         MatrixTransform operator*(const MatrixTransform &M);
         Point operator*(const Point &P) const;

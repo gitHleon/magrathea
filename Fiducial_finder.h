@@ -1,6 +1,8 @@
 #ifndef FIDUCIALFINDER_H
 #define FIDUCIALFINDER_H
 
+#include <string>
+#include <vector>
 #ifdef VALENCIA
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,14 +15,44 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
-#include <opencv2/aruco.hpp>
+
+#include <MatrixTransform.h>
+
+class Circle;
+class Circle
+{
+    private:
+        double R;
+        Point center;
+
+        void cpy(const Circle &C)
+        {
+            R = C.R;
+            center = C.center;
+        }
+    public:
+        Circle() : R(0.0), center(Point::NaN()) {}
+        Circle(double r, Point C)
+            : R(r), center(C) {}
+
+        Circle(double r, double x, double y)
+            : R(r), center(x, y) {}
+
+        Circle(const Circle &C)
+        {
+            if (&C != this)
+                cpy(C);
+        }
+
+        Point get_center() const { return center; }
+        double get_R() const { return R; }
+};
 
 class FiducialFinder
 {
     public:
         FiducialFinder();
         ~FiducialFinder();
-        void Set_calibration(double m_calib);
 
         /**
         * These are a set of methods to give the input image to FiducialFinder
@@ -43,22 +75,67 @@ class FiducialFinder
          */
         bool IsImageEmpty();
 
+        cv::Mat find_region_of_intetest(const Point &origin);
 
-        bool Find_circles(double &X_distance, double &Y_distance, const int &temp_input,
-                          const int &temp_input_2, bool fit = false, bool single = false);
-        bool Find_F(const int &DescriptorAlgorithm, double &X_distance,
-                    double &Y_distance, std::string &timestamp, int &fail_code,
-                    const int &temp_input, const int &temp_input_2, const int &dummy_temp,
-                    cv::Mat &transform_out);
+        int get_kernel_size() const;
+
+        int get_window_size() const;
+
+        Point Find_circles_(bool fit = false, bool single = false,
+                           const Point &origin=Point::NaN(), bool debug = false);
 
 
         /**
-         * Returs one of the RGB components of the image at imput
+         * Finds circles in the image. It uses OpenCV Hough Circle Transform based on
+         * the paper by H.K. Yuen (doi:10.5244/C.3.29)
+         *
+         * @param  circles    A vector of Circles that wil lreceive the coordinates of
+         *                    the circles
+         * @param  expected_R Expected value of the radius
+         * @param  R_width    This expresses the allowed range of values for the radius
+         *                    in percentage. If >1 or <0, the rane is [0-2*R]
+         * @param  min_dist   minimum distance among circles
+         * @param  debug      set to true to debug the process
+         * @return            the error code. =0 if success
+         *
+         */
+        int FindCircles(std::vector<Circle> &circles,
+                        double expected_R, double R_width=0.0, double min_dist=-1,
+                        const Point &origin=Point::NaN(),
+                        bool debug = false);
+
+        /**
+         * find the fiducial given in SetImageFiducial in the Image given in SetImage
+         * @param  outM      Transform to go from fiducial to image
+         * @param  fail_code 0 if not problem found.
+         * @param  debug     set to true to debug the process
+         * @param  origin    the position of the region of interest
+         * @return           position of the fiducial
+         */
+        Point FindFiducial(MatrixTransform &outM, int &fail_code,
+                           const Point &origin=Point::NaN(), bool debug = false);
+
+
+        /**
+         * Returns one of the RGB components of the image at imput
          * @param  input_mat The original matrix
          * @param  input     The RGB component fof the image we want
          * @return The iamge wit honly the selected component
          */
-        cv::Mat get_component(const cv::Mat &input_mat, const int input);
+        static cv::Mat get_component(const cv::Mat &input_mat, const int input);
+
+        /**
+         * Prepares the image for feature detection
+         * @param  image       Original image
+         * @param  kernel_size Kernel size for bluring
+         * @param  debug       true for debug
+         * @param  msg         Prefix to prepend in debug messages
+         * @return             AN OPENCV Mat
+         */
+        static cv::Mat
+        prepare_image(const cv::Mat &image, int kernel_size,
+                      bool debug = false, const std::string &msg = "");
+
 
         /**
          * [enance_contrast description]
@@ -88,10 +165,8 @@ class FiducialFinder
         int dumb_test();
 
     private:
-        double Calibration = 1.0;  // [px/um]
         cv::Mat image;
         cv::Mat image_fiducial;
-        double measured_points[8];
 
         /**
          * [Is_equal description]

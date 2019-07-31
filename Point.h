@@ -10,6 +10,7 @@
 
 #include <iosfwd>
 #include <cmath>
+#include <limits>
 #include <vector>
 #include <opencv2/core/types.hpp>
 
@@ -46,6 +47,13 @@ class Point
 
         // Copy constructor
         Point(const Point &P) { cpy(P._v); }
+
+        // return a NaN point
+        static Point NaN()
+        {
+            return Point(std::numeric_limits<double>::quiet_NaN(),
+                         std::numeric_limits<double>::quiet_NaN());
+        }
 
         // Assignment operator
         Point &operator=(const Point &P)
@@ -105,6 +113,12 @@ class Point
         void x(double v) { _v[0] = v; }
         void y(double v) { _v[1] = v; }
         void z(double v) { _v[2] = v; }
+        void set(double vx, double vy, double vz=0.0)
+        {
+            _v[0] = vx;
+            _v[1] = vy;
+            _v[2] = vz;
+        }
 
         /*
          * Check if values are OK
@@ -135,12 +149,27 @@ class Point
             return *this;
         }
 
-        Point& operator *(double v)
+        Point operator *(double v)
+        {
+            return Point(_v[0]*v, _v[1]*v);
+        }
+        Point operator /(double v)
+        {
+            return Point(_v[0]/v, _v[1]/v);
+        }
+
+        Point& operator *=(double v)
         {
             _v[0] *= v;
             _v[1] *= v;
             return *this;
         }
+        Point& operator /=(double v)
+                        {
+            _v[0] /= v;
+            _v[1] /= v;
+            return *this;
+                        }
 
         double mag2() const
         {

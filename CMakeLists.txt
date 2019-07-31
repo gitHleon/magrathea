@@ -6,7 +6,7 @@ endif()
 project(Magrathea)
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 
 #
 # Find OpenCV
@@ -29,23 +29,31 @@ set(alglib_DIR alglib-3.15.0/cpp/src)
 FILE(GLOB alglib_SOURCES ${alglib_DIR}/*.cpp)	
 add_library(alglib STATIC ${alglib_SOURCES})
 
+# 
+# Create Geom library
+#
+set(geomlib_SOURCES MatrixTransform.cc Point.cc)
+add_library(geomlib STATIC ${geomlib_SOURCES})
+target_include_directories(geomlib PUBLIC ${OpenCV_INCLUDE_DIRS})
+
 # Set include directories
 include_directories(${alglib_DIR} ${xlnt_INCLUDE})
 
 # Test flatness
 add_executable(test-flatness test-flatness.cc flatness.cc alglibtools.cc)
-target_link_libraries(test-flatness alglib)	
+target_link_libraries(test-flatness alglib  ${xlnt_LIB})
+add_dependencies (test-flatness xlnt)
 
 # Test transforms
-add_executable(test-matrix test-matrix.cc MatrixTransform.cc PetalCoordinates.cc)
-target_link_libraries(test-matrix ${xlnt_LIB})
+add_executable(test-matrix test-matrix.cc PetalCoordinates.cc)
+target_link_libraries(test-matrix geomlib ${xlnt_LIB})
 target_include_directories(test-matrix PUBLIC ${OpenCV_INCLUDE_DIRS} )
 add_dependencies (test-matrix xlnt)	
 
 # Test Fiducial Finder
-add_executable(test-f-finder test_f_finder.cc Fiducial_finder.cpp logger.cc)
+add_executable(test-f-finder test_f_finder.cc Fiducial_finder.cpp logger.cc )
 target_include_directories(test-f-finder PUBLIC ${OpenCV_INCLUDE_DIRS} )
-target_link_libraries(test-f-finder ${OpenCV_LIBS} alglib)
+target_link_libraries(test-f-finder ${OpenCV_LIBS} geomlib alglib)
 
 
 #
@@ -98,7 +106,6 @@ set(magrathea_SOURCES
 	flatness.cc
 	alglibtools.cc
 	logger.cc
-	MatrixTransform.cc
 	PetalCoordinates.cc
 	QPetalLocator.cpp
 	${qjoystick_SOURCES}
@@ -119,6 +126,6 @@ target_link_libraries(magrathea
 	Qt5::Multimedia 
 	Qt5::MultimediaWidgets 
 	Qt5::SerialPort
-	${OpenCV_LIBS} alglib ${xlnt_LIB})
+	geomlib ${OpenCV_LIBS} alglib ${xlnt_LIB})
 add_dependencies (magrathea xlnt)	
 	

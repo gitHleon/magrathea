@@ -75,7 +75,6 @@ private slots:
     void Circles_button_Clicked();
     void VignetteButton_clicked();
     void Camera_test();
-    void Aruco_test();
     void FocusAlgoTest_Func();
     bool loop_fid_finder();
     bool loop_fid_finder(int input);
@@ -148,6 +147,10 @@ private:
 
     cv::Mat sub_frame;
 
+    /*
+     * This will contain the transformation from image to Gantry
+     */
+    MatrixTransform cameraM;
     double mCamera_angle =  1.268;
     double mCalibration = 3.62483; //SCT optics 10.035;//3.43;//4.5; //[px/um]
     QCamera *mCamera;

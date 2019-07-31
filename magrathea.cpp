@@ -29,6 +29,7 @@
 #include <QJoysticks.h>
 #endif
 
+#include <logger.h>
 #include <QPetalLocator.h>
 
 //function for debug in opencv, defined elsewhere
@@ -223,9 +224,17 @@ Magrathea::Magrathea(QWidget *parent) :
     ui->frame->setLayout(mCameraLayout);
 
     /**
-     * TODO: need to implement a mechanism to provide the petal locator coordinates
+     * TODO: need to implement a mechanism to provide the petal locator coordinates.
+     *       For now this is done when we click the Find Petal button in Loading.
      */
     //petal_locations.set_reference()
+
+
+    /*
+     * Camera to Gantry transform
+     */
+    cameraM.rotate(mCamera_angle);
+    cameraM.scale(mCalibration);
 
     ///////////////////
     //------------------------------------------
@@ -437,63 +446,71 @@ void Magrathea::updatePosition(){
 
 //******************************************
 //real joystick
-void Magrathea::J_axes_translator(int index, int axis, double value){
+void Magrathea::J_axes_translator(int index, int axis, double value)
+{
     const double threshold = 0.15;
-    if(index != 0 )
+    if (index != 0)
         return; //I want only the main joystick to work
-    if(axis == 0 && (value > threshold))
-        mMotionHandler->runX(-1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 0 && (value < -threshold))
-        mMotionHandler->runX(+1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 0 && ((value < threshold) || (value > -threshold)))
+    if (axis == 0 && (value > threshold))
+        mMotionHandler->runX(-1, ui->spinBox_J_speed->value() * value);
+    else if (axis == 0 && (value < -threshold))
+        mMotionHandler->runX(+1, ui->spinBox_J_speed->value() * value);
+    else if (axis == 0 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunX();
-    else if(axis == 1 && (value > threshold))
-        mMotionHandler->runY(-1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 1 && (value < -threshold))
-        mMotionHandler->runY(+1, ui->spinBox_J_speed->value()*value);
-    else if(axis == 1 && ((value < threshold) || (value > -threshold)))
+    else if (axis == 1 && (value > threshold))
+        mMotionHandler->runY(-1, ui->spinBox_J_speed->value() * value);
+    else if (axis == 1 && (value < -threshold))
+        mMotionHandler->runY(+1, ui->spinBox_J_speed->value() * value);
+    else if (axis == 1 && ((value < threshold) || (value > -threshold)))
         mMotionHandler->endRunY();
-    else if(axis == 2 && !J_control_Rotation && J_control_Z_1){
+    else if (axis == 2 && !J_control_Rotation && J_control_Z_1)
+    {
         //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A"<<std::endl;
-        if(value > threshold)
-            mMotionHandler->runZ(+1, ui->spinBox_J_speed->value()*value);
-        else if(value < -threshold)
-            mMotionHandler->runZ(-1, ui->spinBox_J_speed->value()*value);
-        else if((value < threshold) || (value > -threshold))
+        if (value > threshold)
+            mMotionHandler->runZ(+1, ui->spinBox_J_speed->value() * value);
+        else if (value < -threshold)
+            mMotionHandler->runZ(-1, ui->spinBox_J_speed->value() * value);
+        else if ((value < threshold) || (value > -threshold))
             mMotionHandler->endRunZ();
-    } else if(axis == 2 && !J_control_Rotation && !J_control_Z_1){
+    }
+    else if (axis == 2 && !J_control_Rotation && !J_control_Z_1)
+    {
         //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> B"<<std::endl;
-        if(value > threshold)
-            mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value()*value);
-        else if(value < -threshold)
-            mMotionHandler->runZ_2(-1, ui->spinBox_J_speed->value()*value);
-        else if((value < threshold) || (value > -threshold))
+        if (value > threshold)
+            mMotionHandler->runZ_2(+1, ui->spinBox_J_speed->value() * value);
+        else if (value < -threshold)
+            mMotionHandler->runZ_2(-1, ui->spinBox_J_speed->value() * value);
+        else if ((value < threshold) || (value > -threshold))
             mMotionHandler->endRunZ_2();
-    } else if(axis == 2 && J_control_Rotation){
+    }
+    else if (axis == 2 && J_control_Rotation)
+    {
         //std::cout<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C"<<std::endl;
-        if(value > threshold)
-            mMotionHandler->runU(+1, ui->spinBox_J_speed->value()*value);
-        else if(value < -threshold)
-            mMotionHandler->runU(-1, ui->spinBox_J_speed->value()*value);
-        else if((value < threshold) || (value > -threshold))
+        if (value > threshold)
+            mMotionHandler->runU(+1, ui->spinBox_J_speed->value() * value);
+        else if (value < -threshold)
+            mMotionHandler->runU(-1, ui->spinBox_J_speed->value() * value);
+        else if ((value < threshold) || (value > -threshold))
             mMotionHandler->endRunU();
     }
 }
 
-void Magrathea::J_translator(int index, int button, bool pressed){
+void Magrathea::J_translator(int index, int button, bool pressed)
+{
     //need to translate the generic joystick slots to one specific for every function
     //An other way may be to add inputs to other functions, but this may be more complicated and less friendly to other sites
-    if(index != 0 )
+    if (index != 0)
         return; //I want only the main joystick to work
-    if(button == 1 && pressed)
-        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+1);
-    if(button == 0 && pressed)
-        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-1);
-    if(button == 3 && pressed)
-        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()+15);
-    if(button == 2 && pressed)
-        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value()-15);
-    if(button == 5 && pressed){
+    if (button == 1 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value() + 1);
+    if (button == 0 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value() - 1);
+    if (button == 3 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value() + 15);
+    if (button == 2 && pressed)
+        ui->spinBox_J_speed->setValue(ui->spinBox_J_speed->value() - 15);
+    if (button == 5 && pressed)
+    {
         //std::cout<<"buuton 5"<<std::endl;
         std::vector<double> limits;
         limits.clear();
@@ -507,36 +524,38 @@ void Magrathea::J_translator(int index, int button, bool pressed){
         limits.push_back(ui->doubleSpinBox_Z_2_max_lim->value());
         mMotionHandler->SetLimitsController(limits);
     }
-    if(button == 4 && pressed){
+    if (button == 4 && pressed)
+    {
         //to be merged in one button
         //std::cout<<"buuton 4"<<std::endl;
         std::vector<double> limits;
         limits.clear();
         mMotionHandler->GetLimitsController(limits);
-        ui->lineEdit_X_min_lim->setText(QString::number(     limits.at(0), 'f', 3));
-        ui->lineEdit_Y_min_lim->setText(QString::number(    limits.at(1), 'f', 3));
-        ui->lineEdit_Z_1_min_lim->setText(QString::number(    limits.at(2), 'f', 3));
-        ui->lineEdit_Z_2_min_lim->setText(QString::number(    limits.at(3), 'f', 3));
-        ui->lineEdit_X_max_lim->setText(QString::number(    limits.at(4), 'f', 3));
-        ui->lineEdit_Y_max_lim->setText(QString::number(    limits.at(5), 'f', 3));
-        ui->lineEdit_Z_1_max_lim->setText(QString::number(    limits.at(6), 'f', 3));
-        ui->lineEdit_Z_2_max_lim->setText(QString::number(    limits.at(7), 'f', 3));
+        ui->lineEdit_X_min_lim->setText(QString::number(limits.at(0), 'f', 3));
+        ui->lineEdit_Y_min_lim->setText(QString::number(limits.at(1), 'f', 3));
+        ui->lineEdit_Z_1_min_lim->setText(QString::number(limits.at(2), 'f', 3));
+        ui->lineEdit_Z_2_min_lim->setText(QString::number(limits.at(3), 'f', 3));
+        ui->lineEdit_X_max_lim->setText(QString::number(limits.at(4), 'f', 3));
+        ui->lineEdit_Y_max_lim->setText(QString::number(limits.at(5), 'f', 3));
+        ui->lineEdit_Z_1_max_lim->setText(QString::number(limits.at(6), 'f', 3));
+        ui->lineEdit_Z_2_max_lim->setText(QString::number(limits.at(7), 'f', 3));
     }
-    if(button == 10 && pressed){
+    if (button == 10 && pressed)
+    {
         J_control_Z_1 = !J_control_Z_1;
         mMotionHandler->endRunZ();
         mMotionHandler->endRunZ_2();
     }
-    if(button == 11 && pressed){
+    if (button == 11 && pressed)
+    {
         J_control_Rotation = !J_control_Rotation;
         mMotionHandler->endRunZ();
         mMotionHandler->endRunZ_2();
         mMotionHandler->endRunU();
     }
-    if(button == 9 && pressed)
+    if (button == 9 && pressed)
         //emit Run_focus_signal();
         emit Test_signal();
-
 }
 
 
@@ -888,7 +907,9 @@ void Magrathea::Circles_button_Clicked()
     FiducialFinderCaller(2,dummy); }
 
 //function to find fiducial markers
-bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point){
+bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point)
+{
+    LoggerStream os;
     bool debug = false;
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
@@ -961,50 +982,82 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     std::string tmp_filename = "";
     bool success = false;
 
-    if(from_file){//loading image if need to run on loaded image intead than image from the camera
-        std::string address = "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/Calibration_plate_measures/pos_5/";
-        std::string Images[] = {
-            "Circles_0_2_0.jpg",
-            //"chip_1_1_pos_1.TIF"
-        };
+    if (from_file)
+    { //loading image if need to run on loaded image instead than image from the camera
+        std::string address =
+                "C:/Users/Silicio/cernbox/Gantry_2018/Camera_tests/Calibration_plate_measures/pos_5/";
+        std::string Images[] = { "Circles_0_2_0.jpg",
+        //"chip_1_1_pos_1.TIF"
+                };
 
         tmp_filename = Images[ui->spinBox_input->value()];
-        Ffinder->SetImage(address + Images[ui->spinBox_input->value()]
-                ,cv::IMREAD_COLOR);
-        Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
-    }else{//running on image from the camera
+        Ffinder->SetImage(address + Images[ui->spinBox_input->value()], cv::IMREAD_COLOR);
+    }
+    else
+    { //running on image from the camera
         bool bSuccess = cap.read(mat_from_camera);
-        if (!bSuccess){ //if not success
+        if (!bSuccess)
+        { //if not success
             qInfo("Cannot read a frame from video stream");
             return false;
         }
-        Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
         Ffinder->SetImage(mat_from_camera);
     }
     qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
 
-    if(input == 1 || input == 0){//finding generic template, using SURF
-        bool invalid_match = true;
+    Point position;
+    MatrixTransform outM;
+    if(input == 1 || input == 0)
+    {//finding generic template, using SURF
         //here you can apply condition on the found match to evaluate if it is good or bad
-        cv::Mat output_H;
         int fail_code = 0;
-        success = Ffinder->Find_F(ui->algorithm_box->value(),distance_x,distance_y,timestamp,fail_code,ui->spinBox_input->value(),
-                                  ui->chip_number_spinBox->value(),ui->filter_spinBox->value()/*dummy_temp*/,output_H);
-        double H_1_1 = cv::Scalar(output_H.at<double>(0,0)).val[0];
-        double H_1_2 = cv::Scalar(output_H.at<double>(0,1)).val[0];
-        std::cout<<" invalid_match "<<invalid_match <<" ;tan(theta) "<< fabs(H_1_1/H_1_2)<<" ;s "<< sqrt(H_1_1*H_1_1 + H_1_2*H_1_2)<<std::endl;
-    } else {//finding circles
+        position = Ffinder->FindFiducial(outM, fail_code);
+        success = (fail_code==0);
+        if (fail_code)
+        {
+            os << loglevel(Log::error) << "FiducialFinder: Error finding fiducial: rc=" << fail_code << std::endl;
+        }
+        else
+            success = true;
+
+    }
+    else
+    {//finding circles
+        /*
+         * TODO: how to pass this information to the program.
+         *       May be we send a radius depending on the fiducial
+         *       we want to find
+         */
+        double expected_R = 80.;
+        double range=0.0;
+        double min_dist=-1.0;
+        Point origin(Point::NaN());
+        std::vector<Circle> circles;
+        int rc = Ffinder->FindCircles(circles, expected_R, range, min_dist, origin, debug);
+        std::cout << "CIRCLES: rc=" << rc << " No. of circles: " << circles.size() << std::endl;
+        for (auto c : circles )
+        {
+            std::cout << c.get_center() << " - R=" << c.get_R() << std::endl;
+        }
+        // We pick the first one...
+        success = (circles.size()>0);
+        if (success)
+            position = circles[0].get_center();
+
+#ifdef __from_Daniele
         bool do_fit = ((input == 2) ? false : true);//do fit when inputis different than 2
         bool do_single = ((input == 4) ? true : false);//search for single circle
-        success = Ffinder->Find_circles(distance_x,distance_y,ui->spinBox_input->value(),ui->chip_number_spinBox->value(),do_fit,do_single);
+        Point position = Ffinder->Find_circles(do_fit,do_single);
+#endif
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
     }
 
     if(success)
-        qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",distance_x,distance_y);
-    else {
+        qInfo("Displacement from expected position is: %5.2f um along X, %5.2f um along Y",position.x(), position.y());
+    else
+    {
         qInfo("Fiducial fail");
         return false;
     }
@@ -1039,7 +1092,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     F_point.push_back(distance_y*0.001);
 
     return true;
-    }
+ }
 
 //------------------------------------------
 //calibrate
@@ -1588,7 +1641,6 @@ bool Magrathea::loop_test_images(){
                 std::cout<<"i "<<i<<" ; j "<<j<<" ; m "<<m<<std::endl;
                 cv::destroyAllWindows();
                 FiducialFinder * Ffinder = new FiducialFinder();
-                Ffinder->Set_calibration(1.);
 
                 // TODO - Ffinder->Set_log(outputLogTextEdit);
                 Ffinder->SetImageFiducial(Images_fiducial[j]
@@ -1598,19 +1650,16 @@ bool Magrathea::loop_test_images(){
                 std::string three   = std::to_string(m);
                 std::string image_address = "Image_"+one+"_"+two+"_"+three+".jpg";
                 Ffinder->SetImage(address_images + image_address,cv::IMREAD_COLOR);
-                Ffinder->Set_calibration(mCalibration); //get calibration from a private variable
-                cv::Mat output_H;
-                double distance_x = 0;
-                double distance_y = 0;
-                int fail_code = 0;
-                //fix input values
-                bool success = Ffinder->Find_F(0,distance_x,distance_y,timestamp,fail_code,
-                                               i,j,m,output_H);
 
+                Point position;
+                MatrixTransform outM;
+                int fail_code = 0;
+                position = Ffinder->FindFiducial(outM, fail_code);
+                bool success = (fail_code==0);
                 std::string file_name = (success ? "output_success" : "output_fail");
                 file_name += ("_" +two+".txt");
                 std::ofstream ofs (file_name, std::ofstream::app);
-                ofs <<i<<" "<<j<<" "<<m<<" "<<timestamp<<" "<<fail_code<<" "<<distance_x<<" "<<distance_y<<std::endl;
+                ofs <<i<<" "<<j<<" "<<m<<" "<<timestamp<<" "<<fail_code<<" "<<position.x()<<" "<<position.y()<<std::endl;
                 ofs.close();
                 delete Ffinder;
                 //ATTENTION! distances[0] is cols, distances[1] is rows of the image
@@ -1686,15 +1735,6 @@ bool Magrathea::loop_fid_finder(int input){
 
     }
     return true;
-}
-
-void Magrathea::Aruco_test(){
-    //visualize the different aruco markers
-    cv::Mat test_aruco;
-    auto dictionary = cv::aruco::generateCustomDictionary(522,3);
-    cv::aruco::drawMarker(dictionary, ui->ArucospinBox->value() , 200, test_aruco, 1);
-    cv::imshow("aruco",test_aruco);
-    ui->ArucospinBox->setValue(ui->ArucospinBox->value()+1);
 }
 
 void Magrathea::createTemplate_F(){

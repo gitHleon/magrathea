@@ -31,9 +31,9 @@ MatrixTransform::MatrixTransform()
 
 MatrixTransform::MatrixTransform(double *ptr)
 {
-    for (int i=0; i<6; ++i)
-        _M[i] = ptr[i];
+    set(ptr);
 }
+
 
 MatrixTransform::MatrixTransform(const MatrixTransform &T)
     : _M{1.0, 0.0, 0.0, 1.0, 0.0, 0.0}
@@ -41,11 +41,17 @@ MatrixTransform::MatrixTransform(const MatrixTransform &T)
     for (int i=0; i<6; ++i)
         _M[i] = T._M[i];
 }
+
 MatrixTransform::~MatrixTransform()
 {
     // TODO Auto-generated destructor stub
 }
 
+void MatrixTransform::set(double *ptr)
+{
+    for (int i=0; i<6; ++i)
+        _M[i] = ptr[i];
+}
 
 MatrixTransform MatrixTransform::identity()
 {
@@ -153,16 +159,3 @@ std::ostream& operator<<(std::ostream &os, const MatrixTransform &M)
     return os;
 }
 
-std::ostream& operator<<(std::ostream &os, const Point &P)
-{
-    auto old = os.setf(std::ios_base::fixed, std::ios::floatfield);
-    auto oldp = os.precision(5);
-    auto oldw = os.width(11);
-
-    os << "Point(" << std::fixed << P.x() << "," << P.y() << ")";
-    os.flush();
-    os.setf(old);
-    os.precision(oldp);
-    os.width(oldw);
-    return os;
-}
