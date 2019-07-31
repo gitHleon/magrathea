@@ -7,6 +7,7 @@
 #include <iostream>
 #include <QtWidgets>
 #include "QPetalLocator.h"
+#include "logger.h"
 
 struct QPetalLocatorPriv
 {
@@ -57,14 +58,16 @@ QPetalLocator::~QPetalLocator()
 
 void QPetalLocator::find_top_locator()
 {
-    std::cout << "Getting position of top locator " << std::endl;
+    LoggerStream os;
+    os << loglevel(Log::info) << "Getting position of top locator " << std::endl;
     std::vector<double> current_pos( motion->whereAmI() );
     top.x(current_pos[0]);
     top.y(current_pos[1]);
 }
 void QPetalLocator::find_bottom_locator()
 {
-    std::cout << "Getting position of bottom locator " << std::endl;
+    LoggerStream os;
+    os << loglevel(Log::info)  << "Getting position of bottom locator " << std::endl;
     std::vector<double> current_pos( motion->whereAmI() );
     bottom.x(current_pos[0]);
     bottom.y(current_pos[1]);

@@ -23,6 +23,11 @@ int main(int argc, char **argv)
     double expected_R = 80.0; // size in pixels
     double range=0.1;
     double min_dist=-1;
+
+
+    LoggerStream os;
+    os << loglevel(Log::info) << Point(0,0) << " " << Point(1,1) << std::endl;
+
     static struct option long_options[] = {
              {"image", 1, 0, 'i'},
              {"fiducial", 1, 0, 'f'},
@@ -95,6 +100,7 @@ int main(int argc, char **argv)
         isurf = 0;
 
     bool debug = (idebug!=0);
+
 
     /* F */
     std::string input_image = home + "/Desktop/Fiducials/Image_0_1_2.jpg";

@@ -152,7 +152,6 @@ std::ostream& operator<<(std::ostream &os, const MatrixTransform &M)
     auto oldw = os.width(11);
     os << std::fixed << std::setw(11) << std::setprecision(5) << M[0] << "  " << M[2] << "  " << M[4] << std::endl
        << std::fixed << std::setw(11) << std::setprecision(5) << M[1] << "  " << M[3] << "  " << M[5] << std::endl;
-    os.flush();
     os.setf(old);
     os.precision(oldp);
     os.width(oldw);

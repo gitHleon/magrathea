@@ -81,6 +81,9 @@ class FiducialFinder
 
         int get_window_size() const;
 
+        /*
+         * Vieja de Daniele
+         */
         Point Find_circles_(bool fit = false, bool single = false,
                            const Point &origin=Point::NaN(), bool debug = false);
 

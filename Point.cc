@@ -17,7 +17,6 @@ std::ostream& operator<<(std::ostream &os, const Point &P)
     auto oldf = os.fill(' ');
 
     os << "Point(" << std::right << std::setfill(' ')  << P.x() << "," << P.y() << "," << P.z() << ")";
-    os.flush();
     os.setf(old);
     os.precision(oldp);
     os.width(oldw);
