@@ -1068,7 +1068,12 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
     }
 
     if (min_dist<0)
-        min_dist = std::min(RoiImage.rows, RoiImage.cols)/16;
+    {
+        if (r_min>0.0)
+            min_dist = 4.0*r_min; //std::min(RoiImage.rows, RoiImage.cols)/16;
+        else
+            min_dist = 1.1*r_max;
+    }
 
     cv::Mat image_gray;
     cv::cvtColor(RoiImage, image_gray, cv::COLOR_BGR2GRAY);
@@ -1076,10 +1081,12 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
 
 
     std::vector<cv::Vec3f> circles;
+    double correction_factor = 0.4;
+    int hough_threshold = correction_factor*(r_min >0.0 ? r_min : r_max);
     cv::HoughCircles(image_gray, circles, cv::HOUGH_GRADIENT,
                      2, // dp
                      image_gray.rows/16,  // change this value to detect circles with different distances to each other
-                     100, 30, // To investigate
+                     135, hough_threshold, // To investigate
                      r_min, // min radius
                      r_max // max radius
          );
