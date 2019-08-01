@@ -6,7 +6,7 @@ endif()
 project(Magrathea)
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic")
 
 #
 # Find OpenCV
@@ -21,7 +21,10 @@ set( TESTS OFF CACHE BOOL "disable tests" FORCE)
 add_subdirectory(xlnt)
 find_library(xlnt_LIB xlnt PATHS ${CMAKE_CURRENT_BINARY_DIR}/xlnt/source)
 set(xlnt_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/xlnt/include)
-set(xlnt_LIB  ${CMAKE_CURRENT_BINARY_DIR}/xlnt/source/libxlnt.a)
+if 	(WIN32)
+	set(xlnt_LIB  ${CMAKE_CURRENT_BINARY_DIR}/xlnt/source/libxlnt.a)
+endif (WIN32)
+
 #
 # Create alglib library
 #
@@ -59,7 +62,11 @@ target_link_libraries(test-f-finder ${OpenCV_LIBS} geomlib alglib)
 #
 # Setup Qt stuff
 #
-set(QT5_DIR d:/Qt/5.9.6/mingw53_32)
+if (WIN32)
+	set(QT5_DIR d:/Qt/5.9.6/mingw53_32)
+elseif (APPLE)
+	set(QT5_DIR /usr/local/Cellar/qt/5.13.0)
+endif (WIN32)
 list(APPEND CMAKE_PREFIX_PATH ${QT5_DIR})
 set(Qt5Widgets_DIR ${QT5_DIR}/lib/cmake/Qt5Core)
 set(Qt5Gui_DIR ${QT5_DIR}/lib/cmake/Qt5Gui)
@@ -73,9 +80,12 @@ find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia MultimediaWidgets Serial
 
 
 # Include the QJoysticks
-#find_package(SDL2 )
-set(SDL2_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/QJoysticks-master/lib/SDL/include)
-message( "SDL include ${SDL2_INCLUDE_DIRS}")
+if (UNIX)
+	find_package(SDL2 )
+elseif (WIN32)
+	set(SDL2_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/QJoysticks-master/lib/SDL/include)
+	message( "SDL include ${SDL2_INCLUDE_DIRS}")
+endif (UNIX)
 set(qjoystick_DIR QJoysticks-master)
 set(qjoystick_INCLUDES ${qjoystick_DIR}/src)
 set(qjoystick_SOURCES
@@ -112,7 +122,6 @@ set(magrathea_SOURCES
 	calibrator.cpp
 	focus_finder.cpp
 	MotionHandler.cpp
-  ACSCMotionHandler.cpp
 	Fiducial_finder.cpp
 	fiducial_locations.cpp
 	verticalalignmenttool.cpp
@@ -125,14 +134,21 @@ set(magrathea_SOURCES
 	${qjoystick_SOURCES}
 	${QT_RESOURCES}
 	)
+if (WIN32)
+  set(magrathea_SOURCES ${magrathea_SOURCES} ACSCMotionHandler.cpp)
+endif (WIN32)
 
 add_executable(magrathea ${magrathea_SOURCES})
 
 # CHOSE IFIC MOTION CONTROLLER
-target_compile_definitions(magrathea PUBLIC -DACSC=1 -DVALENCIA=1)
+if (WIN32)
+	target_compile_definitions(magrathea PUBLIC -DACSC=1 -DVALENCIA=1)
+	set(ACSC_LIB D:/Code/magrathea/ACSC/C_CPP/ACSCL_x86.LIB)
+endif (WIN32)
+
 target_include_directories(magrathea PUBLIC
-						 	${Qt5Widgets_INCLUDE_DIRS}
-						 	${qjoystick_INCLUDES} ${SDL2_INCLUDE_DIRS})
+						   ${Qt5Widgets_INCLUDE_DIRS}
+						   ${qjoystick_INCLUDES} ${SDL2_INCLUDE_DIRS})
 target_link_libraries(magrathea
 	Qt5::Core
 	Qt5::Gui
@@ -141,5 +157,5 @@ target_link_libraries(magrathea
 	Qt5::MultimediaWidgets
 	Qt5::SerialPort
 	geomlib ${OpenCV_LIBS} alglib ${xlnt_LIB}
-D:/Code/magrathea/ACSC/C_CPP/ACSCL_x86.LIB)
+	${ACSC_LIB})
 add_dependencies (magrathea xlnt)
