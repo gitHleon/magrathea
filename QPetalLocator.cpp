@@ -63,6 +63,7 @@ void QPetalLocator::find_top_locator()
     std::vector<double> current_pos( motion->whereAmI() );
     top.x(current_pos[0]);
     top.y(current_pos[1]);
+    top.z(current_pos[2]);
 }
 void QPetalLocator::find_bottom_locator()
 {
@@ -71,4 +72,5 @@ void QPetalLocator::find_bottom_locator()
     std::vector<double> current_pos( motion->whereAmI() );
     bottom.x(current_pos[0]);
     bottom.y(current_pos[1]);
+    bottom.z(current_pos[2]);
 }
