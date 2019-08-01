@@ -120,6 +120,8 @@ private:
     bool J_control_Rotation = true;
     double J_axis_speed     = 1.0;
 
+    bool gantry_on=false;
+
 };
 
 #endif // MAGRATHEA_H
