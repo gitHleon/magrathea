@@ -33,7 +33,27 @@ function_ChiSquare(const alglib::real_1d_array &x, double &func, void *ptr)
            (pow(x[15] - real_side_size, 2) / (real_side_size_err * real_side_size));
 }
 
-
+double image_median(cv::Mat channel)
+{
+    double m = (channel.rows * channel.cols) / 2;
+    int bin = 0;
+    double med = -1.0;
+    int histSize = 256;
+    float range[] = { 0, 256 };
+    const float *histRange = { range };
+    bool uniform = true;
+    bool accumulate = false;
+    cv::Mat hist;
+    cv::calcHist(&channel, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, uniform,
+                 accumulate);
+    for (int i = 0; i < histSize && med < 0.0; ++i)
+    {
+        bin += cvRound(hist.at<float>(i));
+        if (bin > m && med < 0.0)
+            med = i;
+    }
+    return med;
+}
 
 
 bool Distance_sorter(cv::DMatch m_1, cv::DMatch m_2)
@@ -992,7 +1012,9 @@ cv::Mat FiducialFinder::prepare_image(const cv::Mat &image, int kernel_size, boo
     if (debug)
         cv::imshow(msg + " - blur+thr+close",image_gray);
 
-    cv::adaptiveThreshold(image_gray,image_gray,255,cv::ADAPTIVE_THRESH_GAUSSIAN_C,cv::THRESH_BINARY_INV,kernel_size,2);
+    cv::adaptiveThreshold(image_gray ,image_gray, 255,
+                          cv::ADAPTIVE_THRESH_GAUSSIAN_C,
+                          cv::THRESH_BINARY_INV,kernel_size,2);
     if (debug)
         cv::imshow(msg + " - threshold",image_gray);
 
@@ -1023,7 +1045,6 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
         r_min = 0.0;
         r_max = 2.0*expected_R;
     }
-
 
     /*
      * Check that hte images are OK
@@ -1078,18 +1099,36 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
             min_dist = 1.1*r_max;
     }
 
-    cv::Mat image_gray;
+    double max_cols = 1280.0;
+    double factor = 1.0;
+    if ( RoiImage.cols > max_cols )
+    {
+        factor = max_cols/double(RoiImage.cols);
+        os << loglevel(Log::warning) << "Reducing image by a factor " << factor << std::endl;
+        cv::Mat orig = RoiImage.clone();
+        cv::resize(orig, RoiImage, cv::Size(), factor, factor, cv::INTER_LANCZOS4);
+        r_min *= factor;
+        r_max *= factor;
+        min_dist *= factor;
+    }
+    cv::Mat image_gray = RoiImage.clone();
     cv::cvtColor(RoiImage, image_gray, cv::COLOR_BGR2GRAY);
     cv::medianBlur(image_gray, image_gray, get_kernel_size());
 
+
+    double median = image_median(image_gray);
+    double sigma = 0.33;
+    // int lower = int(std::max(0.0, (1.0 - sigma) * median));
+    int upper = int(std::min(255.0, (1.0 + sigma) * median));
+    //os << loglevel(Log::info) << "median: " << median << " upper: " << upper << " lower: " << lower << std::endl;
 
     std::vector<cv::Vec3f> circles;
     double correction_factor = 0.4;
     int hough_threshold = correction_factor*(r_min >0.0 ? r_min : r_max);
     cv::HoughCircles(image_gray, circles, cv::HOUGH_GRADIENT,
-                     2, // dp
-                     image_gray.rows/16,  // change this value to detect circles with different distances to each other
-                     135, hough_threshold, // To investigate
+                     1, // dp
+                     min_dist,  // change this value to detect circles with different distances to each other
+                     upper, hough_threshold, // To investigate
                      r_min, // min radius
                      r_max // max radius
          );
@@ -1106,7 +1145,6 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
     {
         cv::Vec3i c = circles[i];
         Point center = Point(c[0], c[1]);
-        out_circles.push_back( Circle(c[2], center) );
 
         if (debug)
         {
@@ -1120,7 +1158,7 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
             os << loglevel(Log::debug)
                << i << ".- " << center << " R= " << radius << std::endl;
         }
-
+        out_circles.push_back( Circle(c[2]/factor, center/factor) );
     }
 
     if (debug)
