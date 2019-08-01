@@ -8,7 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include "PetalCoordinates.h"
-#include "string_utils.h"
+//#include "string_utils.h"
 #include <xlnt/xlnt.hpp>
 
 static Point __nominal_upper_locator__(131.104, 968.526);
@@ -42,6 +42,7 @@ static SensorData __sensor_data__[] =
  * Note that a 90 deg. rotation has been done compared to the files in EDMS
  * needed for a reference in which the petal is vertical.
  */
+ /*
 void read_csv_file(const char *fname, std::map<std::string, Point> &fiducials)
 {
     std::ifstream ifile(fname);
@@ -69,7 +70,7 @@ void read_csv_file(const char *fname, std::map<std::string, Point> &fiducials)
     }
 
 }
-
+*/
 void read_xlsx_file(const char *fname, std::map<std::string, Point> &fiducials)
 {
     xlnt::workbook wb;

@@ -125,7 +125,7 @@ class Point
          */
         bool is_nan() const
         {
-            return isnan(_v[0]) || isnan(_v[1] || isnan(_v[2]) );
+            return std::isnan(_v[0]) || std::isnan(_v[1] || std::isnan(_v[2]) );
         }
 
         /*
