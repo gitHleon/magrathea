@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <opencv2/opencv.hpp>
 #include <StreamViewer.h>
+#include <Point.h>
 #include <PetalCoordinates.h>
 
 /*
@@ -71,7 +72,7 @@ private slots:
     void captureButtonClicked();
     void calibrationCaller(int input);
     void Calibration_ButtonClicked();
-    bool FiducialFinderCaller(const int &input,std::vector <double> & F_point);
+    bool FiducialFinderCaller(const int &input, Point &F_point);
     void Fiducial_finder_button_Clicked();
     void Circles_button_Clicked();
     void VignetteButton_clicked();
@@ -99,7 +100,7 @@ private slots:
     void led_label(QLabel *label, bool value, const std::vector<QString> &input);
 
     /*
-     * Location finding
+     * Find the coordinates of a fiducial located in the given position
      * @param estimated_point an approx position close to the fiducial
      * @param fiducial_type the type of fiducial to search
      */

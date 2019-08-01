@@ -699,20 +699,27 @@ bool Magrathea::CVCaptureButtonClicked(){//function to capture an image using Op
     return true;
 }
 
-bool Magrathea::focusButtonClicked()//function to perform autofocus
+bool Magrathea::focusButtonClicked() //function to perform autofocus
 {
     qInfo(" > camera focus ... ");
     QElapsedTimer timer;
     timer.start();
-    Focus_finder * FocusFinder = new Focus_finder(this);//initiating focus finder class, where all he algorithms are
-    mCamera->stop(); //closing QCamera
 
-    cv::VideoCapture cap(ui->spinBox_dummy->value()); // open the video camera no. 0
-    if (!cap.isOpened()){//Opening opencv-camera, needed for easier image manipulation
+    //initiating focus finder class, where all he algorithms are
+    Focus_finder * FocusFinder = new Focus_finder(this);
+    mCamera->stop();//closing QCamera
+
+    // open the video camera no. 0
+    cv::VideoCapture cap(ui->spinBox_dummy->value());
+    if (!cap.isOpened())
+    {
+        //Opening opencv-camera, needed for easier image manipulation
         QMessageBox::critical(this, tr("Error"), tr("Could not open camera"));
-        return false;}
-    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+        return false;
+    }
+    //get the width and height of frames of the video
+    double dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    double dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
 
     //veryfing that the setting of the camera is optimal
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
@@ -720,33 +727,46 @@ bool Magrathea::focusButtonClicked()//function to perform autofocus
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 3856);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2764);
     cap.set(cv::CAP_PROP_FPS, 4.0);
-    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    //get the width and height of frames of the video
+    dWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    dHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
     qInfo("Frame size : %6.0f x %6.0f",dWidth,dHeight);
+
     //giving focus fnder class control over the camera and the gantry
     FocusFinder->Set_camera(cap);
     FocusFinder->Set_gantry(mMotionHandler);
     FocusFinder->Set_log(outputLogTextEdit);
-    FocusFinder->Set_color_int(ui->ColorBox->value());//selecting wich color is gong to be used for autofocus, in general shuld be green
+
+    //selecting wich color is gong to be used for autofocus, in general shuld be green
     //in valencia we have a color camera
-    const int kernel_size = ( (dWidth > 2000 && dHeight > 2000) ? 11 : 5);//settng kernel size to evaluate the figure of merit for the focus
+    FocusFinder->Set_color_int(ui->ColorBox->value());
+
+    //settng kernel size to evaluate the figure of merit for the focus
+    const int kernel_size = ( (dWidth > 2000 && dHeight > 2000) ? 11 : 5);
     FocusFinder->Set_ksize(kernel_size);
     double focus_position = -1.;
-    if (sender() == ui->std_dev_button){//just evaluating the figures of merit, without autofocus
+    if (sender() == ui->std_dev_button)
+    {    //just evaluating the figures of merit, without autofocus
         cv::Mat mat_from_camera;
         bool bSuccess = cap.read(mat_from_camera);
-        if (!bSuccess){ //if not success
+        if (!bSuccess)
+        { //if not success
             qInfo("Cannot read a frame from video stream");
             return false;
         }
         std::vector<double> figures_of_merit;
         FocusFinder->eval_stddev_ROI(mat_from_camera,figures_of_merit);
         if(figures_of_merit.size() != 0)
-            qInfo(" Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
-    } else if(sender() == ui->std_dev_many_button){
-        FocusFinder->Eval_syst_scan();//evaluating a scan
-    } else {
-        FocusFinder->find_focus(focus_position);//running autofocus
+        qInfo(" Lap : %5.5f;  StdDev : %5.5f;  1st der : %5.5f;  canny edge : %5.5f; ",figures_of_merit[0],figures_of_merit[1],figures_of_merit[2],figures_of_merit[3]);
+    }
+    else if(sender() == ui->std_dev_many_button)
+    {
+        FocusFinder->Eval_syst_scan(); //evaluating a scan
+    }
+    else
+    {
+        FocusFinder->find_focus(focus_position); //running autofocus
     }
     qInfo(" > camera focus : %3.5f",focus_position);
     delete FocusFinder;
@@ -900,15 +920,19 @@ void Magrathea::VignetteButton_clicked(){
 //------------------------------------------
 
 void Magrathea::Fiducial_finder_button_Clicked()
-{   std::vector <double> dummy;
-    FiducialFinderCaller(0,dummy); }
+{
+    Point dummy;
+    FiducialFinderCaller(0, dummy);
+}
 
 void Magrathea::Circles_button_Clicked()
-{   std::vector <double> dummy;
-    FiducialFinderCaller(2,dummy); }
+{
+    Point dummy;
+    FiducialFinderCaller(2, dummy);
+}
 
 //function to find fiducial markers
-bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_point)
+bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
 {
     LoggerStream os;
     bool debug = false;
@@ -942,8 +966,6 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     bool from_file = ui->calib_from_file_Box->isChecked();
     // TODO: Ffinder->Set_log(outputLogTextEdit);
 
-    double distance_x = 0;
-    double distance_y = 0;
     std::string timestamp = "";
     //loading template
     std::string address = "D:/Images/Templates_mytutoyo/";
@@ -1006,7 +1028,7 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     }
     qInfo("Calibration value is : %5.3f [px/um]",mCalibration);
 
-    Point position;
+    Point position(Point::NaN());
     MatrixTransform outM;
     if(input == 1 || input == 0)
     {//finding generic template, using SURF
@@ -1045,11 +1067,6 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
         if (success)
             position = circles[0].get_center();
 
-#ifdef __from_Daniele
-        bool do_fit = ((input == 2) ? false : true);//do fit when inputis different than 2
-        bool do_single = ((input == 4) ? true : false);//search for single circle
-        Point position = Ffinder->Find_circles(do_fit,do_single);
-#endif
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
@@ -1077,21 +1094,23 @@ bool Magrathea::FiducialFinderCaller(const int &input, std::vector <double> & F_
     //WARNING!!! x,y of camera may be different of x,y of gantry!!!  //
     ///////////////////////////////////////////////////////////////////
 
+    /*
+     * Correct by camera transformation
+     */
+    F_point = (cameraM * position);
+	F_point *= 0.001; // why do we do this ?
+	
 #if VALENCIA
     //taking into account orientation of camera wrt gantry
-    double target_x_short = - distance_x*0.001*cos(mCamera_angle) - distance_y*0.001*sin(mCamera_angle);
-    double target_y_short = distance_x*0.001*sin(mCamera_angle) - distance_y*0.001*cos(mCamera_angle);
+    //double target_x_short = - distance_x*0.001*cos(mCamera_angle) - distance_y*0.001*sin(mCamera_angle);
+    //double target_y_short = distance_x*0.001*sin(mCamera_angle) - distance_y*0.001*cos(mCamera_angle);
     ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
-    ofs.close();
 #else
     ofs << std::endl;
-    mMotionHandler->moveXBy(distance_x*0.001,1);
-    mMotionHandler->moveYBy(distance_y*0.001,1);
+    mMotionHandler->moveXBy(F_point.x(),1);
+    mMotionHandler->moveYBy(F_point.y(),1);
 #endif
-    F_point.clear();
-    F_point.push_back(distance_x*0.001);
-    F_point.push_back(distance_y*0.001);
-
+    ofs.close();
     return true;
  }
 
@@ -1587,36 +1606,40 @@ bool Magrathea::loop_test(){
         for(int i=0;i<5;i++){//set appropriate value of the loop limit
             std::cout<<"j "<<j<<" ; i "<<i<<std::endl;
             ui->spinBox_input->setValue(i);
-            std::vector <double> distances;
+            Point target;
             //if(!focusButtonClicked())
             //    return;
-            if(!FiducialFinderCaller(2,distances))
+            if(!FiducialFinderCaller(2,target))
             {
                 std::cout<<"FAIL!!"<<std::endl;
                 return false;
             }
-            double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
-            double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
+
+            // Already done in FiducialFinderCaller
+            //double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+            //double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
             //ATTENTION! distances[0] is cols, distances[1] is rows of the image
             //std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
-            if(!mMotionHandler->moveXBy(-target_x_short,1.))
+            if(!mMotionHandler->moveXBy(-target.x(),1.))
                 return false;
-            if(!mMotionHandler->moveYBy(-target_y_short,1.))
+            if(!mMotionHandler->moveYBy(-target.y(),1.))
                 return false;
         }
     }
     return true;
 }
 
-bool Magrathea::loop_find_circles(){
+bool Magrathea::loop_find_circles()
+{
     //run fiducial finding algo automatically
-    for(int j=0;j<30;j++){//set appropriate value of the loop limit
+    for (int j = 0; j < 30; j++)
+    {            //set appropriate value of the loop limit
         ui->chip_number_spinBox->setValue(j);
-        std::cout<<"j "<<j<<std::endl;
-        std::vector <double> distances;
-        if(!FiducialFinderCaller(2,distances))
+        std::cout << "j " << j << std::endl;
+        Point target;
+        if (!FiducialFinderCaller(2, target))
         {
-            std::cout<<"FAIL!!"<<std::endl;
+            std::cout << "FAIL!!" << std::endl;
             return false;
         }
     }
@@ -1670,43 +1693,48 @@ bool Magrathea::loop_test_images(){
     return true;
 }
 
-bool Magrathea::loop_fid_finder(){
+bool Magrathea::loop_fid_finder()
+{
     //run fiducial finding algo automatically
     //and move to the fiducial position
-    for(int i=0;i<4;i++){//set appropriate value of the loop limit
+    for (int i = 0; i < 4; i++)
+    {    //set appropriate value of the loop limit
         QApplication::processEvents();
-        std::cout<<"It "<<i<<std::endl;
-        std::vector <double> distances;
-        int input = ((i==3) ? 3 : 2);
-        if(!FiducialFinderCaller(input,distances))
+        std::cout << "It " << i << std::endl;
+        Point target;
+        int input = ((i == 3) ? 3 : 2);
+        if (!FiducialFinderCaller(input, target))
         {
-            std::cout<<"FAIL!!"<<std::endl;
+            std::cout << "FAIL!!" << std::endl;
             return false;
         }
-        double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
-        double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
+        // already done in FiducialFinderCaller
+        //double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+        //double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
-        if(!mMotionHandler->moveXBy(-target_x_short,1.))
+        if (!mMotionHandler->moveXBy(-target.x(), 1.))
             return false;
-        if(!mMotionHandler->WaitX(-1))
+        if (!mMotionHandler->WaitX(-1))
             return false;
-        if(!mMotionHandler->moveYBy(-target_y_short,1.))
+        if (!mMotionHandler->moveYBy(-target.y(), 1.))
             return false;
-        if(!mMotionHandler->WaitY(-1))
+        if (!mMotionHandler->WaitY(-1))
             return false;
     }
-    if(sender() == ui->button_measure_1_well){
+    if (sender() == ui->button_measure_1_well)
+    {
         auto one = std::to_string(ui->spinBox_plate_position->value());
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         std::string timestamp = time_now.toLocal8Bit().constData();
 
-        std::vector <double> pos_t_1 = mMotionHandler->whereAmI(1);
-        std::string file_name = "Calibration_plate_position_"+one+".txt";
-        std::ofstream ofs (file_name, std::ofstream::app);
-        ofs<<timestamp<<" "<<ui->chip_number_spinBox->value()<<" "<<pos_t_1[0]<<" "<<pos_t_1[1]<<" "<<pos_t_1[4]<<std::endl;
+        std::vector<double> pos_t_1 = mMotionHandler->whereAmI(1);
+        std::string file_name = "Calibration_plate_position_" + one + ".txt";
+        std::ofstream ofs(file_name, std::ofstream::app);
+        ofs << timestamp << " " << ui->chip_number_spinBox->value() << " " << pos_t_1[0]
+                << " " << pos_t_1[1] << " " << pos_t_1[4] << std::endl;
         ofs.close();
-        ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value()+1);
+        ui->chip_number_spinBox->setValue(ui->chip_number_spinBox->value() + 1);
     }
     return true;
 }
@@ -1716,20 +1744,22 @@ bool Magrathea::loop_fid_finder(int input){
     //and move to the fiducial position
     for(int i=0;i<3;i++){//set appropriate value of the loop limit
         QApplication::processEvents();
-        std::vector <double> distances;
-        if(!FiducialFinderCaller(input,distances))
+        Point target;
+        if(!FiducialFinderCaller(input,target))
         {
             std::cout<<"FAIL!!"<<std::endl;
             return false;
         }
-        double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
-        double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
+
+        // Already done in FiducialFinderCaller
+        //double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
+        //double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
-        if(!mMotionHandler->moveXBy(-target_x_short,1.))
+        if(!mMotionHandler->moveXBy(-target.x(),1.))
             return false;
         if(!mMotionHandler->WaitX(-1))
             return false;
-        if(!mMotionHandler->moveYBy(-target_y_short,1.))
+        if(!mMotionHandler->moveYBy(-target.y(),1.))
             return false;
         if(!mMotionHandler->WaitY(-1))
             return false;
@@ -1971,10 +2001,10 @@ int Magrathea::TestButtonClick(){//dummy function to perform simple tests
 Point Magrathea::find_coordinates_at_position(const Point &estimated_point, int fiducial_type)
     throw(MagratheaException)
 {
-    if(!mMotionHandler->moveXTo(estimated_point.x(),1.))
+    if(!mMotionHandler->moveXTo(estimated_point.x(), 1.))
         throw(MagratheaException("Cannot move to given X postion"));
 
-    if(!mMotionHandler->moveYTo(estimated_point.y(),1.))
+    if(!mMotionHandler->moveYTo(estimated_point.y(), 1.))
         throw(MagratheaException("Cannot move to given Y postion"));
 
     if(!mMotionHandler->WaitX(-1))
@@ -2044,8 +2074,11 @@ int Magrathea::FindPetal(Point &top_locator, Point &bottom_locator )
 {
     cv::destroyAllWindows();
 
+    /*
+     * Get current position
+     */
     std::vector<double> current_pos( mMotionHandler->whereAmI(1) );
-    Point here(current_pos[0], current_pos[1]);
+    Point here(current_pos[0], current_pos[1], current_pos[3]);
     Point top, bottom;
 
     /*
