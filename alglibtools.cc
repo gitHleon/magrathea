@@ -8,6 +8,7 @@
 #include "alglibtools.h"
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <linalg.h>
 #include <statistics.h>
 
