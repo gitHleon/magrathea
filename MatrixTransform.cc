@@ -70,6 +70,12 @@ MatrixTransform MatrixTransform::rotation() const
     return MatrixTransform(val);
 }
 
+MatrixTransform MatrixTransform::translation() const
+{
+    double val[] = {1.0, 0.0, 0.0, 1.0, _M[4], _M[5]};
+    return MatrixTransform(val);
+}
+
 MatrixTransform MatrixTransform::operator*(const MatrixTransform &M)
 {
     return matrix_multiply(*this, M);
