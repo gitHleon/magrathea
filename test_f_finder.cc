@@ -134,7 +134,7 @@ int main(int argc, char **argv)
         finder.SetImageFiducial(ifiducial, cv::IMREAD_COLOR);
         int code = 0;
         MatrixTransform outM;
-        Point pos = finder.FindFiducial(outM, code, Point::NaN(), debug);
+        Point pos = finder.FindFiducial(outM, code, origin, debug);
 
         std::cout << "SURF; " << code << ": " << pos << std::endl
                 << "Transformation\n"
