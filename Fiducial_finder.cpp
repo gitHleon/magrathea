@@ -1248,13 +1248,13 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
         nc += RoItranslation;
 
         out_circles.push_back( Circle(radius, Point(nc.x(), -nc.y())) );
-         
+
         // Point pos = (center - Point(RoiImage.cols/2, RoiImage.rows/2));
         // os << "shifted to center " << pos << std::endl;
         // pos.y(-pos.y());
         // os << "Y flipped " << pos << std::endl;
         // out_circles.push_back( Circle(c[2]/factor, pos/factor) );
-        
+
         if (debug)
         {
             // circle center
