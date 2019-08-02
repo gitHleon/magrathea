@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QTextStream>
 #include <QtMessageHandler>
+#include <QMouseEvent>
 #include <MotionHandler.h>
 #include <cmath>
 #include <QMessageBox>
@@ -28,7 +29,7 @@
 #include <ACSCMotionHandler.h>
 #include <QJoysticks.h>
 #endif
-
+#include "CameraView.h"
 #include <logger.h>
 #include <QPetalLocator.h>
 
@@ -58,6 +59,9 @@ QByteArray int_tohexQByteArray_UltimusV(int input){
     }
     return writeData;
 }
+
+
+
 
 //******************************************
 Magrathea::Magrathea(QWidget *parent) :
@@ -215,9 +219,12 @@ Magrathea::Magrathea(QWidget *parent) :
 
     //create camera objects
     mCamera = new QCamera(this);
-    mCameraViewfinder = new QCameraViewfinder(this);
+    mCameraViewfinder = new CameraView(this); //new QCameraViewfinder(this);
     mCameraImageCapture = new QCameraImageCapture(mCamera, this);
     mCameraLayout = new QVBoxLayout;
+
+    mCameraViewfinder->setMouseTracking(true);
+    connect(mCameraViewfinder, SIGNAL(mouseMoved(QMouseEvent *)), this, SLOT(camera_mouse_moved(QMouseEvent *)));
 
     //add the camera to the layout
     mCamera->setViewfinder(mCameraViewfinder);
@@ -449,6 +456,16 @@ void Magrathea::updatePosition(){
     ui->label_17->setStyleSheet("QLabel { background-color : yellow; color : black; }");
 
     return;
+}
+
+
+void Magrathea::camera_mouse_moved(QMouseEvent *event)
+{
+    std::ostringstream ostr;
+    QPoint P = event->pos();
+    ostr << P.x() << ", " << P.y() << std::endl;
+    ui->imageCoord->setText(QString::fromStdString(ostr.str()));
+    //std::cout << "Mouse moved " << P.x() << " " << P.y() << std::endl;
 }
 
 //******************************************
@@ -974,37 +991,45 @@ bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
 
     std::string timestamp = "";
     //loading template
-    std::string address = "D:/Images/Templates_mytutoyo/";
+    //std::string address = "D:/Images/Templates_mytutoyo/";
     //std::string address = "C:/Users/Silicio/WORK/MODULE_ON_CORE/medidas_fiduciales_CNM/Imagenes_fiduciales/mag_15X/Sensor_estandar/Todas/templates/";
-    std::string Images[] = {
-        address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
-        address + "Fiducial_chip_1_1_pos_1.TIF",
-        address + "atlas_g_chip_1_1_pos_1.TIF",
-        address + "atlas_h_chip_1_1_pos_1.TIF",
-        address + "aruco_f_chip_1_1_pos_1.TIF",
-        address + "aruco_l_chip_1_1_pos_1.TIF", //5
-        address + "aruco_f_chip_1_1_pos_1.TIF",
-        address + "aruco_h_chip_1_1_pos_1.TIF",
-        address + "aruco_o_chip_1_1_pos_2.TIF",
-        address + "aruco_g_chip_1_1_pos_1.TIF",
-        address + "aruco_M_chip_1_1_pos_1.TIF", //10
-        address + "fiducialE.png",
-        address + "fiducialF.png",
-        address + "e_perfect_4_5.png",
-        address + "f_perfect_4_5.png",
-        address + "e_fid.jpg",                           //15
-        address + "f_fid.jpg",
-        address + "ar_m_fid.jpg",
-        address + "fid_test_1.jpg",
-        address + "fid_test_2.jpg",
-        address + "fid_test_3.jpg", //20
-        address + "placa_fid_73_F.jpg",
-        address + "placa_fid_F.jpg",
-        address + "placa_fid_test3_dotsandcrosses.jpg",
-        address + "003_F.jpg",
-        address + "003_F3.jpg"
-    };
+    std::string address = "D:/Gantry/cernbox/GANTRY-IFIC/Pictures_general/Templates/";
 
+    std::string Images[] = {
+                            address + "F-cnm.png",
+                            address + "E-cnm.png",
+//        address + "atlasE_fiducial_chip_1_1_pos_1.TIF",  //0
+//        address + "Fiducial_chip_1_1_pos_1.TIF",
+//        address + "atlas_g_chip_1_1_pos_1.TIF",
+//        address + "atlas_h_chip_1_1_pos_1.TIF",
+//        address + "aruco_f_chip_1_1_pos_1.TIF",
+//        address + "aruco_l_chip_1_1_pos_1.TIF", //5
+//        address + "aruco_f_chip_1_1_pos_1.TIF",
+//        address + "aruco_h_chip_1_1_pos_1.TIF",
+//        address + "aruco_o_chip_1_1_pos_2.TIF",
+//        address + "aruco_g_chip_1_1_pos_1.TIF",
+//        address + "aruco_M_chip_1_1_pos_1.TIF", //10
+//        address + "fiducialE.png",
+//        address + "fiducialF.png",
+//        address + "e_perfect_4_5.png",
+//        address + "f_perfect_4_5.png",
+//        address + "e_fid.jpg",                           //15
+//        address + "f_fid.jpg",
+//        address + "ar_m_fid.jpg",
+//        address + "fid_test_1.jpg",
+//        address + "fid_test_2.jpg",
+//        address + "fid_test_3.jpg", //20
+//        address + "placa_fid_73_F.jpg",
+//        address + "placa_fid_F.jpg",
+//        address + "placa_fid_test3_dotsandcrosses.jpg",
+//        address + "003_F.jpg",
+//        address + "003_F3.jpg"
+    };
+    int indx = ui->spinBox_input_F->value();
+    if (indx>1)
+        indx=0;
+
+    os << loglevel(Log::debug) << "Searching fiducial " << indx << " - " << Images[indx] << std::endl;
     Ffinder->SetImageFiducial(Images[ui->spinBox_input_F->value()]
             ,cv::IMREAD_COLOR);
 
@@ -1040,7 +1065,9 @@ bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
     {//finding generic template, using SURF
         //here you can apply condition on the found match to evaluate if it is good or bad
         int fail_code = 0;
-        position = Ffinder->FindFiducial(outM, fail_code);
+
+        // TODO: give center of RoI
+        position = Ffinder->FindFiducial(outM, fail_code, position, debug);
         success = (fail_code==0);
         if (fail_code)
         {
@@ -1063,6 +1090,18 @@ bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
         Point origin(Point::NaN());
         std::vector<Circle> circles;
         int rc = Ffinder->FindCircles(circles, expected_R, range, min_dist, origin, debug);
+        if ( circles.size()==0 )
+        {
+            // May be a G-type
+            expected_R = 12.5*mCalibration;
+            min_dist = 2*expected_R;
+            range = 0.25;
+            os << loglevel(Log::info) << " Trying with 4 circles" << std::endl;
+            rc = Ffinder->FindCircles(circles, expected_R, range, min_dist, Point(0,0), debug);
+        }
+
+
+
         std::cout << "CIRCLES: rc=" << rc << " No. of circles: " << circles.size() << std::endl;
         for (auto c : circles )
         {
@@ -1104,10 +1143,11 @@ bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
     /*
      * Correct by camera transformation
      */
-    os << "FiducialFinderCaller finds " << position << std::endl;
+    os << "FiducialFinderCaller:  Position in image " << position << " px"<< std::endl;
+    position.y( - position.y() );
     F_point = (cameraM * position);
 	F_point *= 0.001; // from um to mm
-	os << "... and returns " << F_point << std::endl;
+	os << "... and returns " << F_point << " mm" << std::endl;
 
 
 #if VALENCIA

@@ -30,6 +30,9 @@
          <height>400</height>
         </size>
        </property>
+       <property name="mouseTracking">
+        <bool>false</bool>
+       </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
        </property>
@@ -96,6 +99,13 @@
         </layout>
        </item>
        <item>
+        <widget class="QLabel" name="imageCoord">
+         <property name="text">
+          <string>Image Coordinates</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_5">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -122,7 +132,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>4</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="joystickTab">
         <attribute name="title">
@@ -1041,7 +1051,7 @@
               <number>11111</number>
              </property>
              <property name="value">
-              <number>23</number>
+              <number>0</number>
              </property>
             </widget>
            </item>

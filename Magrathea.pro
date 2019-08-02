@@ -31,10 +31,9 @@ SOURCES += \
     Point.cc \
     QPetalLocator.cpp \
     StreamViewer.cc \
+    CameraView.cpp \
     alglibtools.cc \
     flatness.cc \
-    logger.cc \
-    main.cpp \
     magrathea.cpp \
     calibrator.cpp \
     focus_finder.cpp \
@@ -42,6 +41,8 @@ SOURCES += \
     Fiducial_finder.cpp \
     fiducial_locations.cpp \
     verticalalignmenttool.cpp \
+    logger.cc \
+    main.cpp \
 
 
 
@@ -54,6 +55,7 @@ HEADERS += \
         fiducial_locations.h \
         verticalalignmenttool.h \
         StreamViewer.h \
+        CameraView.h \
         QPetalLocator.h
 
 FORMS += \

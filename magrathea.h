@@ -67,6 +67,7 @@ private slots:
     void updatePosition();
 
     //camera
+    void camera_mouse_moved(QMouseEvent *event);
     void enableCameraBoxClicked(bool checked);
     bool focusButtonClicked();
     void captureButtonClicked();

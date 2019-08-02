@@ -2,9 +2,11 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
+//#include <opencv2/xphoto/white_balance.hpp>
 #include "logger.h"
 #include "Fiducial_finder.h"
 #include "MatrixTransform.h"
+#include <opencv2/opencv.hpp>
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
 #endif
@@ -55,11 +57,7 @@ double image_median(cv::Mat channel)
     return med;
 }
 
-/*
- *
- * https://gist.github.com/tomykaira/94472e9f4921ec2cf582
- */
-void balance_white(cv::Mat mat)
+void ___balance_white(cv::Mat mat)
 {
     double discard_ratio = 0.05;
     int hists[3][256];
@@ -111,6 +109,19 @@ void balance_white(cv::Mat mat)
         }
     }
 }
+
+
+/*
+ *
+ * https://gist.github.com/tomykaira/94472e9f4921ec2cf582
+ */
+//void balance_white(cv::Mat mat)
+//{
+//    cv::Ptr<cv::xphoto::WhiteBalancer> wb = cv::xphoto::createSimpleWB();
+////        wb = cv::xphoto::createGrayworldWB();
+//
+//    wb->balanceWhite(mat, mat);
+//}
 
 bool Distance_sorter(cv::DMatch m_1, cv::DMatch m_2)
 {
@@ -553,7 +564,7 @@ int FiducialFinder::get_window_size() const
      */
     int window_size;
     if  (image.cols > 2000 && image.rows > 2000)
-        window_size = 600; // this is approximate the diagonal of an F
+        window_size = 900; // this is approximate the diagonal of an F
     else
         window_size = std::min(image.cols, image.rows)/4;
 
@@ -1143,7 +1154,10 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
          * Define the center of the  Region of Interest
          */
         delta_O = image_O - origin;
-        image_O = origin;
+
+        // if origin is (0,0), we want a RoI center in teh middle of the picture
+        if (origin.mag2() > 0.1)
+            image_O = origin;
 
         /*
          * Define the center of the  Region of Interest
@@ -1180,10 +1194,10 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
         r_max *= factor;
         min_dist *= factor;
     }
-    cv::Mat image_gray = RoiImage.clone();
+    cv::Mat image_gray; // = RoiImage.clone();
     cv::cvtColor(RoiImage, image_gray, cv::COLOR_BGR2GRAY);
     cv::medianBlur(image_gray, image_gray, get_kernel_size());
-    balance_white(image_gray);
+   // balance_white(image_gray);
     if (debug)
     {
         cv::imshow("Blur+white balance", image_gray);
@@ -1235,9 +1249,9 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
             int radius = c[2];
             cv::circle( RoiImage, center, radius, cv::Scalar(0, 255,0), 3, cv::LINE_4);
 
-            os << loglevel(Log::debug)
-               << i << ".- " << center << " R= " << radius << std::endl;
         }
+        os << loglevel(Log::debug)
+           << i << ".- " << center << " R= " << c[2] << std::endl;
         /*
          * We now have to pass from image coordinates to outside workd coordinates
          * with origin in the center of the image (col/2, row/2) rathar than on the
@@ -1247,7 +1261,7 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
         Point nc(center/factor);
         nc += RoItranslation;
 
-        out_circles.push_back( Circle(radius, Point(nc.x(), -nc.y())) );
+        out_circles.push_back( Circle(radius, Point(nc.x(), nc.y())) );
 
         // Point pos = (center - Point(RoiImage.cols/2, RoiImage.rows/2));
         // os << "shifted to center " << pos << std::endl;
@@ -1310,7 +1324,7 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
      * Define the center of the  Region of Interest
      */
     Point image_O = origin;
-    Point delta_O(0,0);
+    Point delta_O(0,0);   // displacement of RoI center from center of figure
     if (origin.is_nan())
         image_O.set(image.cols/2.0, image.rows/2.0);
 
@@ -1319,7 +1333,7 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
 
 
     /*
-     * Define the center of the  Region of Interest
+     * Define the cRegion of Interest centered at image_O
      */
     cv::Mat RoiImage = find_region_of_intetest(image_O);
     if (RoiImage.empty())
@@ -1329,7 +1343,8 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
         return position;
     }
 
-    double max_cols = 256.0;
+    double max_cols = 1040.0 - 1.8*image_fiducial.cols;// 512.0;
+    os << loglevel(Log::info)<< "Max columns " << max_cols << "["<< image_fiducial.cols << "]"<< std::endl;
     double factor = 1.0;
     if ( RoiImage.cols > max_cols )
     {
@@ -1564,29 +1579,30 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
     /*
      * Move from RoI to image
      */
-    position += image_O;
+
     /*
      * We now have to pass from image coordinates to outside workd coordinates
      * with origin in the center of the image (col/2, row/2) rathar than on the
      * upper left corner with Y axis running downwards
      */
-    //position -= image_O;
-    position.y ( -position.y() );
+    position += image_O;
+//position.y ( -position.y() );
 
     /*
      * A few checks before returning
      */
-    if ( fabs(scale-1.0)> 0.2 )
+    if ( fabs(scale-1.0)> 0.2 ||  fabs(scale)<0.01 )
     {
         os << loglevel(Log::error) << "Scale too far from one: " << scale << std::endl;
         fail_code = 1; //control on the scale of the fiducial, which should be close to 1
     }
 
-    if((abs(delta.x()) > image_F_gray.cols/3) || (abs(delta.y()) > image_F_gray.rows/3))
-    {
-        os << loglevel(Log::error) << "Fiducial is off-center: " << scale << std::endl;
-        fail_code = 2;
-    }
+//    TODO: check how to implement this
+//    if((abs(delta.x()) > image_F_gray.cols/3) || (abs(delta.y()) > image_F_gray.rows/3))
+//    {
+//        os << loglevel(Log::error) << "Fiducial is off-center: " << scale << std::endl;
+//        fail_code = 2;
+//    }
 
     /*
      * clean up

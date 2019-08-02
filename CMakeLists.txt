@@ -130,6 +130,7 @@ set(magrathea_SOURCES
 	logger.cc
 	PetalCoordinates.cc
 	QPetalLocator.cpp
+	CameraView.cpp
 	StreamViewer.cc
 	${qjoystick_SOURCES}
 	${QT_RESOURCES}
