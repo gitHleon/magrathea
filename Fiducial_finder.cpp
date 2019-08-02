@@ -55,6 +55,62 @@ double image_median(cv::Mat channel)
     return med;
 }
 
+/*
+ *
+ * https://gist.github.com/tomykaira/94472e9f4921ec2cf582
+ */
+void balance_white(cv::Mat mat)
+{
+    double discard_ratio = 0.05;
+    int hists[3][256];
+    memset(hists, 0, 3 * 256 * sizeof(int));
+    for (int y = 0; y < mat.rows; ++y)
+    {
+        uchar *ptr = mat.ptr<uchar>(y);
+        for (int x = 0; x < mat.cols; ++x)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                hists[j][ptr[x * 3 + j]] += 1;
+            }
+        }
+    }
+// cumulative hist
+    int total = mat.cols * mat.rows;
+    int vmin[3], vmax[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 255; ++j)
+        {
+            hists[i][j + 1] += hists[i][j];
+        }
+        vmin[i] = 0;
+        vmax[i] = 255;
+        while (hists[i][vmin[i]] < discard_ratio * total)
+            vmin[i] += 1;
+        while (hists[i][vmax[i]] > (1 - discard_ratio) * total)
+            vmax[i] -= 1;
+        if (vmax[i] < 255 - 1)
+            vmax[i] += 1;
+    }
+    for (int y = 0; y < mat.rows; ++y)
+    {
+        uchar *ptr = mat.ptr<uchar>(y);
+        for (int x = 0; x < mat.cols; ++x)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                int val = ptr[x * 3 + j];
+                if (val < vmin[j])
+                    val = vmin[j];
+                if (val > vmax[j])
+                    val = vmax[j];
+                ptr[x * 3 + j] = static_cast<uchar>((val - vmin[j]) * 255.0
+                        / (vmax[j] - vmin[j]));
+            }
+        }
+    }
+}
 
 bool Distance_sorter(cv::DMatch m_1, cv::DMatch m_2)
 {
@@ -495,11 +551,13 @@ int FiducialFinder::get_window_size() const
     /*
      * TODO: find a way of computing this
      */
-    int window_size = ( (image.cols > 2000 && image.rows > 2000)
-            ? 2000
-            : std::min(image.cols, image.rows))/4;
-    return window_size;
+    int window_size;
+    if  (image.cols > 2000 && image.rows > 2000)
+        window_size = 600; // this is approximate the diagonal of an F
+    else
+        window_size = std::min(image.cols, image.rows)/4;
 
+    return window_size;
 }
 
 Point FiducialFinder::Find_circles_(bool fit, bool single, const Point &origin, bool debug)
@@ -1047,7 +1105,7 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
     }
 
     /*
-     * Check that hte images are OK
+     * Check that the images are OK
      */
     if (image.empty())
     {
@@ -1073,20 +1131,19 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
               << std::endl;
 
     cv::Mat RoiImage;
-    Point image_O;
+    Point image_O(image.cols/2.0, image.rows/2.0);
+    Point delta_O(0,0);
     if (origin.is_nan())
     {
         RoiImage = image.clone();
-        image_O.set(image.cols/2.0, image.rows/2.0);
     }
     else
     {
         /*
          * Define the center of the  Region of Interest
          */
+        delta_O = image_O - origin;
         image_O = origin;
-        if (origin.is_nan())
-            image_O.set(image.cols/2.0, image.rows/2.0);
 
         /*
          * Define the center of the  Region of Interest
@@ -1097,6 +1154,10 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
             os << loglevel(Log::error) << "Window size wrongly set!!" << std::endl;
             return -2;
         }
+    }
+    if (debug)
+    {
+        os << loglevel(Log::info) << "Image_O: " << image_O << " delta " << delta_O << std::endl;
     }
 
     if (min_dist<0)
@@ -1122,13 +1183,19 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
     cv::Mat image_gray = RoiImage.clone();
     cv::cvtColor(RoiImage, image_gray, cv::COLOR_BGR2GRAY);
     cv::medianBlur(image_gray, image_gray, get_kernel_size());
-
+    balance_white(image_gray);
+    if (debug)
+    {
+        cv::imshow("Blur+white balance", image_gray);
+    }
 
     double median = image_median(image_gray);
     double sigma = 0.33;
-    // int lower = int(std::max(0.0, (1.0 - sigma) * median));
+    int lower = int(std::max(0.0, (1.0 - sigma) * median));
     int upper = int(std::min(255.0, (1.0 + sigma) * median));
-    //os << loglevel(Log::info) << "median: " << median << " upper: " << upper << " lower: " << lower << std::endl;
+    os << loglevel(Log::info) << "median: " << median << " upper: " << upper << " lower: " << lower << std::endl;
+    if (upper<=0)
+        upper = 150;
 
     std::vector<cv::Vec3f> circles;
     double correction_factor = 0.4;
@@ -1149,10 +1216,16 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
            << std::endl;
     }
 
+    int window_size = RoiImage.cols;
+    Point RoItranslation(0,0);
+    if (delta_O.mag2()>0.0)
+        RoItranslation = image_O - Point(window_size/2.0, window_size/2.0);
+
     for( size_t i = 0; i < circles.size(); i++ )
     {
         cv::Vec3i c = circles[i];
         Point center = Point(c[0], c[1]);
+
         if (debug)
         {
             // circle center
@@ -1162,24 +1235,41 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
             int radius = c[2];
             cv::circle( RoiImage, center, radius, cv::Scalar(0, 255,0), 3, cv::LINE_4);
 
+            os << loglevel(Log::debug)
+               << i << ".- " << center << " R= " << radius << std::endl;
         }
-        os << loglevel(Log::debug)
-           << i << ".- " << center << " R= " << c[2] << std::endl;
         /*
          * We now have to pass from image coordinates to outside workd coordinates
          * with origin in the center of the image (col/2, row/2) rathar than on the
          * upper left corner with Y axis running downwards
          */
-        Point pos = (center - Point(RoiImage.cols/2, RoiImage.rows/2));
-        os << "shifted to center " << pos << std::endl;
-        pos.y(-pos.y());
-        os << "Y flipped " << pos << std::endl;
-        out_circles.push_back( Circle(c[2]/factor, pos/factor) );
+        int radius = c[2]/factor;
+        Point nc(center/factor);
+        nc += RoItranslation;
+
+        out_circles.push_back( Circle(radius, Point(nc.x(), -nc.y())) );
+         
+        // Point pos = (center - Point(RoiImage.cols/2, RoiImage.rows/2));
+        // os << "shifted to center " << pos << std::endl;
+        // pos.y(-pos.y());
+        // os << "Y flipped " << pos << std::endl;
+        // out_circles.push_back( Circle(c[2]/factor, pos/factor) );
+        
+        if (debug)
+        {
+            // circle center
+            cv::circle(image, nc, 3, cv::Scalar(0,0,255), 3, cv::LINE_4);
+
+            // circle outline
+            cv::circle(image, nc, radius, cv::Scalar(0, 255,0), 3, cv::LINE_4);
+        }
     }
 
     if (debug)
+    {
         cv::imshow("Detected circles", RoiImage);
-
+    	cv::imshow("CIRCLES in image", image);
+    }
     return 0;
 }
 
@@ -1220,8 +1310,13 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
      * Define the center of the  Region of Interest
      */
     Point image_O = origin;
+    Point delta_O(0,0);
     if (origin.is_nan())
         image_O.set(image.cols/2.0, image.rows/2.0);
+
+    else
+        delta_O = image_O - Point(image.cols/2.0, image.rows/2.0);
+
 
     /*
      * Define the center of the  Region of Interest
@@ -1233,6 +1328,20 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
         fail_code = -3;
         return position;
     }
+
+    double max_cols = 256.0;
+    double factor = 1.0;
+    if ( RoiImage.cols > max_cols )
+    {
+        factor = max_cols/double(RoiImage.cols);
+        os << loglevel(Log::warning) << "Reducing image by a factor " << factor << std::endl;
+        cv::Mat orig = RoiImage.clone();
+        cv::resize(orig, RoiImage, cv::Size(), factor, factor, cv::INTER_LANCZOS4);
+
+        orig = image_fiducial.clone();
+        cv::resize(orig, image_fiducial, cv::Size(), factor, factor, cv::INTER_LANCZOS4);
+    }
+
 
     if(debug)
     {
@@ -1356,6 +1465,17 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
                H.at<double>(0,2), H.at<double>(1,2)};
     outM.set(tmpV);
 
+    double scale = sqrt(outM[0]*outM[0] + outM[1]*outM[1]);
+    if ( fabs(scale)<0.01 )
+    {
+        // estimaAffine failed getting the rotation. Hopefully translation is OK
+        os << loglevel(Log::warning)
+           << "Could not find the rotation of the fiducial w.r.t. the template"
+           << std::endl;
+        outM = outM.translation();
+    }
+
+
     /*
      * Find the fiducial bounding box
      */
@@ -1380,7 +1500,7 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
      * The fiducial position in the image
      */
     Point O_RoI(RoiImage.cols/2, RoiImage.rows/2.0);
-    Point delta = (I_center - O_RoI);
+    Point delta = (I_center - O_RoI)/factor;
 
     position = delta;
 
@@ -1421,34 +1541,41 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
         cv::line(RoiImage, vscene[2], vscene[3], cv::Scalar(0, 255, 0), 4);
         cv::line(RoiImage, vscene[3], vscene[0], cv::Scalar(0, 255, 0), 4);
 
-        cv::Point2d RoItranslation = cv::Point2d((image.cols-window_size)*0.5, (image.rows-window_size)*0.5);
-        cv::line(image, scene_corners[0] + RoItranslation, scene_corners[1] + RoItranslation, cv::Scalar(0, 255, 0), 4);
-        cv::line(image, scene_corners[1] + RoItranslation, scene_corners[2] + RoItranslation, cv::Scalar(0, 255, 0), 4);
-        cv::line(image, scene_corners[2] + RoItranslation, scene_corners[3] + RoItranslation, cv::Scalar(0, 255, 0), 4);
-        cv::line(image, scene_corners[3] + RoItranslation, scene_corners[0] + RoItranslation, cv::Scalar(0, 255, 0), 4);
-        cv::circle(image, image_O, 3, cv::Scalar(0,0,255), -1, 8, 0 );
+
+
+        Point RoItranslation = Point((image.cols-window_size)*0.5, (image.rows-window_size)*0.5)+delta_O;
+        std::vector<Point> vsc;
+        for (auto x : scene_corners)
+            vsc.push_back(Point(x)/factor);
+        Point vsCenter = position + image_O;
+        cv::line(image, vsc[0] + RoItranslation, vsc[1] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::line(image, vsc[1] + RoItranslation, vsc[2] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::line(image, vsc[2] + RoItranslation, vsc[3] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::line(image, vsc[3] + RoItranslation, vsc[0] + RoItranslation, cv::Scalar(0, 255, 0), 4);
+        cv::circle(image, vsCenter, 3, cv::Scalar(0,0,255), -1, 8, 0 );
 
 
         cv::imshow("SURF Match - RoI", RoiImage);
         cv::imshow("The final image", image);
+        os << loglevel(Log::info) << "Position of image_O " << image_O << std::endl;
         os << loglevel(Log::info) << "Position of fiducial " << position << std::endl;
     }
 
-
-
+    /*
+     * Move from RoI to image
+     */
+    position += image_O;
     /*
      * We now have to pass from image coordinates to outside workd coordinates
      * with origin in the center of the image (col/2, row/2) rathar than on the
      * upper left corner with Y axis running downwards
      */
-    position -= image_O;
+    //position -= image_O;
     position.y ( -position.y() );
-
 
     /*
      * A few checks before returning
      */
-    double scale = sqrt(outM[0]*outM[0] + outM[1]*outM[1]);
     if ( fabs(scale-1.0)> 0.2 )
     {
         os << loglevel(Log::error) << "Scale too far from one: " << scale << std::endl;
