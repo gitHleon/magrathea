@@ -32,6 +32,8 @@
 #include <logger.h>
 #include <QPetalLocator.h>
 
+static LoggerStream os;
+
 //function for debug in opencv, defined elsewhere
 std::string type2str(int type);
 
@@ -234,9 +236,10 @@ Magrathea::Magrathea(QWidget *parent) :
 
     /*
      * Camera to Gantry transform
+     * Moves from pixels to um in the gantry
      */
     cameraM.rotate(mCamera_angle);
-    cameraM.scale(mCalibration);
+    cameraM.scale(1.0/mCalibration);
 
     ///////////////////
     //------------------------------------------
@@ -372,6 +375,9 @@ Magrathea::~Magrathea()
 
 //position update
 void Magrathea::updatePosition(){
+
+    if (!mMotionHandler->gantryConnected)
+        return;
 
     //In Valencia calibrated feedback positions need to be accessed with whereAmI(1), non calibrated, with whereAmI(0)
     std::vector <double> pos_t = mMotionHandler->whereAmI(1);
@@ -934,7 +940,7 @@ void Magrathea::Circles_button_Clicked()
 //function to find fiducial markers
 bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
 {
-    LoggerStream os;
+
     bool debug = false;
     cv::destroyAllWindows();
     mCamera->stop(); //closing QCamera
@@ -1051,8 +1057,8 @@ bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
          *       May be we send a radius depending on the fiducial
          *       we want to find
          */
-        double expected_R = 80.;
-        double range=0.0;
+        double expected_R = 150*mCalibration;
+        double range=0.25;
         double min_dist=-1.0;
         Point origin(Point::NaN());
         std::vector<Circle> circles;
@@ -1065,8 +1071,9 @@ bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
         // We pick the first one...
         success = (circles.size()>0);
         if (success)
-            position = circles[0].get_center();
-
+        {
+            position =  circles[0].get_center();
+        }
         QTime now = QTime::currentTime();
         QString time_now = now.toString("hhmmss");
         timestamp = time_now.toLocal8Bit().constData();
@@ -1097,14 +1104,17 @@ bool Magrathea::FiducialFinderCaller(const int &input, Point& F_point)
     /*
      * Correct by camera transformation
      */
+    os << "FiducialFinderCaller finds " << position << std::endl;
     F_point = (cameraM * position);
-	F_point *= 0.001; // why do we do this ?
-	
+	F_point *= 0.001; // from um to mm
+	os << "... and returns " << F_point << std::endl;
+
+
 #if VALENCIA
     //taking into account orientation of camera wrt gantry
     //double target_x_short = - distance_x*0.001*cos(mCamera_angle) - distance_y*0.001*sin(mCamera_angle);
     //double target_y_short = distance_x*0.001*sin(mCamera_angle) - distance_y*0.001*cos(mCamera_angle);
-    ofs<<" "<<pos_t[0]-target_x_short<<" "<<pos_t[1]-target_y_short<<" "<<pos_t[4]<<std::endl;
+    ofs<<" "<<pos_t[0]-F_point.x()<<" "<<pos_t[1]-F_point.y()<<" "<<pos_t[4]<<std::endl;
 #else
     ofs << std::endl;
     mMotionHandler->moveXBy(F_point.x(),1);
@@ -1739,31 +1749,36 @@ bool Magrathea::loop_fid_finder()
     return true;
 }
 
-bool Magrathea::loop_fid_finder(int input){
+bool Magrathea::loop_fid_finder(int input)
+{
+    LoggerStream os;
     //run fiducial finding algo automatically
     //and move to the fiducial position
-    for(int i=0;i<3;i++){//set appropriate value of the loop limit
+    for (int i = 0; i < 3; i++)
+    {    //set appropriate value of the loop limit
         QApplication::processEvents();
         Point target;
-        if(!FiducialFinderCaller(input,target))
+        if (!FiducialFinderCaller(input, target))
         {
-            std::cout<<"FAIL!!"<<std::endl;
+            std::cout << "FAIL!!" << std::endl;
             return false;
         }
-
+        os << "Iteration " << i << " find pos " << target << std::endl;
         // Already done in FiducialFinderCaller
         //double target_x_short = - distances[0]*cos(mCamera_angle) - distances[1]*sin(mCamera_angle);
         //double target_y_short = distances[0]*sin(mCamera_angle) - distances[1]*cos(mCamera_angle);
         //ATTENTION! distances[0] is cols, distances[1] is rows of the image
-        if(!mMotionHandler->moveXBy(-target.x(),1.))
+        if (!mMotionHandler->moveXBy(-target.x(), 1.))
             return false;
-        if(!mMotionHandler->WaitX(-1))
+        if (!mMotionHandler->WaitX(-1))
             return false;
-        if(!mMotionHandler->moveYBy(-target.y(),1.))
+        if (!mMotionHandler->moveYBy(-target.y(), 1.))
             return false;
-        if(!mMotionHandler->WaitY(-1))
+        if (!mMotionHandler->WaitY(-1))
             return false;
 
+        Point new_pos( mMotionHandler->whereAmI(1));
+        os << "... moved to " << new_pos << " at end of iteration" << std::endl;
     }
     return true;
 }
@@ -1998,17 +2013,19 @@ int Magrathea::TestButtonClick(){//dummy function to perform simple tests
 }
 
 
-Point Magrathea::find_coordinates_at_position(const Point &estimated_point, int fiducial_type)
+Point Magrathea::find_coordinates_at_position(const Point &estimated_point, int fiducial_type, double speed)
     throw(MagratheaException)
 {
-    if(!mMotionHandler->moveXTo(estimated_point.x(), 1.))
-        throw(MagratheaException("Cannot move to given X postion"));
+    LoggerStream os;
 
-    if(!mMotionHandler->moveYTo(estimated_point.y(), 1.))
-        throw(MagratheaException("Cannot move to given Y postion"));
+    if(!mMotionHandler->moveXTo(estimated_point.x(), speed))
+        throw(MagratheaException("Cannot move to given X postion"));
 
     if(!mMotionHandler->WaitX(-1))
         throw(MagratheaException("Error waiting to X movement to finish"));;
+
+    if(!mMotionHandler->moveYTo(estimated_point.y(), speed))
+        throw(MagratheaException("Cannot move to given Y postion"));
 
     if(!mMotionHandler->WaitY(-1))
         throw(MagratheaException("Error waiting to Y movement to finish"));
@@ -2023,7 +2040,10 @@ Point Magrathea::find_coordinates_at_position(const Point &estimated_point, int 
 
     //Get the current positon
     std::vector <double> the_position = mMotionHandler->whereAmI(1);
-    return Point(the_position[0], the_position[1], the_position[2]);
+    Point position(the_position[0], the_position[1], the_position[2]);
+
+    os << loglevel(Log::info) << "Fiducial position: " << position << std::endl;
+    return position;
 }
 
 /**
@@ -2032,7 +2052,6 @@ Point Magrathea::find_coordinates_at_position(const Point &estimated_point, int 
  */
 bool Magrathea::set_petal_coordinates()
 {
-    LoggerStream os;
     os << loglevel(Log::info) << "set petal coordinates" << std::endl;
     QPetalLocator P(mMotionHandler);
     P.show();
@@ -2072,6 +2091,7 @@ bool Magrathea::set_petal_coordinates()
 //Function L744 FindPetal()
 int Magrathea::FindPetal(Point &top_locator, Point &bottom_locator )
 {
+    LoggerStream os;
     cv::destroyAllWindows();
 
     /*
@@ -2088,13 +2108,21 @@ int Magrathea::FindPetal(Point &top_locator, Point &bottom_locator )
     {
         if ( here.distance(top_locator) < here.distance(bottom_locator) )
         {
-            top = find_coordinates_at_position(top_locator, 4);
-            bottom = find_coordinates_at_position(bottom_locator, 4);
+            os << "Moving to top " << std::endl;
+            top = find_coordinates_at_position(top_locator, 4, 20.0);
+            os << "..." << top << std::endl
+               << "Moving to bottom" << std::endl;
+            bottom = find_coordinates_at_position(bottom_locator, 4, 20.0);
+            os << "..." << bottom << std::endl;
         }
         else
         {
-            bottom = find_coordinates_at_position(bottom_locator, 4);
-            top = find_coordinates_at_position(top_locator, 4);
+            os << "Moving to bottom " << std::endl;
+            bottom = find_coordinates_at_position(bottom_locator, 4, 20.0);
+            os << "..." << bottom << std::endl
+                        << "Moving to top" << std::endl;
+            top = find_coordinates_at_position(top_locator, 4, 20.0);
+            os << "..." << top << std::endl;
         }
     }
     catch ( MagratheaException &e )

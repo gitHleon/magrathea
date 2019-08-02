@@ -60,17 +60,23 @@ void QPetalLocator::find_top_locator()
 {
     LoggerStream os;
     os << loglevel(Log::info) << "Getting position of top locator " << std::endl;
-    std::vector<double> current_pos( motion->whereAmI() );
-    top.x(current_pos[0]);
-    top.y(current_pos[1]);
-    top.z(current_pos[2]);
+    std::vector<double> current_pos( motion->whereAmI(1) );
+    os << "+++ " << std::endl;
+    for (auto x : current_pos )
+        os << "... " << x << std::endl;
+
+    top.set(current_pos);
+    os << loglevel(Log::info) << top << std::endl;
+
 }
 void QPetalLocator::find_bottom_locator()
 {
     LoggerStream os;
     os << loglevel(Log::info)  << "Getting position of bottom locator " << std::endl;
-    std::vector<double> current_pos( motion->whereAmI() );
-    bottom.x(current_pos[0]);
-    bottom.y(current_pos[1]);
-    bottom.z(current_pos[2]);
+    std::vector<double> current_pos( motion->whereAmI(1) );
+    os << "+++ " << std::endl;
+    for (auto x : current_pos )
+        os << "... " << x << std::endl;
+    bottom.set(current_pos);
+    os << loglevel(Log::info) << bottom << std::endl;
 }

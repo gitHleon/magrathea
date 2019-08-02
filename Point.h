@@ -119,6 +119,17 @@ class Point
             _v[1] = vy;
             _v[2] = vz;
         }
+        template<typename _Tp>
+        void set(std::vector<_Tp> &V)
+        {
+            int indx = 0;
+            for (auto x : V)
+            {
+                _v[indx++] = x;
+                if (indx>3)
+                    break;
+            }
+        }
 
         /*
          * Check if values are OK

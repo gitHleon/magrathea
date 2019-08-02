@@ -13,7 +13,11 @@
 
 int main(int argc, char **argv)
 {
-    std::string home = std::getenv("HOME");
+    const char  *c_home = std::getenv("HOME");
+    std::string home;
+    if (c_home)
+        home = c_home;
+
     std::string ifile, ifiducial;
     int isurf = 1;
     int icircle = 0;
@@ -45,7 +49,7 @@ int main(int argc, char **argv)
     {
         char c;
         option_index = 0;
-        c = getopt_long(argc, argv, ":x:o:s:r:w:h:t:ud", long_options, &option_index);
+        c = getopt_long(argc, argv, ":i:f:o:r:w:h:t:ud", long_options, &option_index);
         if (c == -1)
             break;
         switch (c)

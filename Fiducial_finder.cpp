@@ -1065,18 +1065,26 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
            << std::endl;
         cv::imshow("Input Image", image);
     }
+    os << loglevel(Log::info)
+              << "Image size " << image.cols << 'x' << image.rows
+              << std::endl;
+           os << "Expected R: " << expected_R << " - " << width_R
+              << " [" << r_min << " - " << r_max << "]"
+              << std::endl;
 
     cv::Mat RoiImage;
+    Point image_O;
     if (origin.is_nan())
     {
         RoiImage = image.clone();
+        image_O.set(image.cols/2.0, image.rows/2.0);
     }
     else
     {
         /*
          * Define the center of the  Region of Interest
          */
-        Point image_O = origin;
+        image_O = origin;
         if (origin.is_nan())
             image_O.set(image.cols/2.0, image.rows/2.0);
 
@@ -1145,7 +1153,6 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
     {
         cv::Vec3i c = circles[i];
         Point center = Point(c[0], c[1]);
-
         if (debug)
         {
             // circle center
@@ -1155,10 +1162,19 @@ int FiducialFinder::FindCircles(std::vector<Circle> &out_circles,
             int radius = c[2];
             cv::circle( RoiImage, center, radius, cv::Scalar(0, 255,0), 3, cv::LINE_4);
 
-            os << loglevel(Log::debug)
-               << i << ".- " << center << " R= " << radius << std::endl;
         }
-        out_circles.push_back( Circle(c[2]/factor, center/factor) );
+        os << loglevel(Log::debug)
+           << i << ".- " << center << " R= " << c[2] << std::endl;
+        /*
+         * We now have to pass from image coordinates to outside workd coordinates
+         * with origin in the center of the image (col/2, row/2) rathar than on the
+         * upper left corner with Y axis running downwards
+         */
+        Point pos = (center - Point(RoiImage.cols/2, RoiImage.rows/2));
+        os << "shifted to center " << pos << std::endl;
+        pos.y(-pos.y());
+        os << "Y flipped " << pos << std::endl;
+        out_circles.push_back( Circle(c[2]/factor, pos/factor) );
     }
 
     if (debug)
@@ -1418,10 +1434,16 @@ Point FiducialFinder::FindFiducial(MatrixTransform &outM, int &fail_code, const 
         os << loglevel(Log::info) << "Position of fiducial " << position << std::endl;
     }
 
+
+
     /*
-     * Move from RoI to image
+     * We now have to pass from image coordinates to outside workd coordinates
+     * with origin in the center of the image (col/2, row/2) rathar than on the
+     * upper left corner with Y axis running downwards
      */
-    position += image_O;
+    position -= image_O;
+    position.y ( -position.y() );
+
 
     /*
      * A few checks before returning

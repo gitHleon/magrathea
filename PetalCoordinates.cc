@@ -152,14 +152,14 @@ void PetalCoordinates::set_reference(const Point &upper_locator, const Point &lo
      * TODO: find a way (QSettings?) to store the path to this file
      */
     std::map<std::string, Point> _fiducials;
-    std::string table = std::getenv("FIDUCIAL_TABLE");
-    if (table.empty())
+    const char *table = std::getenv("FIDUCIAL_TABLE");
+    if (!table)
     {
         //read_csv_file("EC-sensor-fiducials.csv", _fiducials);
         read_xlsx_file("EC-sensor-fiducials.xlsx", _fiducials);
     }
     else
-        read_xlsx_file(table.c_str(), _fiducials);
+        read_xlsx_file(table, _fiducials);
 
     /**
      *  Now get the location of the sensors in the reference Petal and store the transform matrix.

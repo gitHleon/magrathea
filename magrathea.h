@@ -104,7 +104,7 @@ private slots:
      * @param estimated_point an approx position close to the fiducial
      * @param fiducial_type the type of fiducial to search
      */
-    Point find_coordinates_at_position(const Point &estimated_point, int fiducial_type)
+    Point find_coordinates_at_position(const Point &estimated_point, int fiducial_type, double speed=1.0)
         throw(MagratheaException);
 
     //Loading

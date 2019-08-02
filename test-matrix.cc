@@ -110,10 +110,16 @@ main(int argc, char **argv)
         {
             for (int ik = 0; ik < 4; ++ik)
             {
+                try {
                 std::cout << "R" << iring << "_T4_" << ik << "_" << j << ": "
                           << "  \tP " << Petal.get_fiducial_in_petal("T4", iring, j, ik) << "  \tG "
                           << Petal.get_fiducial_in_gantry("T4", iring, j, ik) << "  \tX "
                           << Petal.gantry_to_petal(Petal.get_fiducial_in_gantry("T4", iring, j, ik)) << std::endl;
+                }
+                catch (PetalCoordException &e)
+                {
+                    std::cout << e.what() << std::endl;
+                }
             }
             std::cout << std::endl;
         }
