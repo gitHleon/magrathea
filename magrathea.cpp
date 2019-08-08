@@ -355,7 +355,6 @@ void Magrathea::updatePosition(){
 if (!gantry_on)
     return;
 
-
     //In Valencia calibrated feedback positions need to be accessed with whereAmI(1), non calibrated, with whereAmI(0)
     std::vector <double> pos_t = mMotionHandler->whereAmI(1);
 
