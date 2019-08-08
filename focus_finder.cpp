@@ -176,7 +176,7 @@ bool Focus_finder::find_focus(double &focus_height)
             if(z_pos_index==2){
                 if(!gantry->moveZBy(z_step[j],1.))
                     return false;
-                if(!gantry->WaitZ(-1))
+                if(!gantry->WaitZ(-1)) //wait for the end of the motion
                     return false;
             }else if(z_pos_index ==4){
                 if(!gantry->moveZ_2_By(z_step[j],1.))
@@ -373,4 +373,111 @@ void Focus_finder::Eval_syst_time(){
                figures_of_merit[0]<<" "<<figures_of_merit[1]<<" "<<figures_of_merit[2]<<" "<<figures_of_merit[3]<<std::endl;
         ofs.close();
     }
+}
+
+
+bool Focus_finder::autoFocus(double focus_range)
+{
+
+//General function to perform autofocus
+
+bool debug=true;
+
+double currentZ= gantry->whereAmI(1).at(z_pos_index);
+double threshold=0.02;
+double result=1;
+int Nstep=5;
+double P0=currentZ-focus_range/2;
+double Pn=currentZ+focus_range/2;
+double D;
+int cont=0;
+std::vector<double> FM[];
+std::vector<double> Z[];
+double Zopt=gantry->whereAmI(1).at(z_pos_index);
+double increment=focus_range/m;
+
+if(!gantry->gantryConnected){
+    QMessageBox::critical(nullptr, tr("Error"), tr("Gantry not connected!! Can not perform autofocus."));
+    return false;
+}
+
+if(!gantry->moveZBy(-focus_range/2,1.))
+     return false;
+if(!gantry->WaitZ(-1))
+     return false;
+
+while(result>threshold){
+ for(int i=0; i<=Nstep;i++){
+  FM[cont]=evalFM();
+  Z[cont]=gantry->whereAmI(1).at(z_pos_index);
+  cont++;
+if(!gantry->moveZBy(increment,1.))
+     return false;
+if(!gantry->WaitZ(-1))
+     return false;
+}
+
+FMmax = FM[std::max_element(FM.begin(), FM.end())];
+Zmax=Z[std::max_element(FM.begin(), FM.end())];
+result=qFabs(Zmax-Zopt);
+
+if(debug) qDebug() << "FM:" << FM << "Z:" << Z << "FMmax:" << FMmax << "Zmax:" << Zmax; 
+ 
+}
+
+Zpeak=evalFit(FM,Z);
+
+if(!gantry->moveZTo(Zpeak,1.))
+     return false;
+if(!gantry->WaitZ(-1))
+     return false;
+
+return true;
+}
+
+
+
+double Focus_finder::evalFM()
+{
+bool debug=true;
+
+//evaluating focus parameter 
+ 
+const int figure_index = 1;//Std dev
+//const int figure_index = 0;//Variance of Laplacian
+
+cv::Mat image=get_frame_from_camera();
+std::vector<double> figures_of_merit;
+cv::Mat blur_mat;
+eval_stddev_ROI(image,figures_of_merit);//gets RoI and proper color component
+double focus_value = figures_of_merit[figure_index];
+if(debug) qDebug() << "focus value:" focus value:
+return focus_value;
+}
+
+
+double Focus_finder::evalFit(std::vector<double> focus_v,std::vector<double> Z_v)
+{
+
+int size=focus_v.size();
+
+alglib::real_1d_array al_x;
+alglib::real_1d_array al_y;
+for(int i=0;i<size;i++){
+    al_x[i] = focus_v[i];
+    al_y[i] = Z_v[i];
+}
+alglib::ae_int_t m = 3;
+alglib::ae_int_t info;
+alglib::barycentricinterpolant p;
+alglib::polynomialfitreport rep;
+
+alglib::polynomialfit(al_x, al_y, m, info, p, rep);
+
+alglib::real_1d_array a2;
+alglib::polynomialbar2pow(p, a2);
+log->append("Coefficients p_1 = a[0]: "+QString::number(a2[0])+" ;a[1]: "+QString::number(a2[1])+" ; a[2]: "+QString::number(a2[2]));
+log->append("Vertex : ( "+QString::number(EvalVertex_x(a2[2],a2[1],a2[0]))+" , "+QString::number(EvalVertex_y(a2[2],a2[1],a2[0]))+" )");
+z_output = EvalVertex_x(a2[2],a2[1],a2[0]);
+
 }
