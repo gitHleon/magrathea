@@ -53,6 +53,7 @@ public:
     void Set_gantry(MotionHandler *m_gantry);
     void Set_color_int(const int &value);
 
+
 signals:
     void Log_append(QString TextToWrite);
     void Log_write(QString TextToWrite);
@@ -63,12 +64,15 @@ public slots:
     bool   find_focus(double &focus_height);
     void   Eval_syst_time();
     bool Eval_syst_scan();
-
+    
 
 private slots:
     cv::Mat  get_component(const cv::Mat &input_mat,const unsigned int &input);
     cv::Rect get_rect(const cv::Mat &input_image);
     cv::Mat  get_frame_from_camera();
+    bool autoFocus(double focus_range);
+    double evalFM();
+    double evalFit(std::vector<double> focus_v,std::vector<double> Z_v);
 
 private:
     cv::VideoCapture cap;
