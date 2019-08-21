@@ -61,21 +61,21 @@ HEADERS += \
 FORMS += \
         magrathea.ui
 
-INCLUDEPATH += D:/Code/include/alglib
-INCLUDEPATH += D:/Code/include
+INCLUDEPATH += F:/Code/include/alglib
+INCLUDEPATH += F:/Code/include
 INCLUDEPATH += .\mvIMPACT_CPP
-INCLUDEPATH += D:\opencv-build\install\include
-       LIBS += D:\opencv-build\bin\libopencv_flann401.dll
-       LIBS += D:\opencv-build\bin\libopencv_core401.dll
-       LIBS += D:\opencv-build\bin\libopencv_highgui401.dll
-       LIBS += D:\opencv-build\bin\libopencv_videoio401.dll
-       LIBS += D:\opencv-build\bin\libopencv_imgcodecs401.dll
-       LIBS += D:\opencv-build\bin\libopencv_imgproc401.dll
-       LIBS += D:\opencv-build\bin\libopencv_features2d401.dll
-       LIBS += D:\opencv-build\bin\libopencv_xfeatures2d401.dll
-       LIBS += D:\opencv-build\bin\libopencv_calib3d401.dll
-       LIBS += D:\opencv-build\bin\libopencv_aruco401.dll
-       LIBS += D:/Code/lib/libxlnt.a D:/Code/lib/libalglib.a
+INCLUDEPATH += F:\opencv-build\install\include
+       LIBS += F:\opencv-build\bin\libopencv_flann401.dll
+       LIBS += F:\opencv-build\bin\libopencv_core401.dll
+       LIBS += F:\opencv-build\bin\libopencv_highgui401.dll
+       LIBS += F:\opencv-build\bin\libopencv_videoio401.dll
+       LIBS += F:\opencv-build\bin\libopencv_imgcodecs401.dll
+       LIBS += F:\opencv-build\bin\libopencv_imgproc401.dll
+       LIBS += F:\opencv-build\bin\libopencv_features2d401.dll
+       LIBS += F:\opencv-build\bin\libopencv_xfeatures2d401.dll
+       LIBS += F:\opencv-build\bin\libopencv_calib3d401.dll
+       LIBS += F:\opencv-build\bin\libopencv_aruco401.dll
+       LIBS += F:/Code/lib/libxlnt.a D:/Code/lib/libalglib.a
 
 #Vancouver
 win32 : exists(C:/Program Files (x86)/Aerotech/A3200/CLibrary/Include/A3200.h) {
